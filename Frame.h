@@ -3,6 +3,7 @@
 #include "Player.h"
 #include "Ball.h"
 #include "ShotHistory.h"
+#include "Referee.h"
 
 #include <string>
 
@@ -96,6 +97,8 @@ private:
 
 
     Player* m_currentPlayer;
+
+    Referee m_referee;
 
 
     int m_redsRemaining;

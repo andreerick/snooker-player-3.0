@@ -145,6 +145,7 @@
     <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="Match.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Referee.cpp" />
     <ClCompile Include="Shot.cpp" />
     <ClCompile Include="ShotHistory.cpp" />
     <ClCompile Include="SnookerPlayer_01.cpp" />
@@ -158,6 +159,7 @@
     <ClInclude Include="Header.h" />
     <ClInclude Include="Match.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="Referee.h" />
     <ClInclude Include="Shot.h" />
     <ClInclude Include="ShotHistory.h" />
     <ClInclude Include="Tournament.h" />

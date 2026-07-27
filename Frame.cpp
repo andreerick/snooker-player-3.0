@@ -1,9 +1,9 @@
 #include "Frame.h"
 
 #include <iostream>
+#include <string>
 
 #include "Shot.h"
-
 
 
 Frame::Frame()
@@ -80,7 +80,6 @@ void Frame::potRed()
     m_needColor = true;
 
 
-    // Dernière rouge jouée
     if (m_redsRemaining == 0)
     {
         m_phase = FramePhase::LastRedColor;
@@ -98,7 +97,6 @@ void Frame::potColor(Ball ball)
         m_needColor = false;
 
 
-        // Couleur après la dernière rouge
         if (m_phase == FramePhase::LastRedColor)
         {
             m_phase = FramePhase::FinalColors;
@@ -108,7 +106,6 @@ void Frame::potColor(Ball ball)
 
         return;
     }
-
 
 
     if (m_phase == FramePhase::FinalColors)
@@ -145,49 +142,54 @@ FramePhase Frame::getPhase() const
 {
     return m_phase;
 }
+
+
+
+
+
 bool Frame::playShot(const Ball& ball)
 {
-    bool validShot = false;
+    Ball requiredBall = getRequiredBall();
 
 
-    if (ball.getName() == "Rouge")
+    // Contrôle arbitre
+    if (m_referee.checkContact(requiredBall, ball))
     {
-        if (!m_needColor && m_phase == FramePhase::Reds)
-        {
-            validShot = true;
 
+        if (ball.getName() == "Rouge")
+        {
             potRed();
         }
-    }
-    else
-    {
-        if (m_needColor || m_phase == FramePhase::FinalColors)
+        else
         {
-            if (isCorrectFinalColor(ball))
-            {
-                validShot = true;
-
-                potColor(ball);
-            }
+            potColor(ball);
         }
-    }
 
 
-
-    if (validShot)
-    {
         Shot shot(*m_currentPlayer, ball);
 
         m_history.addShot(shot);
+
 
         return true;
     }
 
 
-    std::cout << "Coup interdit !" << std::endl;
+    // Faute
+    int penalty =
+        m_referee.calculateFoul(
+            requiredBall,
+            ball
+        );
+
+
+    foul(penalty);
+
 
     return false;
 }
+
+
 
 
 
@@ -199,10 +201,13 @@ bool Frame::playTurn(const Ball& ball)
 
 
 
+
 void Frame::missShot()
 {
-    std::cout << "Coup rate : changement de joueur"
+    std::cout
+        << "Coup rate : changement de joueur"
         << std::endl;
+
 
     switchPlayer();
 }
@@ -215,7 +220,8 @@ bool Frame::checkShot(const Ball& intended, const Ball& hit)
 {
     if (intended.getName() == hit.getName())
     {
-        std::cout << "Coup valide"
+        std::cout
+            << "Coup valide"
             << std::endl;
 
         return true;
@@ -236,6 +242,7 @@ bool Frame::checkShot(const Ball& intended, const Ball& hit)
 
     return false;
 }
+
 
 
 
@@ -261,7 +268,6 @@ void Frame::foul(int points)
     }
 
 
-
     std::cout
         << "Faute : "
         << penalty
@@ -271,7 +277,6 @@ void Frame::foul(int points)
 
     switchPlayer();
 }
-
 
 
 
@@ -314,7 +319,6 @@ bool Frame::isCorrectFinalColor(const Ball& ball) const
 
 
 
-
 std::string Frame::getNextColorName() const
 {
     switch (m_nextColor)
@@ -346,9 +350,9 @@ std::string Frame::getNextColorName() const
 
 
 
-
 Ball Frame::getRequiredBall() const
 {
+
     if (m_phase == FramePhase::Reds)
     {
         return Ball("Rouge", 1);
@@ -365,7 +369,6 @@ Ball Frame::getRequiredBall() const
     {
         return Ball("Couleur", 0);
     }
-
 
 
     if (m_phase == FramePhase::FinalColors)
@@ -400,10 +403,10 @@ Ball Frame::getRequiredBall() const
 
 
 
-
 void Frame::displayPhase() const
 {
-    std::cout << "Phase actuelle : ";
+    std::cout
+        << "Phase actuelle : ";
 
 
     switch (m_phase)
@@ -412,16 +415,13 @@ void Frame::displayPhase() const
         std::cout << "Rouges";
         break;
 
-
     case FramePhase::LastRedColor:
         std::cout << "Derniere couleur apres rouge";
         break;
 
-
     case FramePhase::FinalColors:
         std::cout << "Couleurs finales";
         break;
-
 
     case FramePhase::Finished:
         std::cout << "Frame termine";
@@ -431,7 +431,6 @@ void Frame::displayPhase() const
 
     std::cout << std::endl;
 }
-
 
 
 

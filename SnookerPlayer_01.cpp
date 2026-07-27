@@ -4,12 +4,16 @@
 
 
 int main()
-{
-    std::cout << "=== TEST GAME MANAGER ==="
+{S
+    std::cout << "=== TEST SNOOKER PLAYER ==="
         << std::endl;
 
 
     GameManager manager;
+
+
+    std::cout << "=== Debut du match ==="
+        << std::endl;
 
 
     manager.startMatch();
