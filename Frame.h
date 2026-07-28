@@ -23,14 +23,19 @@ class Frame
 public:
 
     Frame();
+    Frame(const Frame& other);
+    Frame& operator=(const Frame& other);
 
 
     // Joueurs
     Player& currentPlayer();
+    const Player& currentPlayer() const;
 
     Player& getPlayer1();
+    const Player& getPlayer1() const;
 
     Player& getPlayer2();
+    const Player& getPlayer2() const;
 
 
     void switchPlayer();

@@ -2,6 +2,14 @@
 
 #include <iostream>
 
+namespace
+{
+constexpr const char* kNomBilleCouleur = "Couleur";
+constexpr const char* kNomBilleRouge = "Rouge";
+constexpr const char* kNomBilleBlanche = "Blanche";
+constexpr int kValeurMinimumCouleur = 2;
+}
+
 
 Referee::Referee()
 {
@@ -15,6 +23,23 @@ bool Referee::checkContact(
     const Ball& touched
 )
 {
+    if (required.getName() == kNomBilleCouleur)
+    {
+        if (
+            touched.getName() != kNomBilleRouge
+            && touched.getName() != kNomBilleBlanche
+            && touched.getValue() >= kValeurMinimumCouleur
+        )
+        {
+            std::cout
+                << "Contact correct (couleur)"
+                << std::endl;
+
+            return true;
+        }
+    }
+
+
     if (required.getName() == touched.getName())
     {
         std::cout

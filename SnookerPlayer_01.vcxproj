@@ -156,7 +156,6 @@
     <ClInclude Include="BallSet.h" />
     <ClInclude Include="Frame.h" />
     <ClInclude Include="GameManager.h" />
-    <ClInclude Include="Header.h" />
     <ClInclude Include="Match.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Referee.h" />
