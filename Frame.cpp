@@ -20,8 +20,49 @@ Frame::Frame()
 }
 
 
+Frame::Frame(const Frame& other)
+{
+    *this = other;
+}
+
+
+Frame& Frame::operator=(const Frame& other)
+{
+    if (this == &other)
+    {
+        return *this;
+    }
+
+    m_player1 = other.m_player1;
+    m_player2 = other.m_player2;
+    m_referee = other.m_referee;
+    m_redsRemaining = other.m_redsRemaining;
+    m_needColor = other.m_needColor;
+    m_nextColor = other.m_nextColor;
+    m_phase = other.m_phase;
+    m_history = other.m_history;
+
+    if (other.m_currentPlayer == &other.m_player1)
+    {
+        m_currentPlayer = &m_player1;
+    }
+    else
+    {
+        m_currentPlayer = &m_player2;
+    }
+
+    return *this;
+}
+
+
 
 Player& Frame::currentPlayer()
+{
+    return *m_currentPlayer;
+}
+
+
+const Player& Frame::currentPlayer() const
 {
     return *m_currentPlayer;
 }
@@ -34,8 +75,20 @@ Player& Frame::getPlayer1()
 }
 
 
+const Player& Frame::getPlayer1() const
+{
+    return m_player1;
+}
+
+
 
 Player& Frame::getPlayer2()
+{
+    return m_player2;
+}
+
+
+const Player& Frame::getPlayer2() const
 {
     return m_player2;
 }
@@ -149,7 +202,30 @@ FramePhase Frame::getPhase() const
 
 bool Frame::playShot(const Ball& ball)
 {
+    if (m_phase == FramePhase::Finished)
+    {
+        std::cout
+            << "Frame deja terminee"
+            << std::endl;
+
+        return false;
+    }
+
     Ball requiredBall = getRequiredBall();
+
+
+    if (
+        m_phase == FramePhase::FinalColors
+        && !isCorrectFinalColor(ball)
+    )
+    {
+        const int penalty =
+            m_referee.calculateFoul(requiredBall, ball);
+
+        foul(penalty);
+
+        return false;
+    }
 
 
     // Contrôle arbitre
@@ -170,6 +246,15 @@ bool Frame::playShot(const Ball& ball)
 
         m_history.addShot(shot);
 
+        std::cout
+            << "Coup valide : "
+            << shot.getPlayerName()
+            << " empoche "
+            << shot.getBallName()
+            << " (+"
+            << shot.getPoints()
+            << ")"
+            << std::endl;
 
         return true;
     }
@@ -352,16 +437,15 @@ std::string Frame::getNextColorName() const
 
 Ball Frame::getRequiredBall() const
 {
+    if (m_needColor)
+    {
+        return Ball("Couleur", 0);
+    }
+
 
     if (m_phase == FramePhase::Reds)
     {
         return Ball("Rouge", 1);
-    }
-
-
-    if (m_needColor)
-    {
-        return Ball("Couleur", 0);
     }
 
 

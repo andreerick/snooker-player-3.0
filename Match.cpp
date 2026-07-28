@@ -4,6 +4,9 @@
 
 Match::Match()
 {
+    m_player1.setName("Joueur 1");
+    m_player2.setName("Joueur 2");
+
     m_framesPlayer1 = 0;
 
     m_framesPlayer2 = 0;
@@ -50,6 +53,9 @@ Frame& Match::getCurrentFrame()
 void Match::startNewFrame()
 {
     m_currentFrame = Frame();
+
+    m_currentFrame.getPlayer1().setName(m_player1.getName());
+    m_currentFrame.getPlayer2().setName(m_player2.getName());
 }
 
 
@@ -58,11 +64,11 @@ void Match::startNewFrame()
 
 void Match::frameWon(Player& player)
 {
-    if (&player == &m_player1)
+    if (player.getName() == m_player1.getName())
     {
         m_framesPlayer1++;
     }
-    else
+    else if (player.getName() == m_player2.getName())
     {
         m_framesPlayer2++;
     }

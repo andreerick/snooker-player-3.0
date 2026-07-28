@@ -15,6 +15,23 @@ bool Referee::checkContact(
     const Ball& touched
 )
 {
+    if (required.getName() == "Couleur")
+    {
+        if (
+            touched.getName() != "Rouge"
+            && touched.getName() != "Blanche"
+            && touched.getValue() >= 2
+        )
+        {
+            std::cout
+                << "Contact correct (couleur)"
+                << std::endl;
+
+            return true;
+        }
+    }
+
+
     if (required.getName() == touched.getName())
     {
         std::cout
