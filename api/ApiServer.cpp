@@ -395,8 +395,14 @@ void ApiServer::run()
                     cl_pos = raw.find("content-length:");
                 if (cl_pos != std::string::npos)
                 {
+                    // Trouver le ':' et ignorer les espaces apres
+                    size_t colon = raw.find(':', cl_pos);
+                    size_t val_start = colon + 1;
+                    while (val_start < raw.size() &&
+                           (raw[val_start] == ' ' || raw[val_start] == '\t'))
+                        ++val_start;
                     size_t cl_end = raw.find("\r\n", cl_pos);
-                    int content_length = std::stoi(raw.substr(cl_pos + 15, cl_end - cl_pos - 15));
+                    int content_length = std::stoi(raw.substr(val_start, cl_end - val_start));
                     size_t body_start = raw.find("\r\n\r\n") + 4;
                     if ((int)(raw.size() - body_start) >= content_length) break;
                 }

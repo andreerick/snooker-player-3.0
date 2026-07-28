@@ -110,6 +110,10 @@ class CameraCalibration:
         self.scale_x = self.image_width  / TABLE_WIDTH_MM
         self.scale_y = self.image_height / zone_length
         self.origin_x = 0.0
+        # pixel_origin_y : coordonnee pixel Y correspondant a y_mm=0 (debut de zone)
+        # Formule inverse de pixelToMm : y_mm = (origin_y - y_px) / scale_y
+        # Donc : origin_y = y_px + y_mm * scale_y
+        # Pour y_px=image_height et y_mm=zone_start : origin_y = image_height + zone_start * scale_y
         self.origin_y = self.image_height + self.zone_start * self.scale_y
 
     def calibrate_from_markers(self, markers: list):
@@ -158,7 +162,7 @@ class CameraCalibration:
 
 def detect_balls_opencv(frame, calibration: CameraCalibration) -> list:
     """
-    Detectiondes billes par couleur avec OpenCV.
+    Detection des billes par couleur avec OpenCV.
     Retourne une liste de {'color', 'x_px', 'y_px', 'confidence'}
     """
     if not OPENCV_AVAILABLE:

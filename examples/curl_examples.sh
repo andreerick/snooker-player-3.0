@@ -2,7 +2,7 @@
 # Snooker Player 3.0 - Exemples cURL
 # ====================================
 # Ces exemples supposent que le serveur tourne sur localhost:8080
-# Demarrer le serveur : ./build/snooker_server 8080
+# Démarrer le serveur : ./build/snooker_server 8080
 
 SERVER="http://localhost:8080"
 

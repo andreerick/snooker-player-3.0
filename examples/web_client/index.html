@@ -187,7 +187,7 @@
 
 <header>
   <h1>🎱 Snooker Player 3.0</h1>
-  <span id="server-status" class="status offline">● Deconnecte</span>
+  <span id="server-status" class="status offline">● Déconnecté</span>
   <span id="phase-badge" style="font-size:0.8rem; color:#aaa;"></span>
 </header>
 
@@ -427,7 +427,7 @@ function startAutoRefresh() {
 
 function setStatus(online) {
   const el = document.getElementById('server-status');
-  el.textContent = online ? '● Connecte' : '● Deconnecte';
+  el.textContent = online ? '● Connecté' : '● Déconnecté';
   el.className   = 'status ' + (online ? 'online' : 'offline');
 }
 

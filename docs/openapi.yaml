@@ -228,7 +228,7 @@ paths:
   /api/camera/fused:
     get:
       tags: [camera]
-      summary: Obtenir l'état fusionne des 3 caméras
+      summary: Obtenir l'état fusionné des 3 caméras
       description: |
         Retourne les positions des billes fusionnées à partir des 3 caméras.
         Les zones de chevauchement (200mm) permettent la validation croisée.
