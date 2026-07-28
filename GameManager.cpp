@@ -2,6 +2,12 @@
 
 #include <iostream>
 
+namespace
+{
+constexpr int kMaxSimulationShots = 200;
+constexpr int kFoulFrequencyShots = 10;
+}
+
 
 GameManager::GameManager()
 {
@@ -18,9 +24,7 @@ void GameManager::startMatch()
 
     Frame& frame = m_match.getCurrentFrame();
 
-    constexpr int maxShots = 200;
-
-    for (int shotIndex = 0; shotIndex < maxShots; shotIndex++)
+    for (int shotIndex = 0; shotIndex < kMaxSimulationShots; shotIndex++)
     {
         if (frame.isFinished())
         {
@@ -117,7 +121,8 @@ void GameManager::initializeTournament()
 
 Ball GameManager::chooseBallForSimulation(const Frame& frame, int shotIndex) const
 {
-    if (shotIndex > 0 && shotIndex % 10 == 0)
+    // Injection périodique d'une faute pour exercer la logique d'arbitrage.
+    if (shotIndex > 0 && shotIndex % kFoulFrequencyShots == 0)
     {
         return Ball("Blanche", 0);
     }

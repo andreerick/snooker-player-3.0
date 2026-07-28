@@ -64,11 +64,11 @@ void Match::startNewFrame()
 
 void Match::frameWon(Player& player)
 {
-    if (player.getName() == m_player1.getName())
+    if (&player == &m_player1)
     {
         m_framesPlayer1++;
     }
-    else if (player.getName() == m_player2.getName())
+    else if (&player == &m_player2)
     {
         m_framesPlayer2++;
     }

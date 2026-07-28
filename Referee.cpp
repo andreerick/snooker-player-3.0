@@ -2,6 +2,13 @@
 
 #include <iostream>
 
+namespace
+{
+constexpr const char* kColorBallName = "Couleur";
+constexpr const char* kRedBallName = "Rouge";
+constexpr const char* kWhiteBallName = "Blanche";
+}
+
 
 Referee::Referee()
 {
@@ -15,11 +22,11 @@ bool Referee::checkContact(
     const Ball& touched
 )
 {
-    if (required.getName() == "Couleur")
+    if (required.getName() == kColorBallName)
     {
         if (
-            touched.getName() != "Rouge"
-            && touched.getName() != "Blanche"
+            touched.getName() != kRedBallName
+            && touched.getName() != kWhiteBallName
             && touched.getValue() >= 2
         )
         {
