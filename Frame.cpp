@@ -22,7 +22,23 @@ Frame::Frame()
 
 Frame::Frame(const Frame& other)
 {
-    *this = other;
+    m_player1 = other.m_player1;
+    m_player2 = other.m_player2;
+    m_referee = other.m_referee;
+    m_redsRemaining = other.m_redsRemaining;
+    m_needColor = other.m_needColor;
+    m_nextColor = other.m_nextColor;
+    m_phase = other.m_phase;
+    m_history = other.m_history;
+
+    if (other.m_currentPlayer == &other.m_player1)
+    {
+        m_currentPlayer = &m_player1;
+    }
+    else
+    {
+        m_currentPlayer = &m_player2;
+    }
 }
 
 

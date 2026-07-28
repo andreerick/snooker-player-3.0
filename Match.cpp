@@ -72,6 +72,13 @@ void Match::frameWon(Player& player)
     {
         m_framesPlayer2++;
     }
+    else
+    {
+        std::cout
+            << "Joueur inconnu pour attribution de frame: "
+            << player.getName()
+            << std::endl;
+    }
 }
 
 

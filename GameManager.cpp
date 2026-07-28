@@ -67,6 +67,12 @@ void GameManager::startMatch()
     {
         m_match.frameWon(m_match.getPlayer2());
     }
+    else
+    {
+        std::cout
+            << "Frame nulle, aucun point de frame attribue"
+            << std::endl;
+    }
 
     std::cout
         << "Score match (frames) : "
