@@ -453,6 +453,8 @@ std::string Frame::getNextColorName() const
 
 Ball Frame::getRequiredBall() const
 {
+    // Cette condition prime: après une rouge, une couleur est obligatoire,
+    // même si la phase globale reste "Reds".
     if (m_needColor)
     {
         return Ball("Couleur", 0);

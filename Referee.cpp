@@ -4,9 +4,9 @@
 
 namespace
 {
-constexpr const char* kColorBallName = "Couleur";
-constexpr const char* kRedBallName = "Rouge";
-constexpr const char* kWhiteBallName = "Blanche";
+constexpr const char* kNomBilleCouleur = "Couleur";
+constexpr const char* kNomBilleRouge = "Rouge";
+constexpr const char* kNomBilleBlanche = "Blanche";
 }
 
 
@@ -22,11 +22,11 @@ bool Referee::checkContact(
     const Ball& touched
 )
 {
-    if (required.getName() == kColorBallName)
+    if (required.getName() == kNomBilleCouleur)
     {
         if (
-            touched.getName() != kRedBallName
-            && touched.getName() != kWhiteBallName
+            touched.getName() != kNomBilleRouge
+            && touched.getName() != kNomBilleBlanche
             && touched.getValue() >= 2
         )
         {

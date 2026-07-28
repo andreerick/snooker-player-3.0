@@ -4,7 +4,9 @@
 
 namespace
 {
+// Garde-fou pour garantir la fin de la simulation même en cas de bug logique.
 constexpr int kMaxSimulationShots = 200;
+// Injection d'une faute toutes les N tentatives pour valider l'arbitrage.
 constexpr int kFoulFrequencyShots = 10;
 }
 

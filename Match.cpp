@@ -1,5 +1,6 @@
 #include "Match.h"
 #include <iostream>
+#include <stdexcept>
 
 
 Match::Match()
@@ -74,10 +75,10 @@ void Match::frameWon(Player& player)
     }
     else
     {
-        std::cout
-            << "Joueur inconnu pour attribution de frame: "
-            << player.getName()
-            << std::endl;
+        throw std::runtime_error(
+            "Joueur inconnu pour attribution de frame: "
+            + player.getName()
+        );
     }
 }
 
