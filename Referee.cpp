@@ -7,6 +7,7 @@ namespace
 constexpr const char* kNomBilleCouleur = "Couleur";
 constexpr const char* kNomBilleRouge = "Rouge";
 constexpr const char* kNomBilleBlanche = "Blanche";
+constexpr int kValeurMinimumCouleur = 2;
 }
 
 
@@ -27,7 +28,7 @@ bool Referee::checkContact(
         if (
             touched.getName() != kNomBilleRouge
             && touched.getName() != kNomBilleBlanche
-            && touched.getValue() >= 2
+            && touched.getValue() >= kValeurMinimumCouleur
         )
         {
             std::cout
