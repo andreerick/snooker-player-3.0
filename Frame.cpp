@@ -21,6 +21,47 @@ Frame::Frame()
 
 
 
+Frame::Frame(const Frame& other)
+    : m_player1(other.m_player1)
+    , m_player2(other.m_player2)
+    , m_referee(other.m_referee)
+    , m_redsRemaining(other.m_redsRemaining)
+    , m_needColor(other.m_needColor)
+    , m_nextColor(other.m_nextColor)
+    , m_phase(other.m_phase)
+    , m_history(other.m_history)
+{
+    // Corriger le pointeur interne apres copie
+    m_currentPlayer = (other.m_currentPlayer == &other.m_player1)
+                    ? &m_player1
+                    : &m_player2;
+}
+
+
+
+Frame& Frame::operator=(const Frame& other)
+{
+    if (this != &other)
+    {
+        m_player1       = other.m_player1;
+        m_player2       = other.m_player2;
+        m_referee       = other.m_referee;
+        m_redsRemaining = other.m_redsRemaining;
+        m_needColor     = other.m_needColor;
+        m_nextColor     = other.m_nextColor;
+        m_phase         = other.m_phase;
+        m_history       = other.m_history;
+
+        // Corriger le pointeur interne apres affectation
+        m_currentPlayer = (other.m_currentPlayer == &other.m_player1)
+                        ? &m_player1
+                        : &m_player2;
+    }
+    return *this;
+}
+
+
+
 Player& Frame::currentPlayer()
 {
     return *m_currentPlayer;
@@ -296,19 +337,19 @@ bool Frame::isCorrectFinalColor(const Ball& ball) const
         return ball.getName() == "Jaune";
 
     case 1:
-        return ball.getName() == "Verte";
+        return ball.getName() == "Vert";
 
     case 2:
         return ball.getName() == "Marron";
 
     case 3:
-        return ball.getName() == "Bleue";
+        return ball.getName() == "Bleu";
 
     case 4:
         return ball.getName() == "Rose";
 
     case 5:
-        return ball.getName() == "Noire";
+        return ball.getName() == "Noir";
 
     default:
         return false;
@@ -327,19 +368,19 @@ std::string Frame::getNextColorName() const
         return "Jaune";
 
     case 1:
-        return "Verte";
+        return "Vert";
 
     case 2:
         return "Marron";
 
     case 3:
-        return "Bleue";
+        return "Bleu";
 
     case 4:
         return "Rose";
 
     case 5:
-        return "Noire";
+        return "Noir";
 
     default:
         return "Termine";
@@ -352,16 +393,17 @@ std::string Frame::getNextColorName() const
 
 Ball Frame::getRequiredBall() const
 {
+    // La verification de m_needColor doit preceder la verification de la phase
+    // car apres une rouge en phase Reds, une couleur est requise
+    if (m_needColor)
+    {
+        return Ball("Couleur", 0);
+    }
+
 
     if (m_phase == FramePhase::Reds)
     {
         return Ball("Rouge", 1);
-    }
-
-
-    if (m_needColor)
-    {
-        return Ball("Couleur", 0);
     }
 
 
@@ -379,19 +421,19 @@ Ball Frame::getRequiredBall() const
             return Ball("Jaune", 2);
 
         case 1:
-            return Ball("Verte", 3);
+            return Ball("Vert", 3);
 
         case 2:
             return Ball("Marron", 4);
 
         case 3:
-            return Ball("Bleue", 5);
+            return Ball("Bleu", 5);
 
         case 4:
             return Ball("Rose", 6);
 
         case 5:
-            return Ball("Noire", 7);
+            return Ball("Noir", 7);
         }
     }
 

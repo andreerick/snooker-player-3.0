@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snooker Player 3.0 - Interface Web</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #1a2a1a;
+      color: #e8f0e8;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #0d1a0d;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 2px solid #2d5a2d;
+    }
+
+    header h1 { font-size: 1.4rem; color: #7fba7f; }
+    header .status { font-size: 0.85rem; padding: 4px 12px;
+      border-radius: 12px; background: #333; }
+    header .status.online  { background: #1a5c1a; color: #7fba7f; }
+    header .status.offline { background: #5c1a1a; color: #ba7f7f; }
+
+    .container { display: grid; grid-template-columns: 1fr 380px; gap: 16px;
+      padding: 16px; max-width: 1400px; margin: 0 auto; }
+
+    /* Table de snooker */
+    .table-container {
+      background: #0d1a0d;
+      border-radius: 8px;
+      padding: 16px;
+      border: 1px solid #2d5a2d;
+    }
+
+    .table-container h2 { color: #7fba7f; margin-bottom: 12px; font-size: 1rem; }
+
+    #snooker-table {
+      width: 100%;
+      aspect-ratio: 3570 / 1770;
+      background: #1a6b1a;
+      border: 12px solid #5c3d1a;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pocket {
+      position: absolute;
+      width: 3%;
+      aspect-ratio: 1;
+      background: #000;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .ball {
+      position: absolute;
+      width: 2%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.3);
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .ball:hover { transform: translate(-50%, -50%) scale(1.3); }
+
+    .ball-label {
+      position: absolute;
+      font-size: 0.6rem;
+      color: white;
+      text-shadow: 0 0 3px black;
+      transform: translate(-50%, calc(-50% - 14px));
+      white-space: nowrap;
+    }
+
+    /* Panneau de controle */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: #0d1a0d;
+      border: 1px solid #2d5a2d;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .card h2 { color: #7fba7f; margin-bottom: 12px; font-size: 0.95rem; }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .score-box {
+      background: #152015;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+    }
+    .score-box .player-name { font-size: 0.8rem; color: #7fba7f; }
+    .score-box .score-val   { font-size: 2rem; font-weight: bold; }
+    .score-box.active       { border: 2px solid #7fba7f; }
+
+    .info-row { display: flex; justify-content: space-between;
+      padding: 4px 0; font-size: 0.85rem; border-bottom: 1px solid #1e3a1e; }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .label { color: #7fba7f; }
+
+    .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+
+    .btn {
+      padding: 8px 4px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: bold;
+      transition: opacity 0.2s;
+    }
+    .btn:hover   { opacity: 0.85; }
+    .btn:active  { opacity: 0.7;  }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-rouge   { background: #c0392b; color: white; }
+    .btn-jaune   { background: #f1c40f; color: #333; }
+    .btn-vert    { background: #27ae60; color: white; }
+    .btn-marron  { background: #7f6000; color: white; }
+    .btn-bleu    { background: #2980b9; color: white; }
+    .btn-rose    { background: #e91e8c; color: white; }
+    .btn-noir    { background: #222;    color: white; border: 1px solid #555; }
+    .btn-foul    { background: #8b0000; color: white; }
+    .btn-miss    { background: #555;    color: white; }
+
+    .btn-primary { background: #2d7a2d; color: white; }
+    .btn-danger  { background: #7a2d2d; color: white; }
+
+    #log {
+      background: #0a100a;
+      border-radius: 4px;
+      padding: 8px;
+      height: 150px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.75rem;
+      line-height: 1.6;
+    }
+
+    .log-ok     { color: #7fba7f; }
+    .log-foul   { color: #e07070; }
+    .log-info   { color: #a0a0a0; }
+    .log-error  { color: #ff6060; }
+
+    .server-url input {
+      width: 100%;
+      background: #152015;
+      border: 1px solid #2d5a2d;
+      border-radius: 4px;
+      padding: 6px 10px;
+      color: #e8f0e8;
+      font-size: 0.85rem;
+      margin-top: 6px;
+    }
+
+    .required-ball {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎱 Snooker Player 3.0</h1>
+  <span id="server-status" class="status offline">● Deconnecte</span>
+  <span id="phase-badge" style="font-size:0.8rem; color:#aaa;"></span>
+</header>
+
+<div class="container">
+
+  <!-- Table de snooker -->
+  <div class="table-container">
+    <h2>Table (3570mm × 1770mm) - Vue plongeante</h2>
+    <div id="snooker-table">
+      <!-- Poches (generees par JS) -->
+      <!-- Billes (generees par JS) -->
+    </div>
+  </div>
+
+  <!-- Panneau de controle -->
+  <div class="panel">
+
+    <!-- Scores -->
+    <div class="card">
+      <h2>📊 Scores</h2>
+      <div class="score-grid">
+        <div class="score-box" id="player1-box">
+          <div class="player-name" id="p1-name">Joueur 1</div>
+          <div class="score-val" id="p1-score">0</div>
+        </div>
+        <div class="score-box" id="player2-box">
+          <div class="player-name" id="p2-name">Joueur 2</div>
+          <div class="score-val" id="p2-score">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Etat du jeu -->
+    <div class="card">
+      <h2>🎯 Etat du jeu</h2>
+      <div class="info-row">
+        <span class="label">Phase</span>
+        <span id="phase-val">-</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Rouges restantes</span>
+        <span id="reds-val">15</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Joueur courant</span>
+        <span id="current-player">-</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Bille requise</span>
+        <span id="required-ball" class="required-ball">-</span>
+      </div>
+    </div>
+
+    <!-- Jouer un coup -->
+    <div class="card">
+      <h2>🎱 Jouer un coup</h2>
+      <div class="btn-grid">
+        <button class="btn btn-rouge"  onclick="playShot('Rouge',  1)">Rouge (1)</button>
+        <button class="btn btn-jaune"  onclick="playShot('Jaune',  2)">Jaune (2)</button>
+        <button class="btn btn-vert"   onclick="playShot('Vert',   3)">Vert (3)</button>
+        <button class="btn btn-marron" onclick="playShot('Marron', 4)">Marron (4)</button>
+        <button class="btn btn-bleu"   onclick="playShot('Bleu',   5)">Bleu (5)</button>
+        <button class="btn btn-rose"   onclick="playShot('Rose',   6)">Rose (6)</button>
+        <button class="btn btn-noir"   onclick="playShot('Noir',   7)">Noir (7)</button>
+        <button class="btn btn-foul"   onclick="declareFoul()">Faute</button>
+        <button class="btn btn-miss"   onclick="declareMiss()">Rate</button>
+      </div>
+    </div>
+
+    <!-- Simulation -->
+    <div class="card">
+      <h2>🤖 Simulation</h2>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary" onclick="runDemo()" style="flex:1">
+          Demo rapide
+        </button>
+        <button class="btn btn-danger" onclick="resetGame()" style="flex:1">
+          Reinitialiser
+        </button>
+      </div>
+    </div>
+
+    <!-- Configuration serveur -->
+    <div class="card server-url">
+      <h2>⚙️ Serveur</h2>
+      <input type="text" id="server-url" value="http://localhost:8080"
+             placeholder="http://localhost:8080">
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="btn btn-primary" onclick="connect()" style="flex:1">
+          Connecter
+        </button>
+        <button class="btn" onclick="refreshState()" style="flex:1;background:#2d4a2d">
+          Rafraichir
+        </button>
+      </div>
+    </div>
+
+    <!-- Journal -->
+    <div class="card">
+      <h2>📋 Journal</h2>
+      <div id="log"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// -------------------------------------------------------------------
+// Configuration
+// -------------------------------------------------------------------
+
+let serverUrl = 'http://localhost:8080';
+let refreshInterval = null;
+
+// Positions initiales des billes sur la table (en % de 3570mm et 1770mm)
+const INITIAL_BALLS = [
+  { color: 'Blanche', x: 885/1770, y: 600/3570,  bgColor: 'white',   value: 0 },
+  { color: 'Jaune',   x: 1209/1770, y: 737/3570,  bgColor: '#f1c40f', value: 2 },
+  { color: 'Vert',    x: 561/1770,  y: 737/3570,  bgColor: '#27ae60', value: 3 },
+  { color: 'Marron',  x: 885/1770,  y: 737/3570,  bgColor: '#7f6000', value: 4 },
+  { color: 'Bleu',    x: 885/1770,  y: 1785/3570, bgColor: '#2980b9', value: 5 },
+  { color: 'Rose',    x: 885/1770,  y: 2844/3570, bgColor: '#e91e8c', value: 6 },
+  { color: 'Noir',    x: 885/1770,  y: 3246/3570, bgColor: '#222',    value: 7 },
+];
+
+// 15 rouges en triangle
+for (let i = 0; i < 5; i++) {
+  for (let j = 0; j <= i; j++) {
+    INITIAL_BALLS.push({
+      color: 'Rouge', value: 1,
+      x: (885 + (j - i/2) * 55) / 1770,
+      y: (2950 + i * 55) / 3570,
+      bgColor: '#c0392b'
+    });
+  }
+}
+
+// -------------------------------------------------------------------
+// Dessin de la table
+// -------------------------------------------------------------------
+
+function initTable() {
+  const table = document.getElementById('snooker-table');
+
+  // Poches (6)
+  const pockets = [
+    [0, 100], [50, 100], [100, 100],
+    [0, 0],   [50, 0],   [100, 0]
+  ];
+  pockets.forEach(([x, y]) => {
+    const p = document.createElement('div');
+    p.className = 'pocket';
+    p.style.left = x + '%';
+    p.style.top  = y + '%';
+    table.appendChild(p);
+  });
+
+  // Ligne de baulk
+  const baulk = document.createElement('div');
+  baulk.style.cssText = `
+    position:absolute; left:0; right:0;
+    top:${(1 - 737/3570)*100}%;
+    height:1px; background:rgba(255,255,255,0.2);
+  `;
+  table.appendChild(baulk);
+
+  // Billes initiales
+  updateBallsOnTable(INITIAL_BALLS);
+}
+
+function updateBallsOnTable(balls) {
+  const table = document.getElementById('snooker-table');
+
+  // Supprimer les anciennes billes
+  table.querySelectorAll('.ball, .ball-label').forEach(el => el.remove());
+
+  balls.forEach(ball => {
+    const div = document.createElement('div');
+    div.className = 'ball';
+    div.style.left       = (ball.x * 100) + '%';
+    div.style.top        = ((1 - ball.y) * 100) + '%';
+    div.style.background = ball.bgColor || '#ccc';
+    div.title            = `${ball.color} (${ball.value} pts)`;
+    table.appendChild(div);
+  });
+}
+
+// -------------------------------------------------------------------
+// API
+// -------------------------------------------------------------------
+
+async function apiGet(path) {
+  const r = await fetch(serverUrl + path);
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await fetch(serverUrl + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+// -------------------------------------------------------------------
+// Connexion et etat
+// -------------------------------------------------------------------
+
+async function connect() {
+  serverUrl = document.getElementById('server-url').value.trim();
+  try {
+    const h = await apiGet('/health');
+    setStatus(true);
+    log(`Connecte a ${serverUrl}`, 'info');
+    await refreshState();
+    startAutoRefresh();
+  } catch (e) {
+    setStatus(false);
+    log(`Erreur de connexion : ${e.message}`, 'error');
+  }
+}
+
+async function refreshState() {
+  try {
+    const state = await apiGet('/api/game/state');
+    updateUI(state);
+  } catch (e) {
+    // silencieux si deja en erreur
+  }
+}
+
+function startAutoRefresh() {
+  if (refreshInterval) clearInterval(refreshInterval);
+  refreshInterval = setInterval(refreshState, 2000);
+}
+
+function setStatus(online) {
+  const el = document.getElementById('server-status');
+  el.textContent = online ? '● Connecte' : '● Deconnecte';
+  el.className   = 'status ' + (online ? 'online' : 'offline');
+}
+
+// -------------------------------------------------------------------
+// Mise a jour de l'interface
+// -------------------------------------------------------------------
+
+const PHASE_LABELS = {
+  reds:           '🔴 Phase Rouges',
+  last_red_color: '🎱 Derniere couleur',
+  final_colors:   '🌈 Couleurs finales',
+  finished:       '🏆 Terminee'
+};
+
+const BALL_COLORS_CSS = {
+  Rouge: '#c0392b', Jaune: '#f1c40f', Vert: '#27ae60', Marron: '#7f6000',
+  Bleu: '#2980b9', Rose: '#e91e8c', Noir: '#222', Couleur: '#999', Aucune: '#555'
+};
+
+function updateUI(state) {
+  if (!state || !state.frame) return;
+
+  const frame = state.frame;
+  const match = state.match;
+
+  // Scores
+  if (frame.players && frame.players.length >= 2) {
+    document.getElementById('p1-name').textContent  = frame.players[0].name;
+    document.getElementById('p1-score').textContent = frame.players[0].score;
+    document.getElementById('p2-name').textContent  = frame.players[1].name;
+    document.getElementById('p2-score').textContent = frame.players[1].score;
+
+    const isP1 = frame.current_player === frame.players[0].name;
+    document.getElementById('player1-box').classList.toggle('active',  isP1);
+    document.getElementById('player2-box').classList.toggle('active', !isP1);
+  }
+
+  // Etat
+  document.getElementById('phase-val').textContent      = PHASE_LABELS[frame.phase] || frame.phase;
+  document.getElementById('reds-val').textContent       = frame.reds_remaining;
+  document.getElementById('current-player').textContent = frame.current_player;
+  document.getElementById('phase-badge').textContent    = PHASE_LABELS[frame.phase] || '';
+
+  // Bille requise
+  if (frame.required_ball) {
+    const rb  = frame.required_ball;
+    const el  = document.getElementById('required-ball');
+    el.textContent = rb.name + (rb.value ? ` (${rb.value} pts)` : '');
+    el.style.background = BALL_COLORS_CSS[rb.name] || '#333';
+    el.style.color      = ['Jaune'].includes(rb.name) ? '#333' : 'white';
+  }
+}
+
+// -------------------------------------------------------------------
+// Actions de jeu
+// -------------------------------------------------------------------
+
+async function playShot(ballName, ballValue) {
+  try {
+    const r = await apiPost('/api/game/shot', {
+      ball_name: ballName, ball_value: ballValue
+    });
+    const cls = r.status === 'ok' ? 'ok' : 'foul';
+    log(`Coup: ${ballName} -> ${r.message || r.status}`, cls);
+    await refreshState();
+  } catch (e) {
+    log(`Erreur: ${e.message}`, 'error');
+  }
+}
+
+async function declareFoul() {
+  try {
+    const r = await apiPost('/api/game/foul', { points: 4 });
+    log(`Faute declaree: ${r.message || r.status}`, 'foul');
+    await refreshState();
+  } catch (e) {
+    log(`Erreur: ${e.message}`, 'error');
+  }
+}
+
+async function declareMiss() {
+  log('Coup rate - changement de joueur', 'info');
+  // Envoie une faute minimale
+  await declareFoul();
+}
+
+async function runDemo() {
+  try {
+    const r = await apiGet('/api/simulate/demo');
+    log(`Demo: ${JSON.stringify(r.shots)}`, 'info');
+    await refreshState();
+  } catch (e) {
+    log(`Erreur demo: ${e.message}`, 'error');
+  }
+}
+
+async function resetGame() {
+  log('Reinitialisation... (recharger la page)', 'info');
+  // Note: un vrai reset necessiterait un endpoint dédié
+}
+
+// -------------------------------------------------------------------
+// Journal
+// -------------------------------------------------------------------
+
+function log(msg, type = 'info') {
+  const el  = document.getElementById('log');
+  const div = document.createElement('div');
+  div.className = 'log-' + type;
+  div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+// -------------------------------------------------------------------
+// Initialisation
+// -------------------------------------------------------------------
+
+initTable();
+
+// Tentative de connexion automatique
+window.addEventListener('load', () => {
+  setTimeout(connect, 500);
+});
+</script>
+
+</body>
+</html>

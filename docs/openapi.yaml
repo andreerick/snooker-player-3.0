@@ -1,0 +1,486 @@
+openapi: 3.0.3
+
+info:
+  title: Snooker Player 3.0 API
+  description: |
+    ## API REST pour le moteur snooker Snooker Player 3.0
+
+    ### Architecture
+    - **Core C++20** : moteur de jeu snooker (règles, arbitrage, phases)
+    - **Systeme cameras** : 3 cameras plongeantes alignées sur la longueur de la table
+    - **API REST** : interface HTTP JSON pour contrôler le jeu et récupérer l'état
+
+    ### Table de jeu
+    - Surface : 3570mm × 1770mm
+    - 6 poches : 4 coins + 2 milieu des grandes bandes
+    - Hauteur cameras : 1200mm au-dessus de la surface
+
+    ### Configuration cameras
+    ```
+    CAM 1 (~595mm)    CAM 2 (1785mm)    CAM 3 (~2975mm)
+         ↓                  ↓                 ↓
+    ┌──────────────────────────────────────────┐
+    │           TABLE 3570 × 1770 mm           │
+    └──────────────────────────────────────────┘
+    ```
+
+    ### Phases de jeu
+    1. **reds** : 15 rouges à poter, alternées avec une couleur
+    2. **last_red_color** : dernière rouge potée, couleur requise
+    3. **final_colors** : couleurs dans l'ordre (Jaune→Vert→Marron→Bleu→Rose→Noir)
+    4. **finished** : frame terminée
+
+    ### Valeurs des billes
+    | Bille   | Points |
+    |---------|--------|
+    | Rouge   | 1      |
+    | Jaune   | 2      |
+    | Vert    | 3      |
+    | Marron  | 4      |
+    | Bleu    | 5      |
+    | Rose    | 6      |
+    | Noir    | 7      |
+
+    ### Fautes
+    - Minimum : 4 points
+    - Maximum : valeur de la bille visée ou touchée (selon la plus haute)
+
+  version: "3.0.0"
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Serveur local de développement
+
+tags:
+  - name: health
+    description: Vérification de l'état du serveur
+  - name: game
+    description: Contrôle du jeu snooker
+  - name: camera
+    description: Système de caméras multi-vues
+  - name: simulation
+    description: Mode simulation (sans caméra)
+
+paths:
+
+  # -------------------------------------------------------------------
+  # Health
+  # -------------------------------------------------------------------
+  /health:
+    get:
+      tags: [health]
+      summary: Vérifier l'état du serveur
+      operationId: getHealth
+      responses:
+        "200":
+          description: Serveur opérationnel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                service: snooker-player-3.0
+
+  # -------------------------------------------------------------------
+  # Game
+  # -------------------------------------------------------------------
+  /api/game/state:
+    get:
+      tags: [game]
+      summary: Obtenir l'état courant du jeu
+      operationId: getGameState
+      responses:
+        "200":
+          description: État du jeu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameState'
+
+  /api/game/shot:
+    post:
+      tags: [game]
+      summary: Jouer un coup
+      description: |
+        Enregistre un coup joué. Le serveur vérifie si la bille est
+        conforme à la phase de jeu en cours. En cas de faute, l'adversaire
+        reçoit la pénalité et c'est son tour.
+      operationId: playShot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShotRequest'
+            examples:
+              rouge:
+                summary: Jouer une rouge
+                value: { ball_name: "Rouge", ball_value: 1 }
+              noir:
+                summary: Jouer le Noir (couleur)
+                value: { ball_name: "Noir", ball_value: 7 }
+              vert:
+                summary: Jouer le Vert
+                value: { ball_name: "Vert", ball_value: 3 }
+      responses:
+        "200":
+          description: Résultat du coup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShotResponse'
+        "400":
+          description: Requête invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/game/foul:
+    post:
+      tags: [game]
+      summary: Déclarer une faute manuelle
+      description: |
+        Permet de déclarer manuellement une faute avec le nombre de points
+        de pénalité. L'adversaire reçoit les points.
+      operationId: declareFoul
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FoulRequest'
+            example:
+              points: 4
+      responses:
+        "200":
+          description: Faute enregistrée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /api/game/history:
+    get:
+      tags: [game]
+      summary: Historique des coups
+      operationId: getGameHistory
+      responses:
+        "200":
+          description: Historique des coups joués
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryResponse'
+
+  # -------------------------------------------------------------------
+  # Camera
+  # -------------------------------------------------------------------
+  /api/camera/{id}/frame:
+    post:
+      tags: [camera]
+      summary: Soumettre des détections de billes depuis une caméra
+      description: |
+        Chaque caméra envoie ses détections de billes (positions en pixels).
+        Le serveur convertit en mm et fusionne les données des 3 caméras.
+
+        **IDs de caméras** :
+        - `1` : Caméra avant (zone 0-1390mm)
+        - `2` : Caméra milieu (zone 1190-2380mm)
+        - `3` : Caméra arrière (zone 2370-3570mm)
+      operationId: submitCameraFrame
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifiant de la caméra (1, 2 ou 3)
+          schema:
+            type: integer
+            enum: [1, 2, 3]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CameraFrameRequest'
+            example:
+              timestamp_ms: 1700000000000
+              detections:
+                - color: "Blanche"
+                  x_px: 320
+                  y_px: 360
+                  confidence: 0.95
+                - color: "Rouge"
+                  x_px: 400
+                  y_px: 200
+                  confidence: 0.90
+      responses:
+        "200":
+          description: Frame traitée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /api/camera/fused:
+    get:
+      tags: [camera]
+      summary: Obtenir l'état fusionne des 3 caméras
+      description: |
+        Retourne les positions des billes fusionnées à partir des 3 caméras.
+        Les zones de chevauchement (200mm) permettent la validation croisée.
+      operationId: getFusedState
+      responses:
+        "200":
+          description: État fusionné des caméras
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FusedStateResponse'
+
+  # -------------------------------------------------------------------
+  # Simulation
+  # -------------------------------------------------------------------
+  /api/simulate/demo:
+    get:
+      tags: [simulation]
+      summary: Lancer une simulation de démo
+      description: |
+        Joue automatiquement quelques coups pour démontrer la logique du jeu.
+        Utile pour tester l'API sans caméra.
+      operationId: runSimulationDemo
+      responses:
+        "200":
+          description: Résultat de la simulation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationResponse'
+
+# -------------------------------------------------------------------
+# Composants
+# -------------------------------------------------------------------
+components:
+  schemas:
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: snooker-player-3.0
+
+    BallInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nom de la bille
+          example: Noir
+        value:
+          type: integer
+          description: Points de la bille
+          example: 7
+
+    PlayerInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Joueur 1
+        score:
+          type: integer
+          example: 42
+
+    FrameState:
+      type: object
+      properties:
+        phase:
+          type: string
+          enum: [reds, last_red_color, final_colors, finished]
+          description: Phase de jeu actuelle
+        reds_remaining:
+          type: integer
+          description: Nombre de rouges restantes (0-15)
+          example: 14
+        current_player:
+          type: string
+          description: Nom du joueur dont c'est le tour
+        required_ball:
+          $ref: '#/components/schemas/BallInfo'
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerInfo'
+
+    MatchState:
+      type: object
+      properties:
+        frames_player1:
+          type: integer
+        frames_player2:
+          type: integer
+        match_finished:
+          type: boolean
+
+    GameState:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        match:
+          $ref: '#/components/schemas/MatchState'
+        frame:
+          $ref: '#/components/schemas/FrameState'
+
+    ShotRequest:
+      type: object
+      required: [ball_name, ball_value]
+      properties:
+        ball_name:
+          type: string
+          description: Nom de la bille jouée
+          example: Noir
+          enum: [Rouge, Jaune, Vert, Marron, Bleu, Rose, Noir]
+        ball_value:
+          type: integer
+          description: Valeur de la bille en points
+          example: 7
+
+    ShotResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        message:
+          type: string
+          example: "Coup joue : Noir"
+
+    FoulRequest:
+      type: object
+      required: [points]
+      properties:
+        points:
+          type: integer
+          minimum: 4
+          maximum: 7
+          description: Points de pénalité (min 4, max 7)
+          example: 4
+
+    SuccessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+
+    HistoryResponse:
+      type: object
+      properties:
+        total_shots:
+          type: integer
+          description: Nombre total de coups joués
+
+    BallDetectionRequest:
+      type: object
+      required: [color, x_px, y_px]
+      properties:
+        color:
+          type: string
+          example: Blanche
+        x_px:
+          type: number
+          description: Position X en pixels dans l'image
+        y_px:
+          type: number
+          description: Position Y en pixels dans l'image
+        confidence:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          description: Confiance de la détection
+          example: 0.95
+
+    CameraFrameRequest:
+      type: object
+      required: [detections]
+      properties:
+        timestamp_ms:
+          type: integer
+          format: int64
+          description: Horodatage en millisecondes (ms depuis epoch)
+        detections:
+          type: array
+          items:
+            $ref: '#/components/schemas/BallDetectionRequest'
+
+    BallPosition:
+      type: object
+      properties:
+        color:
+          type: string
+          example: Noir
+        x_mm:
+          type: number
+          description: Position X sur la table (mm, axe largeur 0-1770)
+        y_mm:
+          type: number
+          description: Position Y sur la table (mm, axe longueur 0-3570)
+        confidence:
+          type: number
+        camera_id:
+          type: integer
+          description: Camera source (-1 si fusionné)
+
+    FusedStateResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        timestamp_ms:
+          type: integer
+          format: int64
+        balls:
+          type: array
+          items:
+            $ref: '#/components/schemas/BallPosition'
+
+    SimulationShot:
+      type: object
+      properties:
+        ball:
+          type: string
+        result:
+          type: string
+          enum: [ok, foul]
+
+    SimulationResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        shots:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationShot'
+        game_state:
+          $ref: '#/components/schemas/GameState'
