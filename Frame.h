@@ -24,6 +24,11 @@ public:
 
     Frame();
 
+    // Constructeur de copie et operateur d'affectation (necessaires pour
+    // corriger le pointeur interne m_currentPlayer apres copie)
+    Frame(const Frame& other);
+    Frame& operator=(const Frame& other);
+
 
     // Joueurs
     Player& currentPlayer();
