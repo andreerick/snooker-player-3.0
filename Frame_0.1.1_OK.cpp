@@ -1,66 +1,44 @@
 #include "Frame.h"
 
 #include <iostream>
+#include <string>
 
 #include "Shot.h"
 
 
+
+// =====================================
+// Constructeur
+// =====================================
+
 Frame::Frame()
 {
+
     m_player1.setName("Eric");
+
     m_player2.setName("Jean");
+
+
 
     m_currentPlayer = &m_player1;
 
+
+
     m_redsRemaining = 15;
+
 
     m_needColor = false;
 
-    m_freeBall = false;
 
     m_nextColor = 0;
 
+
     m_phase = FramePhase::Reds;
+
 }
 
 
-// =====================================
-// Copie
-// =====================================
 
-Frame::Frame(const Frame& other)
-{
-    *this = other;
-}
-
-
-Frame& Frame::operator=(const Frame& other)
-{
-    if (this != &other)
-    {
-        m_player1 = other.m_player1;
-        m_player2 = other.m_player2;
-
-        m_redsRemaining = other.m_redsRemaining;
-        m_needColor = other.m_needColor;
-        m_nextColor = other.m_nextColor;
-        m_phase = other.m_phase;
-
-        m_history = other.m_history;
-
-
-        if (other.m_currentPlayer == &other.m_player2)
-        {
-            m_currentPlayer = &m_player2;
-        }
-        else
-        {
-            m_currentPlayer = &m_player1;
-        }
-    }
-
-    return *this;
-}
 
 
 // =====================================
@@ -73,10 +51,14 @@ Player& Frame::currentPlayer()
 }
 
 
+
+
 Player& Frame::getPlayer1()
 {
     return m_player1;
 }
+
+
 
 
 Player& Frame::getPlayer2()
@@ -85,17 +67,26 @@ Player& Frame::getPlayer2()
 }
 
 
+
+
 void Frame::switchPlayer()
 {
     if (m_currentPlayer == &m_player1)
+    {
         m_currentPlayer = &m_player2;
+    }
     else
+    {
         m_currentPlayer = &m_player1;
+    }
 }
 
 
+
+
+
 // =====================================
-// Gestion rouges
+// Gestion des rouges
 // =====================================
 
 int Frame::redsRemaining() const
@@ -104,21 +95,28 @@ int Frame::redsRemaining() const
 }
 
 
+
+
 void Frame::potRed()
 {
     if (m_redsRemaining <= 0)
+    {
         return;
+    }
 
 
     m_redsRemaining--;
 
-    // Synchronisation avec la table réelle
-    m_ballSet.removeBall("Rouge");
-
 
     m_currentPlayer->addPoints(1);
 
+
+
+    // Après une rouge,
+    // il faut une couleur
+
     m_needColor = true;
+
 
 
     if (m_redsRemaining == 0)
@@ -128,66 +126,81 @@ void Frame::potRed()
 }
 
 
+
+
+
 // =====================================
-// Gestion couleurs
+// Gestion des couleurs
 // =====================================
 
 void Frame::potColor(Ball ball)
 {
-    m_currentPlayer->addPoints(ball.getValue());
 
-
-    m_needColor = false;
-
-
-    if (m_phase == FramePhase::LastRedColor)
+    if (m_needColor)
     {
-        m_phase = FramePhase::FinalColors;
-        m_nextColor = 0;
+
+        m_currentPlayer->addPoints(
+            ball.getValue()
+        );
+
+
+        m_needColor = false;
+
+
+
+        if (m_phase == FramePhase::LastRedColor)
+        {
+            m_phase = FramePhase::FinalColors;
+
+            m_nextColor = 0;
+        }
+
+
+        return;
     }
-    else if (m_phase == FramePhase::FinalColors)
+
+
+
+
+
+    if (m_phase == FramePhase::FinalColors)
     {
+
+        m_currentPlayer->addPoints(
+            ball.getValue()
+        );
+
+
         m_nextColor++;
+
+
 
         if (m_nextColor >= 6)
         {
             m_phase = FramePhase::Finished;
         }
     }
+
 }
-// =====================================
-// Etat du jeu
-// =====================================
-
-bool Frame::isColorNeeded() const
-{
-    return m_needColor;
-}
-
-
-bool Frame::isFinished() const
-{
-    return m_phase == FramePhase::Finished;
-}
-
-
-FramePhase Frame::getPhase() const
-{
-    return m_phase;
-}
-
-
 // =====================================
 // Jeu normal
 // =====================================
 
-bool Frame::playShot(const Ball& ball)
+bool Frame::playShot(
+    const Ball& ball
+)
 {
-    Ball required = getRequiredBall();
+
+    Ball requiredBall = getRequiredBall();
 
 
-            
-    if (m_referee.checkContact(required, ball))
+
+    // Contrôle arbitre
+
+    if (m_referee.checkContact(
+        requiredBall,
+        ball
+    ))
     {
 
         if (ball.getName() == "Rouge")
@@ -197,12 +210,15 @@ bool Frame::playShot(const Ball& ball)
         else
         {
             potColor(ball);
-
-            // Retrait de la bille de la table
-            m_ballSet.removeBall(
-                ball.getName()
-            );
         }
+
+
+
+
+        std::cout
+            << "SHOT DEBUT"
+            << std::endl;
+
 
 
         Shot shot(
@@ -211,105 +227,52 @@ bool Frame::playShot(const Ball& ball)
         );
 
 
+
         m_history.addShot(shot);
+
+
+
+        m_history.displayHistory();
+
 
 
         return true;
     }
 
 
+
+
+
+    // ==============================
+    // Faute
+    // ==============================
+
     int penalty =
         m_referee.calculateFoul(
-            required,
+            requiredBall,
             ball
         );
 
 
-    foul(
-        required,
-        ball,
-        penalty
-    );
+
+    foul(penalty);
+
 
 
     return false;
 }
 
 
-bool Frame::playTurn(const Ball& ball)
+
+
+
+bool Frame::playTurn(
+    const Ball& ball
+)
 {
     return playShot(ball);
 }
 
-// =====================================
-// Gestion Free Ball
-// =====================================
-
-bool Frame::playFreeBall(const Ball& ball)
-{
-    if (!m_freeBall)
-    {
-        return false;
-    }
-
-
-    // Vérification de la couleur choisie
-
-    if (ball.getName() != m_freeBallColor.getName())
-    {
-        int penalty =
-            m_referee.calculateFoul(
-                m_freeBallColor,
-                ball
-            );
-
-
-        foul(
-            m_freeBallColor,
-            ball,
-            penalty
-        );
-
-
-        return false;
-    }
-
-
-    // La couleur Free Ball compte comme une rouge
-
-    m_currentPlayer->addPoints(1);
-
-
-    std::cout
-        << "Free Ball : "
-        << ball.getName()
-        << " compte pour 1 point"
-        << std::endl;
-
-
-
-    Shot shot(
-        *m_currentPlayer,
-        ball
-    );
-
-
-    m_history.addShot(shot);
-
-
-
-    // Fin du Free Ball
-
-    m_freeBall = false;
-
-
-    m_freeBallColor =
-        Ball("Aucune", 0);
-
-
-
-    return true;
-}
 
 // =====================================
 // Coup raté
@@ -321,12 +284,16 @@ void Frame::missShot()
         << "Coup rate : changement de joueur"
         << std::endl;
 
+
     switchPlayer();
 }
 
 
+
+
+
 // =====================================
-// Arbitrage manuel
+// Contrôle manuel arbitre
 // =====================================
 
 bool Frame::checkShot(
@@ -334,13 +301,22 @@ bool Frame::checkShot(
     const Ball& hit
 )
 {
+
     if (intended.getName() == hit.getName())
     {
+        std::cout
+            << "Coup valide"
+            << std::endl;
+
+
         return true;
     }
 
 
-    int penalty = hit.getValue();
+
+    int penalty =
+        hit.getValue();
+
 
 
     if (intended.getValue() > penalty)
@@ -349,15 +325,16 @@ bool Frame::checkShot(
     }
 
 
-    foul(
-        intended,
-        hit,
-        penalty
-    );
+
+    foul(penalty);
+
 
 
     return false;
 }
+
+
+
 
 
 // =====================================
@@ -365,12 +342,12 @@ bool Frame::checkShot(
 // =====================================
 
 void Frame::foul(
-    const Ball& required,
-    const Ball& touched,
     int points
 )
 {
+
     int penalty = points;
+
 
 
     if (penalty < 4)
@@ -379,9 +356,10 @@ void Frame::foul(
     }
 
 
-    std::string foulPlayer =
-        m_currentPlayer->getName();
 
+
+    // Attribution des points
+    // à l'adversaire
 
     if (m_currentPlayer == &m_player1)
     {
@@ -393,39 +371,76 @@ void Frame::foul(
     }
 
 
-    std::cout
-        << "Faute : "
-        << penalty
-        << " points"
-        << std::endl;
+
+
+
+    // =================================
+    // Enregistrement arbitre
+    // =================================
+
+    std::string playerName =
+        m_currentPlayer->getName();
+
+
+
+    Ball required =
+        getRequiredBall();
+
+
+
+    // Pour l'instant nous mémorisons
+    // la bille demandée.
+    // La bille jouée sera ajoutée
+    // avec la prochaine évolution
+    // de l'objet FoulRecord.
 
 
     m_history.addFoul(
-        foulPlayer,
+        playerName,
         required.getName(),
-        touched.getName(),
-        "Mauvaise bille touchee",
+        "Inconnue",
         penalty
     );
 
 
-    switchPlayer();
-}
 
+
+
+    std::cout
+        << "Faute : "
+        << penalty
+        << " points pour l'adversaire"
+        << std::endl;
+
+
+
+
+    switchPlayer();
+
+}
 // =====================================
 // Couleurs finales
 // =====================================
 
-bool Frame::isCorrectFinalColor(const Ball& ball) const
+bool Frame::isCorrectFinalColor(
+    const Ball& ball
+) const
 {
     if (m_phase != FramePhase::FinalColors)
     {
         return true;
     }
 
+
     return ball.getName() == getNextColorName();
 }
 
+
+
+
+// =====================================
+// Nom de la prochaine couleur
+// =====================================
 
 std::string Frame::getNextColorName() const
 {
@@ -455,23 +470,53 @@ std::string Frame::getNextColorName() const
 }
 
 
+
+
 // =====================================
 // Bille demandée
 // =====================================
 
 Ball Frame::getRequiredBall() const
 {
+
+    // Après une rouge,
+    // une couleur est obligatoire
+
     if (m_needColor)
     {
-        return Ball("Couleur", 0);
+        return Ball(
+            "Couleur",
+            0
+        );
     }
 
+
+
+    // Phase des rouges
 
     if (m_phase == FramePhase::Reds)
     {
-        return Ball("Rouge", 1);
+        return Ball(
+            "Rouge",
+            1
+        );
     }
 
+
+
+    // Dernière rouge + couleur
+
+    if (m_phase == FramePhase::LastRedColor)
+    {
+        return Ball(
+            "Couleur",
+            0
+        );
+    }
+
+
+
+    // Couleurs finales
 
     if (m_phase == FramePhase::FinalColors)
     {
@@ -498,12 +543,19 @@ Ball Frame::getRequiredBall() const
     }
 
 
-    return Ball("Aucune", 0);
+
+    return Ball(
+        "Aucune",
+        0
+    );
 }
 
 
+
+
+
 // =====================================
-// Affichage
+// Affichage phase
 // =====================================
 
 void Frame::displayPhase() const
@@ -537,8 +589,30 @@ void Frame::displayPhase() const
 
 
 
+
+
+// =====================================
+// Affichage état du frame
+// =====================================
+
 void Frame::displayStatus() const
 {
+    std::cout
+        << std::endl;
+
+    std::cout
+        << "========================"
+        << std::endl;
+
+    std::cout
+        << "      SNOOKER PLAYER"
+        << std::endl;
+
+    std::cout
+        << "========================"
+        << std::endl;
+
+
     std::cout
         << "Joueur : "
         << m_currentPlayer->getName()
@@ -546,14 +620,24 @@ void Frame::displayStatus() const
 
 
     std::cout
-        << "Score Eric : "
+        << "Score "
+        << m_player1.getName()
+        << " : "
         << m_player1.getScore()
         << std::endl;
 
 
     std::cout
-        << "Score Jean : "
+        << "Score "
+        << m_player2.getName()
+        << " : "
         << m_player2.getScore()
+        << std::endl;
+
+
+    std::cout
+        << "Break actuel : "
+        << m_currentPlayer->getBreak()
         << std::endl;
 
 
@@ -561,38 +645,21 @@ void Frame::displayStatus() const
         << "Rouges restantes : "
         << m_redsRemaining
         << std::endl;
+
+
+    std::cout
+        << "Bille demandee : "
+        << getRequiredBall().getName()
+        << std::endl;
+
+
+    std::cout
+        << "========================"
+        << std::endl;
 }
 
 
-// =====================================
-// Free Ball
-// =====================================
 
-void Frame::setFreeBall(bool value)
-{
-    m_freeBall = value;
-}
-
-
-bool Frame::isFreeBall() const
-{
-    return m_freeBall;
-}
-
-// =====================================
-// Free Ball couleur
-// =====================================
-
-void Frame::setFreeBallColor(const Ball& ball)
-{
-    m_freeBallColor = ball;
-}
-
-
-Ball Frame::getFreeBallColor() const
-{
-    return m_freeBallColor;
-}
 
 
 // =====================================
@@ -603,11 +670,43 @@ const ShotHistory& Frame::getHistory() const
 {
     return m_history;
 }
+
 // =====================================
-// Table de jeu
+// Operateur de copie
 // =====================================
 
-const BallSet& Frame::getBallSet() const
+Frame& Frame::operator=(const Frame& other)
 {
-    return m_ballSet;
+    if (this != &other)
+    {
+
+        m_player1 = other.m_player1;
+
+        m_player2 = other.m_player2;
+
+
+        m_redsRemaining = other.m_redsRemaining;
+
+        m_needColor = other.m_needColor;
+
+        m_nextColor = other.m_nextColor;
+
+        m_phase = other.m_phase;
+
+
+        m_history = other.m_history;
+
+
+
+        m_currentPlayer = &m_player1;
+
+
+        if (other.m_currentPlayer == &other.m_player2)
+        {
+            m_currentPlayer = &m_player2;
+        }
+    }
+
+
+    return *this;
 }

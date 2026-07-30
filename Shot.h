@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "Player.h"
 #include "Ball.h"
 
@@ -9,7 +10,10 @@ class Shot
 
 public:
 
-    Shot(const Player& player, const Ball& ball);
+    Shot(
+        const Player& player,
+        const Ball& ball
+    );
 
 
     std::string getPlayerName() const;

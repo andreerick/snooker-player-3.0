@@ -1,4 +1,7 @@
 #include "Player.h"
+#include <iostream>
+
+
 
 
 Player::Player()
@@ -21,6 +24,9 @@ void Player::setName(const std::string& name)
 
 std::string Player::getName() const
 {
+    
+         
+
     return m_name;
 }
 

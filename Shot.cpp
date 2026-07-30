@@ -1,17 +1,40 @@
 #include "Shot.h"
 
+#include <iostream>
 
 
-Shot::Shot(const Player& player, const Ball& ball)
+
+// =====================================
+// Constructeur
+// =====================================
+
+Shot::Shot(
+    const Player& player,
+    const Ball& ball
+)
 {
-    m_playerName = player.getName();
+    
+        
+    m_playerName =
+        player.getName();
 
-    m_ballName = ball.getName();
+        
+    m_ballName =
+        ball.getName();
 
-    m_points = ball.getValue();
+
+    m_points =
+        ball.getValue();
+
+
+    
 }
 
 
+
+// =====================================
+// Informations du joueur
+// =====================================
 
 std::string Shot::getPlayerName() const
 {
@@ -20,12 +43,20 @@ std::string Shot::getPlayerName() const
 
 
 
+// =====================================
+// Informations de la bille
+// =====================================
+
 std::string Shot::getBallName() const
 {
     return m_ballName;
 }
 
 
+
+// =====================================
+// Points du coup
+// =====================================
 
 int Shot::getPoints() const
 {

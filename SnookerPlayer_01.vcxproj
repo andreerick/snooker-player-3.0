@@ -154,6 +154,7 @@
   <ItemGroup>
     <ClInclude Include="Ball.h" />
     <ClInclude Include="BallSet.h" />
+    <ClInclude Include="FoulRecord.h" />
     <ClInclude Include="Frame.h" />
     <ClInclude Include="GameManager.h" />
     <ClInclude Include="Header.h" />

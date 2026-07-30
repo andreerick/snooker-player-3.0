@@ -4,7 +4,7 @@
 #include "Ball.h"
 #include "ShotHistory.h"
 #include "Referee.h"
-#include "BallSet.h"
+
 #include <string>
 
 
@@ -62,32 +62,14 @@ public:
     bool playTurn(const Ball& ball);
 
 
-    // Gestion Free Ball
-
-    bool playFreeBall(const Ball& ball);
-
-
 
     // Arbitrage
     bool checkShot(const Ball& intended, const Ball& hit);
 
-    void foul(
-        const Ball& required,
-        const Ball& touched,
-        int points
-    );
+    void foul(int points);
 
     void missShot();
 
-    // Free Ball
-
-    void setFreeBall(bool value);
-
-    bool isFreeBall() const;
-
-    void setFreeBallColor(const Ball& ball);
-
-    Ball getFreeBallColor() const;
 
 
     // Couleurs finales
@@ -109,11 +91,8 @@ public:
     // Historique
     const ShotHistory& getHistory() const;
 
-    // Table de jeu
 
-    const BallSet& getBallSet() const;
 
-    
 private:
 
     Player m_player1;
@@ -131,9 +110,6 @@ private:
 
     bool m_needColor;
 
-    bool m_freeBall;
-
-    Ball m_freeBallColor = Ball("Aucune", 0);
 
     int m_nextColor;
 
@@ -142,7 +118,5 @@ private:
 
 
     ShotHistory m_history;
-
-    BallSet m_ballSet;
 
 };
