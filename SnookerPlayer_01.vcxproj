@@ -111,10 +111,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>D:\Dev\vcpkg-master\vcpkg-master\installed\x64-windows\include\opencv4</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>D:\Dev\vcpkg-master\vcpkg-master\installed\x64-windows\include\opencv4</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -140,7 +142,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Ball.cpp" />
+    <ClCompile Include="BallDetector.cpp" />
     <ClCompile Include="BallSet.cpp" />
+    <ClCompile Include="Calibration.cpp" />
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Frame.cpp" />
     <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="Match.cpp" />
@@ -153,7 +158,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Ball.h" />
+    <ClInclude Include="BallDetector.h" />
     <ClInclude Include="BallSet.h" />
+    <ClInclude Include="Calibration.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="FoulRecord.h" />
     <ClInclude Include="Frame.h" />
     <ClInclude Include="GameManager.h" />

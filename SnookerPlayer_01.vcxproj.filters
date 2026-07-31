@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="MesureVision">
+      <UniqueIdentifier>{bf358df4-4aee-49d3-a04d-0362180e70fa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Player.cpp">
@@ -47,6 +50,15 @@
     </ClCompile>
     <ClCompile Include="Referee.cpp">
       <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>MesureVision</Filter>
+    </ClCompile>
+    <ClCompile Include="Calibration.cpp">
+      <Filter>MesureVision</Filter>
+    </ClCompile>
+    <ClCompile Include="BallDetector.cpp">
+      <Filter>MesureVision</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -85,6 +97,15 @@
     </ClInclude>
     <ClInclude Include="FoulRecord.h">
       <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>MesureVision</Filter>
+    </ClInclude>
+    <ClInclude Include="Calibration.h">
+      <Filter>MesureVision</Filter>
+    </ClInclude>
+    <ClInclude Include="BallDetector.h">
+      <Filter>MesureVision</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
