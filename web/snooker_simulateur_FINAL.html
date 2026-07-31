@@ -194,14 +194,15 @@
     font-size:11px;letter-spacing:1.5px;color:var(--gray);
     text-transform:uppercase;margin-bottom:18px;
   }
-  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
-  .player{display:flex;align-items:center;gap:10px;width:150px;}
-  .player.right{justify-content:flex-end;}
-  .player-label{font-size:11px;letter-spacing:1px;}
+  .header{display:flex;align-items:center;gap:16px;margin-bottom:18px;}
+  .player{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1.155;width:auto;background:#000;transition:background 0.2s, border-color 0.2s;border:1px solid #000;border-radius:6px;padding:6px 0;}
+  #player-block-2{flex:1.05;}
+  .player-label{font-size:11px;letter-spacing:1px;text-align:center;}
   .player-label.p1{color:var(--green);}
   .player-label.p2{color:var(--orange);}
-  .player-name{font-size:18px;font-weight:600;}
-  .player-name .player-label{font-size:12px;font-weight:600;letter-spacing:0.5px;}
+  .player-name{font-size:28px;font-weight:700;}
+  .player.active-turn{background:#000;border-color:#000;}
+  #player-block-2.active-turn{background:#000;border-color:#000;}
   .avatar{
     width:44px;height:44px;border-radius:50%;border:2px solid var(--green);
     display:flex;align-items:center;justify-content:center;font-weight:700;
@@ -210,7 +211,7 @@
   .avatar.orange{border-color:var(--orange);color:var(--orange);}
   .avatar.active-turn{box-shadow:0 0 0 4px rgba(34,197,94,0.35);}
   .avatar.orange.active-turn{box-shadow:0 0 0 4px rgba(245,166,35,0.35);}
-  .center-header{text-align:center;flex:1;}
+  .center-header{text-align:center;flex:0.36;}
   .center-header .title{
     font-size:11px;letter-spacing:1.5px;color:var(--gray);
     text-transform:uppercase;margin-bottom:8px;
@@ -234,8 +235,8 @@
 
   .mid-row{display:flex;gap:16px;margin-bottom:22px;}
   .box{border:1px solid var(--border);border-radius:6px;padding:16px;}
-  .points-box{flex:1.1;background:var(--green-dim);border-color:#1e4a2a;display:flex;align-items:center;justify-content:center;min-height:120px;}
-  .points-box .big{font-size:48px;font-weight:700;color:var(--green);}
+  .points-box{flex:1.155;background:var(--green-dim);border-color:#1e4a2a;display:flex;align-items:center;justify-content:center;min-height:126px;}
+  .points-box .big{font-size:51px;font-weight:700;color:var(--green);}
   .points-box .caption{
     font-size:10px;letter-spacing:1px;color:var(--green);
     text-transform:uppercase;margin-bottom:14px;
@@ -252,9 +253,8 @@
     color:var(--green);font-weight:700;border-top:1px solid #1e4a2a;
     margin-top:4px;padding-top:6px;
   }
-  .break-box{flex:0.9;text-align:center;}
-  .break-box .label{font-size:10px;letter-spacing:1.5px;color:var(--gray);text-transform:uppercase;}
-  .break-box .value{font-size:30px;font-weight:700;color:var(--green);margin:6px 0 14px 0;}
+  .break-box{flex:0.36;text-align:center;display:flex;align-items:center;justify-content:center;min-height:48px;}
+  .break-box .value{font-size:38px;font-weight:700;color:var(--green);}
   .break-box .ball-label{
     font-size:10px;letter-spacing:1.5px;color:var(--gray);
     text-transform:uppercase;margin-bottom:10px;
@@ -267,8 +267,8 @@
   .ball.blue{background:#2f6fd6;}
   .ball.pink{background:#f27fb0;}
   .ball.black{background:#222;border:1px solid #444;}
-  .fault-box{flex:1;background:rgba(245,166,35,0.06);border-color:#4a3413;color:var(--gray);display:flex;align-items:center;justify-content:center;min-height:120px;}
-  .fault-box .big{font-size:48px;font-weight:700;color:var(--orange);}
+  .fault-box{flex:1.05;background:rgba(245,166,35,0.06);border-color:#4a3413;color:var(--gray);display:flex;align-items:center;justify-content:center;min-height:126px;}
+  .fault-box .big{font-size:51px;font-weight:700;color:var(--orange);}
   .box-active-p1{box-shadow:0 0 0 2px var(--green);}
   .box-active-p2{box-shadow:0 0 0 2px var(--orange);}
   .fault-box .caption{font-size:10px;letter-spacing:1px;color:var(--gray);text-transform:uppercase;}
@@ -371,12 +371,9 @@
     <div class="eyebrow">Tableau de score</div>
 
     <div class="header">
-      <div class="player">
-        <div class="avatar" id="avatar-1">E</div>
-        <div>
-          <div class="player-label p1">Joueur 1</div>
-          <div class="player-name" id="name-1">Eric</div>
-        </div>
+      <div class="player" id="player-block-1">
+        <div class="player-label p1">Joueur 1</div>
+        <div class="player-name" id="name-1">Eric</div>
       </div>
 
       <div class="center-header">
@@ -389,12 +386,9 @@
         </div>
       </div>
 
-      <div class="player right">
-        <div>
-          <div class="player-label p2" style="text-align:right;">Joueur 2</div>
-          <div class="player-name" id="name-2">David</div>
-        </div>
-        <div class="avatar orange" id="avatar-2">D</div>
+      <div class="player" id="player-block-2">
+        <div class="player-label p2">Joueur 2</div>
+        <div class="player-name" id="name-2">David</div>
       </div>
     </div>
 
@@ -404,10 +398,7 @@
       </div>
 
       <div class="box break-box">
-        <div class="label">Break</div>
         <div class="value" id="live-break">0</div>
-        <div class="ball-label">Bille à jouer</div>
-        <div class="ball red" id="ball-to-play"></div>
       </div>
 
       <div class="box fault-box" id="box-p2">
@@ -653,8 +644,8 @@ function render(){
   document.querySelector('.striker-row').className = 'striker-row ' + (cp === 1 ? 'is-p1' : 'is-p2');
   document.getElementById('action-log').textContent = lastAction;
 
-  document.getElementById('avatar-1').classList.toggle('active-turn', cp === 1);
-  document.getElementById('avatar-2').classList.toggle('active-turn', cp === 2);
+  document.getElementById('player-block-1').classList.toggle('active-turn', cp === 1);
+  document.getElementById('player-block-2').classList.toggle('active-turn', cp === 2);
 
   document.getElementById('mini-score-1').textContent = state.players[1].total;
   document.getElementById('mini-score-2').textContent = state.players[2].total;
@@ -671,15 +662,6 @@ function render(){
   document.getElementById('box-p2').classList.toggle('box-active-p2', cp === 2);
 
   document.getElementById('live-break').textContent = state.liveBreak;
-
-  // bille à jouer
-  const ballToPlay = document.getElementById('ball-to-play');
-  ballToPlay.className = 'ball';
-  if(state.phase === 'reds'){
-    ballToPlay.classList.add(state.redsLeft > 0 ? 'red' : 'yellow');
-  } else {
-    ballToPlay.classList.add(state.finalColorsLeft[0] || 'black');
-  }
 
   // succession
   const track = document.getElementById('succession-track');
