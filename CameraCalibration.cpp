@@ -1,6 +1,7 @@
 #include "CameraCalibration.h"
 #include <iostream>
 #include <fstream>
+#include <cmath>
 
 // =====================================================================
 // CameraCalibration
@@ -45,6 +46,62 @@ bool CameraCalibration::calibrate(
     m_homography = h;
     m_calibrated = true;
     std::cout << "Calibration reussie." << std::endl;
+    return true;
+}
+
+bool CameraCalibration::calibrateFromTwoPoints(
+    const cv::Point2f& imagePoint1,
+    const cv::Point2f& imagePoint2,
+    const cv::Point2f& tablePoint1Cm,
+    const cv::Point2f& tablePoint2Cm
+)
+{
+    // Vecteur entre les 2 points, cote image et cote reel (cm).
+    cv::Point2f dImg = imagePoint2 - imagePoint1;
+    cv::Point2f dReal = tablePoint2Cm - tablePoint1Cm;
+
+    double imgLen = std::sqrt(dImg.x * dImg.x + dImg.y * dImg.y);
+    double realLen = std::sqrt(dReal.x * dReal.x + dReal.y * dReal.y);
+
+    if (imgLen < 1e-6)
+    {
+        std::cout << "Erreur calibration 2 points : les 2 points image sont confondus." << std::endl;
+        m_calibrated = false;
+        return false;
+    }
+
+    // Echelle uniforme (cm par pixel) et angle de rotation entre les
+    // 2 reperes (image -> table reelle).
+    double scale = realLen / imgLen;
+    double angleImg = std::atan2(dImg.y, dImg.x);
+    double angleReal = std::atan2(dReal.y, dReal.x);
+    double angle = angleReal - angleImg;
+
+    double cosA = std::cos(angle);
+    double sinA = std::sin(angle);
+
+    // Matrice de similitude 2x2 (rotation + echelle) appliquee au
+    // point image translate (image - imagePoint1), puis on ajoute
+    // tablePoint1Cm pour obtenir la position reelle.
+    // On construit directement une matrice 3x3 homogene, compatible
+    // avec cv::perspectiveTransform (deja utilise par imageToTable),
+    // pour reutiliser exactement le meme code que la calibration a 4 points.
+    double a = scale * cosA;
+    double b = -scale * sinA;
+    double c = scale * sinA;
+    double d = scale * cosA;
+    double tx = tablePoint1Cm.x - (a * imagePoint1.x + b * imagePoint1.y);
+    double ty = tablePoint1Cm.y - (c * imagePoint1.x + d * imagePoint1.y);
+
+    cv::Mat h = (cv::Mat_<double>(3, 3) <<
+        a, b, tx,
+        c, d, ty,
+        0.0, 0.0, 1.0);
+
+    m_homography = h;
+    m_calibrated = true;
+    std::cout << "Calibration a 2 points reussie (similitude : echelle="
+               << scale << ", rotation=" << (angle * 180.0 / CV_PI) << " deg)." << std::endl;
     return true;
 }
 

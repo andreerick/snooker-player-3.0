@@ -27,6 +27,20 @@ public:
         const std::vector<cv::Point2f>& tablePointsCm
     );
 
+    // Version simplifiee a 2 points (utilisee avec le schema a 6
+    // marqueurs, 2 par camera, colles sur les 2 longs bords de la
+    // zone). Calcule une transformation "similarite" (rotation +
+    // echelle uniforme + translation) au lieu d'une homographie
+    // complete a 4 points. Suffisant quand la camera regarde bien
+    // droit vers le bas (peu de perspective), comme prevu ici (1.20m
+    // de hauteur, zone directement sous la camera).
+    bool calibrateFromTwoPoints(
+        const cv::Point2f& imagePoint1,
+        const cv::Point2f& imagePoint2,
+        const cv::Point2f& tablePoint1Cm,
+        const cv::Point2f& tablePoint2Cm
+    );
+
     // Convertit un point (pixel de la camera) en coordonnees reelles
     // sur la table (cm). Ne fonctionne que si calibrate() a reussi.
     cv::Point2f imageToTable(const cv::Point2f& imagePoint) const;
