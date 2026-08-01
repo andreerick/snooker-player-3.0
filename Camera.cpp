@@ -1,18 +1,44 @@
 #include <opencv2/opencv.hpp>
+#include <iostream>
 
 void TestOpenCV()
 {
-    cv::Mat image(400, 600, CV_8UC3, cv::Scalar(0, 120, 0));
+    cv::VideoCapture camera(0);
 
-    cv::putText(
-        image,
-        "OpenCV fonctionne !",
-        cv::Point(70, 200),
-        cv::FONT_HERSHEY_SIMPLEX,
-        1.0,
-        cv::Scalar(255, 255, 255),
-        2);
+    if (!camera.isOpened())
+    {
+        std::cout << "ERREUR : camera introuvable" << std::endl;
+        return;
+    }
 
-    cv::imshow("MesureVision", image);
-    cv::waitKey(0);
+    cv::Mat image;
+
+    while (true)
+    {
+        camera >> image;
+
+        if (image.empty())
+            break;
+
+        cv::imshow("Camera Snooker Player", image);
+
+        int touche = cv::waitKey(30);
+
+        // ESPACE = prendre une photo
+        if (touche == 32)
+        {
+            cv::imwrite("C:\\Users\\Public\\capture_snooker.jpg", image);
+
+            std::cout
+                << "Photo enregistree : capture_snooker.jpg"
+                << std::endl;
+        }
+
+        // ECHAP = quitter
+        if (touche == 27)
+            break;
+    }
+
+    camera.release();
+    cv::destroyAllWindows();
 }

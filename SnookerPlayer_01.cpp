@@ -4,6 +4,7 @@
 #include "Ball.h"
 #include "BallSet.h"
 
+void TestOpenCV();
 
 
 int main()
@@ -341,5 +342,9 @@ int main()
         << "Bleue apres coup couleur : "
         << (testFrame.getBallSet().isOnTable("Bleue") ? "OUI" : "NON")
         << std::endl;
+
+    // Test OpenCV
+    TestOpenCV();
+
     return 0;
 }
