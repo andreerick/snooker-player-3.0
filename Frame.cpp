@@ -176,11 +176,11 @@ bool Frame::playShot(const Ball& ball)
     // ---------------------------------------------------
     // Cas 2 : bille de COULEUR jouée pendant la phase des rouges
     // -> Légale UNIQUEMENT si la bille juste avant était une rouge
-    //    (m_needColor == true). Sinon : faute (deux couleurs de suite).
+    //    (m_needColor == true). Sinon : faute (rouge attendue).
     // ---------------------------------------------------
     if (m_phase != FramePhase::FinalColors && !m_needColor)
     {
-        Ball required = Ball("Couleur", 0);
+        Ball required = Ball("Rouge", 1);
         int penalty = m_referee.calculateFoul(required, ball);
         foul(required, ball, penalty);
         return false;
@@ -200,12 +200,21 @@ bool Frame::playShot(const Ball& ball)
     }
 
     // ---------------------------------------------------
-    // Coup légal : la couleur compte et la bille est retirée
-    // (sauf en phase des rouges où elle revient sur la table,
-    //  ce que gère déjà removeBall/BallSet côté affichage).
+    // Coup légal : la couleur compte et la bille est retirée.
+    // En phase des rouges (Reds), les couleurs sont remises sur
+    // la table après avoir été empochées (re-spot).
+    // En phase finale (FinalColors), elles sont définitivement
+    // retirées de la table.
     // ---------------------------------------------------
+    FramePhase phaseBefore = m_phase;
     potColor(ball);
     m_ballSet.removeBall(ball.getName());
+
+    // Re-spot : en phase des rouges, la couleur revient sur la table
+    if (phaseBefore == FramePhase::Reds)
+    {
+        m_ballSet.restoreBall(ball);
+    }
 
     Shot shot(*m_currentPlayer, ball);
     m_history.addShot(shot);
@@ -258,10 +267,11 @@ bool Frame::playFreeBall(const Ball& ball)
     );
     m_history.addShot(shot);
 
-    // Fin du Free Ball
+    // Fin du Free Ball : le joueur doit ensuite jouer une couleur
     m_freeBall = false;
     m_freeBallColor =
         Ball("Aucune", 0);
+    m_needColor = true;
 
     return true;
 }
