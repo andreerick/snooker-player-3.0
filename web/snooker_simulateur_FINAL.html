@@ -26,9 +26,36 @@
   }
   .layout{
     display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:20px;
+  }
+  .top-row{
+    display:flex;
+    flex-wrap:wrap;
     gap:20px;
     align-items:flex-start;
   }
+  .log-panel{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px 16px;
+    color:var(--white);
+  }
+  .log-panel .title{
+    font-size:12px;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--green);margin-bottom:10px;
+  }
+  .log-list{
+    display:flex;flex-wrap:wrap;gap:6px;font-size:11px;
+    max-height:180px;overflow-y:auto;
+  }
+  .log-list .entry{
+    padding:6px 8px;background:var(--panel);border:1px solid var(--border);
+    border-radius:4px;line-height:1.4;
+  }
+  .log-list .entry .n{color:var(--gray);margin-right:4px;}
 
   /* ---------- PANNEAU DE SIMULATION (gauche) ---------- */
   .simulator{
@@ -313,7 +340,23 @@
 </style>
 </head>
 <body>
+
+<div style="max-width:900px;margin:0 auto 14px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--panel);display:flex;align-items:center;gap:14px;flex-wrap:wrap;color:var(--white);font-family:'Segoe UI', Arial, sans-serif;">
+  <span id="test-status-pill" style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;"></span>
+  <div style="flex:1;min-width:160px;">
+    <div style="font-size:11px;letter-spacing:0.5px;color:var(--gray);text-transform:uppercase;margin-bottom:2px;">Étape <span id="test-step-num">0</span> / <span id="test-step-total">0</span></div>
+    <div id="test-step-desc" style="font-size:14px;">Test de scénario prêt — clique sur « Lancer le test » pour démarrer.</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;">
+    <span style="font-size:11px;color:var(--gray);">Lent</span>
+    <input type="range" id="test-speed" min="1" max="10" step="1" value="5" style="width:100px;">
+    <span style="font-size:11px;color:var(--gray);">Rapide</span>
+  </div>
+  <button id="test-run-btn" style="font-size:12px;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--white);cursor:pointer;">Lancer le test</button>
+</div>
+
 <div class="layout">
+<div class="top-row">
 
   <!-- PANNEAU DE SIMULATION -->
   <div class="simulator">
@@ -345,17 +388,17 @@
     </div>
 
     <div class="section-label">Coup spécial</div>
-    <button class="action-btn freeball" onclick="freeBall()">Bille libre (Free ball) +1</button>
+    <button class="action-btn freeball" id="btn-freeball" onclick="freeBall()">Bille libre (Free ball) +1</button>
 
     <div class="section-label">Faute adverse</div>
     <div class="foul-row">
       <input type="number" id="foul-value" value="4" min="4" max="7">
-      <button onclick="applyFoul()">Appliquer</button>
+      <button id="btn-apply-foul" onclick="applyFoul()">Appliquer</button>
     </div>
 
     <div class="section-label">Fin de coup</div>
-    <button class="action-btn" onclick="endTurnNoScore()">Fin du tour (pas de faute)</button>
-    <button class="action-btn" onclick="endFrame()">Terminer la frame</button>
+    <button class="action-btn" id="btn-end-turn" onclick="endTurnNoScore()">Fin du tour (pas de faute)</button>
+    <button class="action-btn" id="btn-end-frame" onclick="endFrame()">Terminer la frame</button>
 
     <div class="util-row">
       <button onclick="undo()">↩ Annuler</button>
@@ -416,9 +459,16 @@
     </div>
 
     <div class="footer">
-      <div class="status"><span class="dot-indicator"></span> Simulateur actif</div>
-      <div>Match en cours</div>
+      <div class="status"><span class="dot-indicator" id="status-dot"></span> <span id="status-text">Simulateur actif</span></div>
+      <div id="match-status">Match en cours</div>
     </div>
+  </div>
+
+</div>
+
+  <div class="log-panel">
+    <div class="title">Journal des coups</div>
+    <div class="log-list" id="log-list"></div>
   </div>
 
 </div>
@@ -441,16 +491,28 @@ function initialState(){
     lastBallType: null,   // 'red' ou 'color' -> type de la dernière bille empochée (null au début)
     succession: [],
     framesScore: {1:0, 2:0},
-    frameNum: 1
+    frameNum: 1,
+    matchOver: false,
+    matchWinner: null
   };
 }
 
 let state = initialState();
 let history = [];
 let lastAction = '—';
+let fullLog = [];
+
+function renderLog(){
+  const list = document.getElementById('log-list');
+  if(!list) return;
+  list.innerHTML = fullLog.map((m,idx)=>'<div class="entry"><span class="n">#'+(idx+1)+'</span>'+m+'</div>').join('');
+  list.scrollTop = list.scrollHeight;
+}
 
 function setLog(msg){
   lastAction = msg;
+  fullLog.push(msg);
+  renderLog();
 }
 
 function pushHistory(){
@@ -467,6 +529,8 @@ function undo(){
 function resetAll(){
   state = initialState();
   history = [];
+  fullLog = [];
+  renderLog();
   setLog('Simulation réinitialisée.');
   render();
 }
@@ -487,7 +551,7 @@ function potBall(color){
   const value = BALL_VALUES[color];
   const isRed = color === 'red';
 
-  if(isRed && state.redsLeft <= 0 && state.phase === 'reds'){ history.pop(); return; }
+  if(isRed && state.phase !== 'reds'){ history.pop(); return; }
 
   if(state.phase === 'reds' && !isRed){
     const sequenceOk = state.lastBallType === 'red';
@@ -591,7 +655,6 @@ function endFrame(){
   pushHistory();
   const winner = state.players[1].total >= state.players[2].total ? 1 : 2;
   state.framesScore[winner] += 1;
-  state.frameNum = Math.min(state.frameNum + 1, 11);
   state.players[1].total = 0; state.players[1].freeBall = 0; state.players[1].foulsGained = 0;
   state.players[2].total = 0; state.players[2].freeBall = 0; state.players[2].foulsGained = 0;
   state.liveBreak = 0;
@@ -600,7 +663,15 @@ function endFrame(){
   state.phase = 'reds';
   state.lastBallType = null;
   state.succession = [];
-  setLog('Frame remportée par ' + state.players[winner].name + '. Frame suivante : ' + state.frameNum + '/11.');
+
+  if(state.framesScore[winner] >= 6){
+    state.matchOver = true;
+    state.matchWinner = winner;
+    setLog('Match remporté par ' + state.players[winner].name + ' (' + state.framesScore[1] + ' - ' + state.framesScore[2] + ').');
+  } else {
+    state.frameNum = Math.min(state.frameNum + 1, 11);
+    setLog('Frame remportée par ' + state.players[winner].name + '. Frame suivante : ' + state.frameNum + '/11.');
+  }
   render();
 }
 
@@ -628,6 +699,17 @@ function updateBallButtons(){
       document.getElementById('btn-'+c).disabled = false;
     });
   }
+  if(state.matchOver){
+    document.getElementById('btn-red').disabled = true;
+    FINAL_ORDER.forEach(c=>{ document.getElementById('btn-'+c).disabled = true; });
+  }
+}
+
+function updateActionButtons(){
+  ['btn-freeball','btn-apply-foul','btn-end-turn','btn-end-frame'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.disabled = state.matchOver;
+  });
 }
 
 function ballHTML(color){
@@ -669,10 +751,84 @@ function render(){
 
   document.getElementById('points-remaining').textContent = computePointsRemaining();
 
+  if(state.matchOver){
+    document.getElementById('match-status').textContent = 'Match terminé — vainqueur : ' + state.players[state.matchWinner].name;
+    document.getElementById('status-text').textContent = 'Match terminé';
+    document.getElementById('status-dot').style.background = 'var(--orange)';
+  } else {
+    document.getElementById('match-status').textContent = 'Match en cours';
+    document.getElementById('status-text').textContent = 'Simulateur actif';
+    document.getElementById('status-dot').style.background = 'var(--green)';
+  }
+
   updateBallButtons();
+  updateActionButtons();
 }
 
 render();
+
+const testSteps = [
+  {desc:'Réinitialisation de l\'état initial.', fn:()=>resetAll()},
+  {desc:'Joueur au tir empoche une bille rouge (+1 pt).', fn:()=>potBall('red'), btn:'btn-red'},
+  {desc:'Puis empoche la noire (+7 pts). Le break passe à 8.', fn:()=>potBall('black'), btn:'btn-black'},
+  {desc:'Encore une rouge (+1 pt).', fn:()=>potBall('red'), btn:'btn-red'},
+  {desc:'Il joue le rose juste après une rouge : séquence valide (+6 pts).', fn:()=>potBall('pink'), btn:'btn-pink'},
+  {desc:'Faute simulée : il rejoue le rose juste après une couleur → les points partent à l\'adversaire.', fn:()=>potBall('pink'), btn:'btn-pink'},
+  {desc:'Changement manuel de joueur au tir.', fn:()=>switchStriker()},
+  {desc:'Bille libre accordée (+1 pt).', fn:()=>freeBall(), btn:'btn-freeball'},
+  {desc:'Faute adverse appliquée manuellement (valeur 4).', fn:()=>applyFoul(), btn:'btn-apply-foul'},
+  {desc:'Fin du tour sans bille marquée : le joueur change.', fn:()=>endTurnNoScore(), btn:'btn-end-turn'},
+  {desc:'Annulation du dernier coup (undo).', fn:()=>undo()},
+  {desc:'Fin de la frame en cours : le score le plus élevé l\'emporte.', fn:()=>endFrame(), btn:'btn-end-frame'},
+  {desc:'Test terminé.', fn:()=>{}}
+];
+// Pour tester un nouveau scénario : modifie ou complète le tableau testSteps
+// ci-dessus. Chaque étape = { desc: 'texte affiché', fn: () => fonctionAAppeler(...), btn: 'id-du-bouton-a-surligner (optionnel)' }
+
+document.getElementById('test-step-total').textContent = testSteps.length;
+
+function testHighlight(id){
+  if(!id) return;
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.style.outline = '2px solid var(--green)';
+  el.style.outlineOffset = '2px';
+  setTimeout(()=>{ el.style.outline=''; el.style.outlineOffset=''; }, 1300);
+}
+
+let testDelay = 2100;
+function testComputeDelay(){
+  const v = parseInt(document.getElementById('test-speed').value, 10);
+  const minDelay = 350, maxDelay = 3600;
+  testDelay = Math.round(maxDelay - (v-1)/9 * (maxDelay-minDelay));
+}
+document.getElementById('test-speed').addEventListener('input', testComputeDelay);
+testComputeDelay();
+
+let testToken = 0;
+function testRun(i, token){
+  if(token !== testToken) return;
+  if(i >= testSteps.length){
+    document.getElementById('test-status-pill').style.background = 'var(--green)';
+    document.getElementById('test-step-desc').textContent = 'Test terminé.';
+    return;
+  }
+  const step = testSteps[i];
+  document.getElementById('test-step-num').textContent = i+1;
+  document.getElementById('test-step-desc').textContent = step.desc;
+  document.getElementById('test-status-pill').style.background = 'var(--orange)';
+  testHighlight(step.btn);
+  setTimeout(()=>{ if(token === testToken) step.fn(); }, Math.round(testDelay*0.28));
+  setTimeout(()=>{ testRun(i+1, token); }, testDelay);
+}
+
+function testStart(){
+  testToken++;
+  const myToken = testToken;
+  testRun(0, myToken);
+}
+
+document.getElementById('test-run-btn').addEventListener('click', testStart);
 </script>
 </body>
 </html>
