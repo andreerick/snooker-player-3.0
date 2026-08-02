@@ -3,76 +3,127 @@
 #include <opencv2/aruco.hpp>
 #include <iostream>
 #include <map>
+#include <vector>
+#include <algorithm>
 
 // =====================================================================
 // Outil de calibration AUTOMATIQUE par marqueurs ArUco
 // ---------------------------------------------------------------------
-// Remplace le clic a la souris (CalibrationTool.cpp) par une detection
-// 100% automatique : colle 4 marqueurs ArUco imprimes aux 4 coins de
-// la zone couverte par une camera, et le programme retrouve leurs
-// positions avec une precision inferieure au pixel.
+// Version a 10 marqueurs au total, colles sur le bord EXTERIEUR de la
+// table (le chassis en bois, pas la bande de jeu) :
 //
-// AVANTAGES par rapport au clic souris :
-//   - Precision bien meilleure et constante (pas de tremblement de main)
-//   - Reproductible : si la camera bouge un peu, on recalibre a
-//     l'identique sans avoir a re-cliquer "a peu pres au bon endroit"
-//   - Resout le probleme des points de transition entre 2 zones de
-//     cameras, qui n'ont aucun repere physique naturel sur le tapis.
+//   - Camera 1 (jaune/verte/marron, INCLINEE ~4 deg) : 4 marqueurs aux
+//     4 coins de sa zone -> calibration homographie complete (4 points)
+//   - Camera 2 (bleue, centre, VERTICALE)            : 2 marqueurs,
+//     legerement decales de la poche du milieu       -> calibration
+//     simplifiee a 2 points (similitude)
+//   - Camera 3 (rouges/rose/noire, INCLINEE ~4 deg)  : 4 marqueurs aux
+//     4 coins de sa zone -> calibration homographie complete (4 points)
 //
-// UTILISATION :
-//   1. Génère les 4 marqueurs a imprimer avec --generate
-//        ArucoCalibrationTool.exe --generate
-//      (cree marker_0.png, marker_1.png, marker_2.png, marker_3.png)
-//   2. Imprime-les et colle-les aux 4 coins de la zone d'une camera :
-//        marker_0 = haut-gauche, marker_1 = haut-droit,
-//        marker_2 = bas-droit,   marker_3 = bas-gauche
-//   3. Calibre une camera avec :
-//        ArucoCalibrationTool.exe <index_camera 0/1/2> <image_ou_flux>
-// =====================================================================
-
-// =====================================================================
-// Outil de calibration AUTOMATIQUE par marqueurs ArUco
-// ---------------------------------------------------------------------
-// Version simplifiee a 6 marqueurs au total (2 par camera), colles sur
-// le bord EXTERIEUR de la table (le chassis en bois, pas la bande de
-// jeu), sur les 2 longs cotes :
-//   - Camera 1 (zone billes jaune/verte/marron) : marqueurs ID 0 (haut) et ID 1 (bas)
-//   - Camera 2 (zone bille bleue, centre table)  : marqueurs ID 2 (haut) et ID 3 (bas)
-//   - Camera 3 (zone billes rouges/rose/noire)   : marqueurs ID 4 (haut) et ID 5 (bas)
+// Le programme detecte tout seul COMBIEN de marqueurs il voit sur la
+// photo (2 ou 4) et choisit automatiquement la bonne methode :
+//   - 2 marqueurs detectes -> CameraCalibration::calibrateFromTwoPoints
+//   - 4 marqueurs detectes -> CameraCalibration::calibrate (4 points)
 //
-// Cette version a 2 points suffit car les cameras regardent tout droit
-// vers le bas (1.20m de hauteur, zone directement sous la camera, peu
-// de perspective) : une simple similitude (rotation + echelle +
-// translation) suffit, pas besoin d'une homographie complete a 4 points.
+// Numerotation humaine (planche a imprimer) = ID ArUco + 1, pour que
+// les fichiers s'appellent marker_1.png ... marker_10.png :
+//   ID 0 -> marker_1.png  : Camera 1, HAUT, cote baulk
+//   ID 1 -> marker_2.png  : Camera 1, HAUT, cote camera 2
+//   ID 2 -> marker_3.png  : Camera 1, BAS,  cote baulk
+//   ID 3 -> marker_4.png  : Camera 1, BAS,  cote camera 2
+//   ID 4 -> marker_5.png  : Camera 2, HAUT
+//   ID 5 -> marker_6.png  : Camera 2, BAS
+//   ID 6 -> marker_7.png  : Camera 3, HAUT, cote camera 2
+//   ID 7 -> marker_8.png  : Camera 3, HAUT, cote noire
+//   ID 8 -> marker_9.png  : Camera 3, BAS,  cote camera 2
+//   ID 9 -> marker_10.png : Camera 3, BAS,  cote noire
 //
 // UTILISATION :
-//   1. Génère les 6 marqueurs :  ArucoCalibrationTool.exe --generate
+//   1. Genere les 10 marqueurs :  ArucoCalibrationTool.exe --generate
 //   2. Colle-les sur le bord EXTERIEUR de la table (voir schema du manuel)
 //   3. Calibre une camera :
 //        ArucoCalibrationTool.exe <index_camera 0/1/2> <image_ou_flux>
+//      (0 = Camera 1, 1 = Camera 2, 2 = Camera 3)
 // =====================================================================
+
+static const int NB_MARKERS = 10;
 
 void generateMarkers()
 {
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
 
-    for (int id = 0; id < 6; id++)
+    for (int id = 0; id < NB_MARKERS; id++)
     {
         cv::Mat markerImage;
         cv::aruco::generateImageMarker(dictionary, id, 400, markerImage);
-        std::string filename = "marker_" + std::to_string(id) + ".png";
+        std::string filename = "marker_" + std::to_string(id + 1) + ".png";
         cv::imwrite(filename, markerImage);
         std::cout << "Marqueur genere : " << filename << std::endl;
     }
 
     std::cout << std::endl;
-    std::cout << "Colle ces 6 marqueurs sur le bord EXTERIEUR de la table (chassis), sur les 2 longs cotes :" << std::endl;
-    std::cout << "  marker_0.png -> Camera 1 (jaune/verte/marron), bord HAUT" << std::endl;
-    std::cout << "  marker_1.png -> Camera 1 (jaune/verte/marron), bord BAS" << std::endl;
-    std::cout << "  marker_2.png -> Camera 2 (bleue, centre),      bord HAUT" << std::endl;
-    std::cout << "  marker_3.png -> Camera 2 (bleue, centre),      bord BAS" << std::endl;
-    std::cout << "  marker_4.png -> Camera 3 (rouges/rose/noire),  bord HAUT" << std::endl;
-    std::cout << "  marker_5.png -> Camera 3 (rouges/rose/noire),  bord BAS" << std::endl;
+    std::cout << "Colle ces 10 marqueurs sur le bord EXTERIEUR de la table (voir manuel, section 2) :" << std::endl;
+    std::cout << "  marker_1.png  -> Camera 1, HAUT, cote baulk" << std::endl;
+    std::cout << "  marker_2.png  -> Camera 1, HAUT, cote camera 2" << std::endl;
+    std::cout << "  marker_3.png  -> Camera 1, BAS,  cote baulk" << std::endl;
+    std::cout << "  marker_4.png  -> Camera 1, BAS,  cote camera 2" << std::endl;
+    std::cout << "  marker_5.png  -> Camera 2, HAUT" << std::endl;
+    std::cout << "  marker_6.png  -> Camera 2, BAS" << std::endl;
+    std::cout << "  marker_7.png  -> Camera 3, HAUT, cote camera 2" << std::endl;
+    std::cout << "  marker_8.png  -> Camera 3, HAUT, cote noire" << std::endl;
+    std::cout << "  marker_9.png  -> Camera 3, BAS,  cote camera 2" << std::endl;
+    std::cout << "  marker_10.png -> Camera 3, BAS,  cote noire" << std::endl;
+}
+
+// -----------------------------------------------------------------
+// Pour chaque camera : la liste des ID ArUco attendus, et leur
+// position reelle sur la table (cm), dans le MEME ORDRE.
+// Table 357 x 178 cm. Poche centrale a x = 178.5 cm.
+// -----------------------------------------------------------------
+struct CameraMarkerPlan
+{
+    std::vector<int> expectedIds;
+    std::vector<cv::Point2f> tablePointsCm;
+};
+
+CameraMarkerPlan getMarkerPlan(int cameraIndex)
+{
+    CameraMarkerPlan plan;
+
+    if (cameraIndex == 0)
+    {
+        // Camera 1 : 4 coins de la zone 0 -> 130 cm
+        plan.expectedIds = { 0, 1, 2, 3 };
+        plan.tablePointsCm = {
+            cv::Point2f(0.0f,   0.0f),    // ID 0 : haut, cote baulk
+            cv::Point2f(130.0f, 0.0f),    // ID 1 : haut, cote camera 2
+            cv::Point2f(0.0f,   178.0f),  // ID 2 : bas,  cote baulk
+            cv::Point2f(130.0f, 178.0f)   // ID 3 : bas,  cote camera 2
+        };
+    }
+    else if (cameraIndex == 1)
+    {
+        // Camera 2 : 2 marqueurs, decales de 15 cm de part et d'autre
+        // de la poche centrale (x = 178.5 cm), en quinconce.
+        plan.expectedIds = { 4, 5 };
+        plan.tablePointsCm = {
+            cv::Point2f(163.5f, 0.0f),    // ID 4 : haut (poche - 15cm)
+            cv::Point2f(193.5f, 178.0f)   // ID 5 : bas  (poche + 15cm)
+        };
+    }
+    else
+    {
+        // Camera 3 : 4 coins de la zone 227 -> 357 cm
+        plan.expectedIds = { 6, 7, 8, 9 };
+        plan.tablePointsCm = {
+            cv::Point2f(227.0f, 0.0f),    // ID 6 : haut, cote camera 2
+            cv::Point2f(357.0f, 0.0f),    // ID 7 : haut, cote noire
+            cv::Point2f(227.0f, 178.0f),  // ID 8 : bas,  cote camera 2
+            cv::Point2f(357.0f, 178.0f)   // ID 9 : bas,  cote noire
+        };
+    }
+
+    return plan;
 }
 
 int main(int argc, char** argv)
@@ -125,13 +176,10 @@ int main(int argc, char** argv)
     }
 
     // -----------------------------------------------------------------
-    // Detection automatique des 2 marqueurs de CETTE camera.
-    // Camera 0 -> IDs 0 (haut) et 1 (bas)
-    // Camera 1 -> IDs 2 (haut) et 3 (bas)
-    // Camera 2 -> IDs 4 (haut) et 5 (bas)
+    // Detection de TOUS les marqueurs visibles sur la photo, puis on
+    // ne garde que ceux attendus pour cette camera.
     // -----------------------------------------------------------------
-    int idHaut = cameraIndex * 2;
-    int idBas = cameraIndex * 2 + 1;
+    CameraMarkerPlan plan = getMarkerPlan(cameraIndex);
 
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
     cv::aruco::DetectorParameters detectorParams;
@@ -141,8 +189,6 @@ int main(int argc, char** argv)
     std::vector<int> ids;
     std::vector<std::vector<cv::Point2f>> rejected;
     detector.detectMarkers(frame, corners, ids, rejected);
-
-    std::cout << "Marqueurs detectes : " << ids.size() << " (attendus : ID " << idHaut << " et ID " << idBas << ")" << std::endl;
 
     std::map<int, cv::Point2f> markerCenters;
     for (size_t i = 0; i < ids.size(); i++)
@@ -154,33 +200,69 @@ int main(int argc, char** argv)
         }
         center *= (1.0f / corners[i].size());
         markerCenters[ids[i]] = center;
-        std::cout << "  ID " << ids[i] << " detecte au centre (" << center.x << ", " << center.y << ")" << std::endl;
     }
 
-    if (markerCenters.find(idHaut) == markerCenters.end() || markerCenters.find(idBas) == markerCenters.end())
+    // Ne garder que les marqueurs attendus pour cette camera, dans
+    // l'ordre du plan (important pour que image<->table se correspondent).
+    std::vector<cv::Point2f> foundImagePoints;
+    std::vector<cv::Point2f> foundTablePoints;
+    std::vector<int> missingIds;
+
+    for (size_t i = 0; i < plan.expectedIds.size(); i++)
     {
-        std::cout << "Erreur : il manque le marqueur ID " << idHaut << " et/ou ID " << idBas << "." << std::endl;
+        int id = plan.expectedIds[i];
+        auto it = markerCenters.find(id);
+        if (it != markerCenters.end())
+        {
+            foundImagePoints.push_back(it->second);
+            foundTablePoints.push_back(plan.tablePointsCm[i]);
+            std::cout << "  ID " << id << " (marqueur " << (id + 1) << ") detecte au centre ("
+                      << it->second.x << ", " << it->second.y << ")" << std::endl;
+        }
+        else
+        {
+            missingIds.push_back(id);
+        }
+    }
+
+    std::cout << "Marqueurs detectes : " << foundImagePoints.size()
+              << " / " << plan.expectedIds.size() << " attendus pour la camera " << cameraIndex << std::endl;
+
+    if (!missingIds.empty())
+    {
+        std::cout << "Erreur : marqueur(s) manquant(s) - ID";
+        for (int id : missingIds) std::cout << " " << id << " (marqueur " << (id + 1) << ")";
+        std::cout << ". Verifiez l'eclairage, la nettete, et qu'aucun marqueur n'est masque." << std::endl;
         return 1;
     }
 
     // -----------------------------------------------------------------
-    // Position reelle (cm) du centre de la zone de cette camera, sur
-    // les 2 longs bords EXTERIEURS de la table (voir schema du manuel).
-    // Table 357 x 178 cm, 3 zones centrees sur : baulk (~59.5cm),
-    // bille bleue/centre (~178.5cm), billes rouges (~297.5cm).
+    // Choix automatique de la methode selon le nombre de marqueurs :
+    //   2 marqueurs -> calibrateFromTwoPoints (Camera 2, verticale)
+    //   4 marqueurs -> calibrate / homographie complete (Cameras 1 et 3, inclinees)
     // -----------------------------------------------------------------
-    float zoneCenters[3] = { 59.5f, 178.5f, 297.5f };
-    float tableWidth = 178.0f;
-    float x = zoneCenters[cameraIndex];
-
-    cv::Point2f tablePointHaut(x, 0.0f);
-    cv::Point2f tablePointBas(x, tableWidth);
-
     CameraCalibration calib;
-    bool ok = calib.calibrateFromTwoPoints(
-        markerCenters[idHaut], markerCenters[idBas],
-        tablePointHaut, tablePointBas
-    );
+    bool ok = false;
+
+    if (foundImagePoints.size() == 2)
+    {
+        std::cout << "2 marqueurs detectes -> calibration simplifiee a 2 points (similitude)." << std::endl;
+        ok = calib.calibrateFromTwoPoints(
+            foundImagePoints[0], foundImagePoints[1],
+            foundTablePoints[0], foundTablePoints[1]
+        );
+    }
+    else if (foundImagePoints.size() == 4)
+    {
+        std::cout << "4 marqueurs detectes -> calibration complete a 4 points (homographie)." << std::endl;
+        ok = calib.calibrate(foundImagePoints, foundTablePoints);
+    }
+    else
+    {
+        std::cout << "Erreur : nombre de marqueurs inattendu (" << foundImagePoints.size()
+                   << "), impossible de choisir une methode de calibration." << std::endl;
+        return 1;
+    }
 
     if (!ok)
     {
