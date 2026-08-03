@@ -1,5 +1,6 @@
 #include "BallDetector.h"
 #include <iostream>
+#include <cmath>
 
 // =====================================================================
 // Plages HSV de depart pour chaque bille.
@@ -186,7 +187,7 @@ std::vector<DetectedBall> BallDetector::detectBallsByShape(
     return results;
 }
 
-
+std::vector<DetectedBall> BallDetector::detectBalls(
     const cv::Mat& frame,
     int minRadius,
     int maxRadius
