@@ -19,3 +19,8 @@ Match& GameManager::getMatch()
 {
     return m_match;
 }
+
+void GameManager::afterShot()
+{
+    m_match.checkFrameEnd();
+}
