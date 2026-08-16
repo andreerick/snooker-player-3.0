@@ -16,6 +16,7 @@ public:
 
     Match& getMatch();
 
+    void afterShot();
 
 
 private:
