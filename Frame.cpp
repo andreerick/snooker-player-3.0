@@ -4,8 +4,8 @@
 
 Frame::Frame()
 {
-    m_player1.setName("Eric");
-    m_player2.setName("Jean");
+    m_player1.setName("Joueur 1");
+    m_player2.setName("Joueur 2");
     m_currentPlayer = &m_player1;
     m_redsRemaining = 15;
     m_needColor = false;
@@ -70,6 +70,12 @@ void Frame::switchPlayer()
         m_currentPlayer = &m_player2;
     else
         m_currentPlayer = &m_player1;
+}
+
+void Frame::setPlayerNames(const std::string& name1, const std::string& name2)
+{
+    m_player1.setName(name1);
+    m_player2.setName(name2);
 }
 
 // =====================================
@@ -142,6 +148,27 @@ bool Frame::isFinished() const
 FramePhase Frame::getPhase() const
 {
     return m_phase;
+}
+
+std::string Frame::getWinnerName() const
+{
+    if (!isFinished())
+    {
+        return "";
+    }
+
+    if (m_player1.getScore() > m_player2.getScore())
+    {
+        return m_player1.getName();
+    }
+    if (m_player2.getScore() > m_player1.getScore())
+    {
+        return m_player2.getName();
+    }
+
+    // Egalite en fin de frame (cas de la noire a rejouer) :
+    // pas encore gere, a traiter separement.
+    return "Egalite";
 }
 
 // =====================================
@@ -456,11 +483,15 @@ void Frame::displayStatus() const
         << m_currentPlayer->getName()
         << std::endl;
     std::cout
-        << "Score Eric : "
+        << "Score "
+        << m_player1.getName()
+        << " : "
         << m_player1.getScore()
         << std::endl;
     std::cout
-        << "Score Jean : "
+        << "Score "
+        << m_player2.getName()
+        << " : "
         << m_player2.getScore()
         << std::endl;
     std::cout
