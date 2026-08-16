@@ -186,6 +186,11 @@ std::vector<DetectedBall> BallDetector::detectBallsByShape(
     return results;
 }
 
+std::vector<DetectedBall> BallDetector::detectBalls(
+    const cv::Mat& frame,
+    int minRadius,
+    int maxRadius
+) const
 
     const cv::Mat& frame,
     int minRadius,
