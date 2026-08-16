@@ -27,7 +27,7 @@ public:
     Frame(const Frame& other);
     Frame& operator=(const Frame& other);
 
-     // Joueurs
+    // Joueurs
     Player& currentPlayer();
 
     Player& getPlayer1();
@@ -36,6 +36,8 @@ public:
 
 
     void switchPlayer();
+
+    void setPlayerNames(const std::string& name1, const std::string& name2);
 
 
     // Gestion des billes
@@ -53,6 +55,8 @@ public:
     bool isFinished() const;
 
     FramePhase getPhase() const;
+
+    std::string getWinnerName() const;
 
 
 
