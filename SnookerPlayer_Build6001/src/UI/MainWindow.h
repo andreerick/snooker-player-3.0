@@ -1,3 +1,11 @@
 #pragma once
+
 #include <QMainWindow>
-class MainWindow: public QMainWindow{Q_OBJECT public: MainWindow(QWidget* p=nullptr);};
+
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+    explicit MainWindow(QWidget* parent = nullptr);
+};
