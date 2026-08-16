@@ -23,6 +23,10 @@ public:
 
     void startNewFrame();
 
+    void setPlayerNames(const std::string& name1, const std::string& name2);
+
+    void checkFrameEnd();
+
 
     void frameWon(Player& player);
 
