@@ -1,2 +1,8 @@
 #include "MainWindow.h"
-MainWindow::MainWindow(QWidget* p):QMainWindow(p){setWindowTitle("Snooker Player");resize(1200,700);}
+
+MainWindow::MainWindow(QWidget* parent)
+    : QMainWindow(parent)
+{
+    setWindowTitle("Snooker Player");
+    resize(1200, 700);
+}
