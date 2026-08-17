@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Compiled binaries (Linux/macOS)
+snooker_main
+test_scenarios
+
 # User-specific files
 *.rsuser
 *.suo
