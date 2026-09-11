@@ -12,7 +12,7 @@ if(WIN32)
     )
 endif()
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets TextToSpeech)
+find_package(Qt6 REQUIRED COMPONENTS Widgets TextToSpeech Network)
 qt_standard_project_setup()
 
 # ---------------------------------------------------------------------
@@ -157,7 +157,7 @@ target_include_directories(SnookerPlayer PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party
 )
 
-target_link_libraries(SnookerPlayer PRIVATE Qt6::Widgets Qt6::TextToSpeech MesureVision)
+target_link_libraries(SnookerPlayer PRIVATE Qt6::Widgets Qt6::TextToSpeech Qt6::Network MesureVision)
 
 # ws2_32 : sockets Windows, necessaires a cpp-httplib (voir MatchWebServer)
 # meme en HTTP simple (pas de HTTPS, donc pas besoin d'OpenSSL ici).
