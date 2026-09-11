@@ -1821,11 +1821,23 @@ MainWindow::MainWindow(QWidget* parent)
     outerLayout->addWidget(scorePanel, 1);
     outerLayout->addWidget(remotePanel, 0);
 
+    // La vue de match (score + telecommande, tous deux tres denses en
+    // widgets empiles verticalement) est plus haute que ne le sont la
+    // plupart des ecrans : sans scroll, le bas (compteur de points,
+    // derniers boutons de la telecommande) se retrouve hors ecran. On
+    // l'enveloppe donc dans un QScrollArea plutot que de l'ajouter tel
+    // quel au stack.
+    QScrollArea* matchScrollArea = new QScrollArea(this);
+    matchScrollArea->setWidget(central);
+    matchScrollArea->setWidgetResizable(true);
+    matchScrollArea->setFrameShape(QFrame::NoFrame);
+    matchScrollArea->setStyleSheet("background-color: " + kBg + ";");
+
     // Ecran d'accueil (voir HomeScreen) : affiche en premier, avant que
     // le match (deja entierement construit ci-dessus, juste cache) ne
     // soit reellement demarre. Voir startNewMatchFromHome().
     m_rootStack = new CurrentPageStackedWidget(this);
-    m_rootStack->addWidget(central);       // index 0 : vue du match (cachee au demarrage)
+    m_rootStack->addWidget(matchScrollArea); // index 0 : vue du match (cachee au demarrage)
 
     m_homeScreen = new HomeScreen(this);
     m_homeScreen->setWifiStatus(m_webServer->isRunning());
