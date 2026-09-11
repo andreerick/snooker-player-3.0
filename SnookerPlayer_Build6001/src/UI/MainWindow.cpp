@@ -31,6 +31,7 @@
 #include <QListWidget>
 #include <QJsonArray>
 #include <QScreen>
+#include <QGuiApplication>
 #include <QJsonObject>
 #include <QTableWidget>
 #include <QHeaderView>
@@ -682,19 +683,34 @@ namespace
         return actions;
     }
 
+    // QStackedWidget dimensionne par defaut sa sizeHint()/minimumSizeHint()
+    // sur la PLUS GRANDE de ses pages, meme cachee : ici la vue de match
+    // (page 0, dense en widgets) forcait ainsi la fenetre a etre plus
+    // grande que l'ecran des le demarrage, alors que c'est l'accueil (page
+    // 1, plus petit) qui est affiche en premier -- coupant le bas de
+    // l'accueil hors ecran. On ne considere donc que la page courante.
+    class CurrentPageStackedWidget : public QStackedWidget
+    {
+    public:
+        explicit CurrentPageStackedWidget(QWidget* parent = nullptr) : QStackedWidget(parent) {}
+
+        QSize sizeHint() const override
+        {
+            return currentWidget() ? currentWidget()->sizeHint() : QStackedWidget::sizeHint();
+        }
+
+        QSize minimumSizeHint() const override
+        {
+            return currentWidget() ? currentWidget()->minimumSizeHint() : QStackedWidget::minimumSizeHint();
+        }
+    };
+
 }
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
     setWindowTitle("Snooker Player");
-    // Taille "confortable" de reference (ecran de dev Windows) ramenee a
-    // l'espace ecran reellement disponible : sur un ecran plus petit (ex.
-    // 1440x900), 1500x860 deborde et coupe le bas de l'accueil (tuiles
-    // hors ecran) puisque la fenetre ne peut pas depasser l'ecran.
-    QSize desiredSize(1500, 860);
-    QSize availableSize = screen() ? screen()->availableGeometry().size() : desiredSize;
-    resize(desiredSize.boundedTo(availableSize));
 
     setStyleSheet("background-color: " + kBg + ";");
 
@@ -1808,7 +1824,7 @@ MainWindow::MainWindow(QWidget* parent)
     // Ecran d'accueil (voir HomeScreen) : affiche en premier, avant que
     // le match (deja entierement construit ci-dessus, juste cache) ne
     // soit reellement demarre. Voir startNewMatchFromHome().
-    m_rootStack = new QStackedWidget(this);
+    m_rootStack = new CurrentPageStackedWidget(this);
     m_rootStack->addWidget(central);       // index 0 : vue du match (cachee au demarrage)
 
     m_homeScreen = new HomeScreen(this);
@@ -1888,6 +1904,21 @@ MainWindow::MainWindow(QWidget* parent)
             ShareSessionDialog dialog(m_webServer, this);
             dialog.exec();
         });
+
+    // Taille "confortable" de reference (ecran de dev Windows) ramenee a
+    // l'espace ecran reellement disponible, et placee explicitement sur
+    // l'ecran principal : sur un ecran plus petit (ex. 1440x900) ou avec
+    // plusieurs ecrans, 1500x860 deborde et/ou l'OS replace la fenetre sur
+    // un ecran secondaire plus petit dont on herite la position au prochain
+    // lancement, ce qui coupe le bas de l'accueil (tuiles hors ecran). Fait
+    // en tout dernier (apres construction de toutes les pages) : sinon le
+    // systeme de layout de Qt peut regrandir la fenetre juste apres, en
+    // fonction du sizeHint de la plus grande page (ex. l'ecran de match).
+    QScreen* targetScreen = QGuiApplication::primaryScreen();
+    QRect availableGeometry = targetScreen ? targetScreen->availableGeometry() : QRect(0, 0, 1500, 860);
+    QSize desiredSize(1500, 860);
+    QSize windowSize = desiredSize.boundedTo(availableGeometry.size());
+    setGeometry(QRect(availableGeometry.topLeft(), windowSize));
 }
 
 void MainWindow::startNewMatchFromHome()
