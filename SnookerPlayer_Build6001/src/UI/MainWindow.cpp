@@ -30,6 +30,7 @@
 #include <QGraphicsDropShadowEffect>
 #include <QListWidget>
 #include <QJsonArray>
+#include <QScreen>
 #include <QJsonObject>
 #include <QTableWidget>
 #include <QHeaderView>
@@ -687,7 +688,13 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
     setWindowTitle("Snooker Player");
-    resize(1500, 860);
+    // Taille "confortable" de reference (ecran de dev Windows) ramenee a
+    // l'espace ecran reellement disponible : sur un ecran plus petit (ex.
+    // 1440x900), 1500x860 deborde et coupe le bas de l'accueil (tuiles
+    // hors ecran) puisque la fenetre ne peut pas depasser l'ecran.
+    QSize desiredSize(1500, 860);
+    QSize availableSize = screen() ? screen()->availableGeometry().size() : desiredSize;
+    resize(desiredSize.boundedTo(availableSize));
 
     setStyleSheet("background-color: " + kBg + ";");
 
