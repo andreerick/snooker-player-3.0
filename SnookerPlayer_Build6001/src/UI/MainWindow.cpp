@@ -2092,6 +2092,21 @@ MainWindow::MainWindow(QWidget* parent)
                 m_shareButton->setText("Partager en Wi-Fi (actif)");
             }
             ShareSessionDialog dialog(m_webServer, this);
+            // Si le telephone envoie les noms des joueurs pendant que ce
+            // dialogue est ouvert, handleRemoteControlAction() demarre le
+            // match (beginMatch()) mais ne sait rien de ce dialogue local
+            // -- sans ceci, le QR code resterait affiche par-dessus la
+            // vue du match fraichement construite, exigeant une fermeture
+            // manuelle. La connexion est portee par `dialog` : elle se
+            // deconnecte toute seule des que le dialogue est detruit.
+            connect(m_webServer, &MatchWebServer::controlActionRequested, &dialog,
+                [&dialog](const QString& action, const QJsonObject&)
+                {
+                    if (action == "submitNames")
+                    {
+                        dialog.accept();
+                    }
+                });
             dialog.exec();
         });
 
@@ -3107,10 +3122,12 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
         }
         // Cas du QR code imprime sur la table, scanne sans que personne
         // n'ait touche au PC (voir HomeScreen) : demarre le match
-        // directement avec les noms saisis sur le telephone.
+        // directement avec les noms (et la longueur de match) saisis sur
+        // le telephone.
         QString p1 = params.value("p1").toString().trimmed();
         QString p2 = params.value("p2").toString().trimmed();
-        beginMatch(p1.isEmpty() ? "Joueur 1" : p1, p2.isEmpty() ? "Joueur 2" : p2);
+        int frames = params.value("frames").toInt(2);
+        beginMatch(p1.isEmpty() ? "Joueur 1" : p1, p2.isEmpty() ? "Joueur 2" : p2, frames);
         return;
     }
 
@@ -3177,6 +3194,7 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
     {
         // "Fin de break" : coup rate volontaire, pas une action en
         // attente (voir missShotButton dans le constructeur).
+        snapshotFrameForUndo();
         frame.missShot();
         m_gameManager.afterShot();
         refreshDisplay();
@@ -3194,6 +3212,43 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
         }
         m_gameManager.afterShot();
         refreshDisplay();
+        return;
+    }
+    if (action == "undo")
+    {
+        // Meme logique que le bouton "Retour" de la telecommande de
+        // bureau 2.0 : un seul niveau d'annulation (voir
+        // snapshotFrameForUndo()).
+        if (!m_hasUndoSnapshot)
+        {
+            return;
+        }
+        m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+        m_hasUndoSnapshot = false;
+        m_pendingAction = PendingAction::None;
+        refreshDisplay();
+        return;
+    }
+    if (action == "goHome")
+    {
+        // Meme logique que le bouton "Esc" de la telecommande de bureau
+        // 2.0 : quitte l'ecran de match et revient a l'accueil.
+        m_rootStack->setCurrentIndex(1);
+        return;
+    }
+    if (action == "newMatch")
+    {
+        // Meme logique que le bouton "Nouveau match" de la telecommande
+        // de bureau 1.0 (restartMatch()), mais les noms viennent du
+        // formulaire redemande sur la page telephone (voir
+        // showNewMatchForm() dans kPageHtml) plutot que d'une boite de
+        // dialogue PC. Contrairement a "submitNames", volontairement PAS
+        // bloque par m_matchStarted : c'est justement pour redemarrer un
+        // match deja en cours.
+        QString p1 = params.value("p1").toString().trimmed();
+        QString p2 = params.value("p2").toString().trimmed();
+        int frames = params.value("frames").toInt(2);
+        restartMatch(p1.isEmpty() ? "Joueur 1" : p1, p2.isEmpty() ? "Joueur 2" : p2, frames);
         return;
     }
 }
