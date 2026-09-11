@@ -351,6 +351,25 @@ void MatchWebServer::updateState(const QJsonObject& state)
     m_state = state;
 }
 
+bool MatchWebServer::hasActiveClient() const
+{
+    QMutexLocker locker(&m_stateMutex);
+
+    const qint64 now = QDateTime::currentMSecsSinceEpoch();
+    for (auto it = m_activeClients.begin(); it != m_activeClients.end(); )
+    {
+        if (now - it.value() > kClientTimeoutMs)
+        {
+            it = m_activeClients.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+    return !m_activeClients.isEmpty();
+}
+
 bool MatchWebServer::registerClient(const QString& clientId)
 {
     QMutexLocker locker(&m_stateMutex);

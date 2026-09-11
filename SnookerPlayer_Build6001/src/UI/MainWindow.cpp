@@ -187,14 +187,14 @@ namespace
         return row;
     }
 
-    // Panneau "detail des points" : billes empochees normalement, Free
-    // Ball, fautes adverses. La somme des trois vaut toujours le score
-    // total du joueur affiche dans le cadre "points marques" au-dessus.
+    // Panneau "detail des points" : billes empochees normalement et
+    // fautes adverses (le Free ball n'est plus affiche separement ici,
+    // mais ses points restent inclus dans le score total du joueur
+    // affiche dans le cadre "points marques" au-dessus).
     QFrame* buildDetailBox(
         QWidget* parent,
         const QString& borderColor,
         QLabel*& pottedOut,
-        QLabel*& freeBallOut,
         QLabel*& foulsOut
     )
     {
@@ -210,7 +210,6 @@ namespace
         detailLayout->addWidget(detailTitle);
 
         detailLayout->addWidget(buildDetailRow(detailBox, "Break", pottedOut));
-        detailLayout->addWidget(buildDetailRow(detailBox, "Free ball", freeBallOut));
         detailLayout->addWidget(buildDetailRow(detailBox, "Fautes adverses", foulsOut));
 
         return detailBox;
@@ -793,7 +792,7 @@ MainWindow::MainWindow(QWidget* parent)
     m_frameScoreLabel = new QLabel(framesPanel);
     m_frameScoreLabel->setAlignment(Qt::AlignHCenter);
     QFont frameScoreFont;
-    frameScoreFont.setPointSize(40);
+    frameScoreFont.setPointSize(60); // +50% (demande utilisateur, sauf "points restants")
     frameScoreFont.setBold(true);
     m_frameScoreLabel->setFont(frameScoreFont);
 
@@ -816,7 +815,7 @@ MainWindow::MainWindow(QWidget* parent)
     m_currentFrameLabel = new QLabel(currentFrameBox);
     m_currentFrameLabel->setAlignment(Qt::AlignHCenter);
     QFont currentFrameFont;
-    currentFrameFont.setPointSize(22);
+    currentFrameFont.setPointSize(33); // +50% (demande utilisateur, sauf "points restants")
     currentFrameFont.setBold(true);
     m_currentFrameLabel->setFont(currentFrameFont);
     m_currentFrameLabel->setStyleSheet("color: " + kWhite + "; border: none; background: transparent;");
@@ -850,7 +849,7 @@ MainWindow::MainWindow(QWidget* parent)
     m_breakValueLabel = new QLabel(breakPanel);
     m_breakValueLabel->setAlignment(Qt::AlignHCenter);
     QFont breakFont;
-    breakFont.setPointSize(48);
+    breakFont.setPointSize(72); // +50% (demande utilisateur, sauf "points restants")
     breakFont.setBold(true);
     m_breakValueLabel->setFont(breakFont);
     m_breakValueLabel->setStyleSheet("color: " + kWhite + "; border: none; background: transparent;");
@@ -935,7 +934,7 @@ MainWindow::MainWindow(QWidget* parent)
     m_player1ScoreBoxValue = new QLabel(m_player1ScoreBox);
     m_player1ScoreBoxValue->setAlignment(Qt::AlignHCenter);
     QFont scoreBoxFont;
-    scoreBoxFont.setPointSize(48);
+    scoreBoxFont.setPointSize(72); // +50% (demande utilisateur, sauf "points restants")
     scoreBoxFont.setBold(true);
     m_player1ScoreBoxValue->setFont(scoreBoxFont);
     m_player1ScoreBoxValue->setStyleSheet("color: " + kWhite + "; border: none; background: transparent;");
@@ -982,10 +981,10 @@ MainWindow::MainWindow(QWidget* parent)
     // imbrique dans les cadres de score, pour combler l'espace vide).
     // ---------------------------------------------------
     QFrame* player1DetailBox = buildDetailBox(
-        central, kGreen, m_player1DetailPotted, m_player1DetailFreeBall, m_player1DetailFouls
+        central, kGreen, m_player1DetailPotted, m_player1DetailFouls
     );
     QFrame* player2DetailBox = buildDetailBox(
-        central, kOrange, m_player2DetailPotted, m_player2DetailFreeBall, m_player2DetailFouls
+        central, kOrange, m_player2DetailPotted, m_player2DetailFouls
     );
 
     // Espace invisible de la meme largeur que breakPanel, pour que les
@@ -1143,11 +1142,23 @@ MainWindow::MainWindow(QWidget* parent)
     recordingLayout->addWidget(m_recordingDot);
     recordingLayout->addWidget(m_recordingStatusLabel);
 
+    // Bouton toujours visible (hors du panneau de controles) pour
+    // afficher/masquer la telecommande : sans lui, une fois le panneau
+    // cache, il n'y aurait plus aucun moyen de le rafficher.
+    m_toggleRemoteButton = new QPushButton("Masquer telecommande", footerPanel);
+    m_toggleRemoteButton->setStyleSheet(
+        "QPushButton { background-color: " + kPanel + "; color: " + kGray + ";"
+        "border: 1px solid " + kBorder + "; border-radius: 4px; padding: 4px 10px; font-size: 11px; }"
+        "QPushButton:hover { color: " + kWhite + "; }"
+    );
+
     footerLayout->addWidget(camerasSection);
     footerLayout->addStretch();
     footerLayout->addWidget(durationSection);
     footerLayout->addStretch();
     footerLayout->addWidget(recordingSection);
+    footerLayout->addStretch();
+    footerLayout->addWidget(m_toggleRemoteButton);
 
     QWidget* topRow = new QWidget(central);
     QHBoxLayout* topRowLayout = new QHBoxLayout(topRow);
@@ -1176,26 +1187,28 @@ MainWindow::MainWindow(QWidget* parent)
         "background-color: " + kPanel + "; border: 1px solid " + kBorder + "; border-radius: 5px;"
     );
     remotePanel->setFixedWidth(220);
-    QVBoxLayout* remoteLayout = new QVBoxLayout(remotePanel);
+    QVBoxLayout* remotePanelOuterLayout = new QVBoxLayout(remotePanel);
+    remotePanelOuterLayout->setContentsMargins(0, 0, 0, 0);
+    remotePanelOuterLayout->setSpacing(0);
+
+    // La telecommande contient beaucoup plus de boutons que la hauteur de
+    // l'ecran ne peut en afficher d'un coup. Sans defilement, Qt "starve"
+    // les sous-dispositions imbriquees (les paires de billes) d'espace
+    // vertical et leur donne une hauteur NEGATIVE, ce qui les fait toutes
+    // s'empiler au meme endroit au lieu de simplement deborder en bas.
+    QScrollArea* remoteScrollArea = new QScrollArea(remotePanel);
+    remoteScrollArea->setWidgetResizable(true);
+    remoteScrollArea->setFrameShape(QFrame::NoFrame);
+    remoteScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    remoteScrollArea->setStyleSheet("background: transparent; border: none;");
+    remotePanelOuterLayout->addWidget(remoteScrollArea);
+
+    QWidget* remoteContent = new QWidget(remoteScrollArea);
+    remoteContent->setStyleSheet("background: transparent;");
+    QVBoxLayout* remoteLayout = new QVBoxLayout(remoteContent);
     remoteLayout->setContentsMargins(14, 14, 14, 14);
     remoteLayout->setSpacing(10);
-
-    QLabel* remoteTitle = new QLabel("TELECOMMANDE", remotePanel);
-    remoteTitle->setAlignment(Qt::AlignHCenter);
-    remoteTitle->setStyleSheet("color: " + kGray + "; font-size: 11px; letter-spacing: 1px;");
-    remoteLayout->addWidget(remoteTitle);
-
-    // Apercu en direct de la camera : seul moyen de verifier visuellement
-    // que l'objet teste est bien dans le champ tant que le suivi camera
-    // est actif. Vide/gris tant que le suivi n'a pas demarre.
-    m_cameraPreviewLabel = new QLabel(remotePanel);
-    m_cameraPreviewLabel->setFixedSize(190, 140);
-    m_cameraPreviewLabel->setAlignment(Qt::AlignCenter);
-    m_cameraPreviewLabel->setStyleSheet(
-        "background-color: " + kPanel + "; border: 1px solid " + kBorder + "; border-radius: 5px; color: " + kGray + "; font-size: 11px;"
-    );
-    m_cameraPreviewLabel->setText("Pas d'image");
-    remoteLayout->addWidget(m_cameraPreviewLabel, 0, Qt::AlignHCenter);
+    remoteScrollArea->setWidget(remoteContent);
 
     // Alerte precoce : une bille encore sur la table (pas empochee) est
     // detectee dangereusement proche du bord (voir VisionGameBridge::
@@ -1252,21 +1265,17 @@ MainWindow::MainWindow(QWidget* parent)
         });
     remoteLayout->addWidget(m_cancelPendingButton);
 
-    QVector<QString> ballNames;
-    ballNames.append("Rouge");
-    ballNames.append("Jaune");
-    ballNames.append("Verte");
-    ballNames.append("Marron");
-    ballNames.append("Bleue");
-    ballNames.append("Rose");
-    ballNames.append("Noire");
+    const int ballButtonWidth = 88;
+    const int ballButtonHeight = 56;
+    const int ballButtonSpacing = 8;
 
-    QGridLayout* ballButtonsLayout = new QGridLayout();
-    ballButtonsLayout->setSpacing(8);
-    int ballRow = 0;
-    int ballCol = 0;
-    const int ballButtonsPerRow = 2;
-    for (const QString& ballName : ballNames)
+    // Cree un bouton de bille stylise (couleur pleine, texte "Nom\n(valeur)").
+    // Extrait en lambda pour eviter de dupliquer ce bloc 7 fois : la
+    // disposition (rangee pleine largeur pour la rouge, paires pour les
+    // couleurs) est geree par l'appelant via des QHBoxLayout, pas par un
+    // QGridLayout -- un QGridLayout avec span de colonnes melange a des
+    // cellules simples ecrasait les lignes les unes sur les autres.
+    auto makeBallButton = [&](const QString& ballName, int width) -> QPushButton*
     {
         int ballValue = standardBallValue(ballName);
 
@@ -1276,7 +1285,7 @@ MainWindow::MainWindow(QWidget* parent)
         QPushButton* ballButton = new QPushButton(
             ballName + "\n(" + QString::number(ballValue) + ")", remotePanel
         );
-        ballButton->setFixedSize(88, 56);
+        ballButton->setFixedSize(width, ballButtonHeight);
         ballButton->setStyleSheet(QString(
             "QPushButton {"
             "  background-color: %1;"
@@ -1295,13 +1304,29 @@ MainWindow::MainWindow(QWidget* parent)
                 handleBallAction(ballName, ballValue);
             });
 
-        ballButtonsLayout->addWidget(ballButton, ballRow, ballCol);
-        ballCol++;
-        if (ballCol >= ballButtonsPerRow)
-        {
-            ballCol = 0;
-            ballRow++;
-        }
+        return ballButton;
+    };
+
+    QVBoxLayout* ballButtonsLayout = new QVBoxLayout();
+    ballButtonsLayout->setSpacing(ballButtonSpacing);
+
+    // La rouge occupe seule toute la largeur de la telecommande (une seule
+    // bille rouge peut etre jouee a la fois, contrairement aux billes de
+    // couleur, d'ou sa mise en avant visuelle).
+    ballButtonsLayout->addWidget(makeBallButton("Rouge", ballButtonWidth * 2 + ballButtonSpacing));
+
+    const QList<QPair<QString, QString>> colorPairs = {
+        { "Jaune", "Verte" },
+        { "Marron", "Bleue" },
+        { "Rose", "Noire" }
+    };
+    for (const auto& pair : colorPairs)
+    {
+        QHBoxLayout* pairRow = new QHBoxLayout();
+        pairRow->setSpacing(ballButtonSpacing);
+        pairRow->addWidget(makeBallButton(pair.first, ballButtonWidth));
+        pairRow->addWidget(makeBallButton(pair.second, ballButtonWidth));
+        ballButtonsLayout->addLayout(pairRow);
     }
 
     remoteLayout->addLayout(ballButtonsLayout);
@@ -1797,6 +1822,150 @@ MainWindow::MainWindow(QWidget* parent)
 
     outerLayout->addWidget(scorePanel, 1);
     outerLayout->addWidget(remotePanel, 0);
+    m_remotePanel = remotePanel;
+
+    // ---------------------------------------------------
+    // Telecommande "2.0" : version simplifiee (billes + Faute + Fin de
+    // break seulement), pour l'usage courant sans scenarios/tests.
+    // ETAPE EN COURS : construite ici juste a cote de la 1.0 pour
+    // comparaison visuelle -- pas encore branchee a un choix dans les
+    // parametres ni a la detection d'un telephone connecte.
+    // ---------------------------------------------------
+    QFrame* remotePanelSimple = new QFrame(central);
+    remotePanelSimple->setStyleSheet(
+        "background-color: " + kPanel + "; border: 1px solid " + kBorder + "; border-radius: 5px;"
+    );
+    remotePanelSimple->setFixedWidth(220);
+    QVBoxLayout* simpleLayout = new QVBoxLayout(remotePanelSimple);
+    simpleLayout->setContentsMargins(14, 14, 14, 14);
+    simpleLayout->setSpacing(10);
+
+    auto makeSimpleBallButton = [&](const QString& ballName, int width) -> QPushButton*
+    {
+        int ballValue = standardBallValue(ballName);
+        QColor base(ballColorHex(ballName));
+        QColor textColor = (base.lightness() > 150) ? QColor(kBg) : QColor(kWhite);
+
+        QPushButton* ballButton = new QPushButton(
+            ballName + "\n(" + QString::number(ballValue) + ")", remotePanelSimple
+        );
+        ballButton->setFixedSize(width, ballButtonHeight);
+        ballButton->setStyleSheet(QString(
+            "QPushButton {"
+            "  background-color: %1;"
+            "  color: %2;"
+            "  border: 1px solid %3;"
+            "  border-radius: 8px;"
+            "  font-weight: bold;"
+            "  font-size: 12px;"
+            "}"
+            "QPushButton:hover { border: 2px solid " + kWhite + "; }"
+            "QPushButton:pressed { background-color: %4; }"
+        ).arg(base.name(), textColor.name(), base.darker(150).name(), base.darker(130).name()));
+
+        connect(ballButton, &QPushButton::clicked, this, [this, ballName, ballValue]()
+            {
+                handleBallAction(ballName, ballValue);
+            });
+
+        return ballButton;
+    };
+
+    QVBoxLayout* simpleBallButtonsLayout = new QVBoxLayout();
+    simpleBallButtonsLayout->setSpacing(ballButtonSpacing);
+    simpleBallButtonsLayout->addWidget(
+        makeSimpleBallButton("Rouge", ballButtonWidth * 2 + ballButtonSpacing)
+    );
+    for (const auto& pair : colorPairs)
+    {
+        QHBoxLayout* simplePairRow = new QHBoxLayout();
+        simplePairRow->setSpacing(ballButtonSpacing);
+        simplePairRow->addWidget(makeSimpleBallButton(pair.first, ballButtonWidth));
+        simplePairRow->addWidget(makeSimpleBallButton(pair.second, ballButtonWidth));
+        simpleBallButtonsLayout->addLayout(simplePairRow);
+    }
+    simpleLayout->addLayout(simpleBallButtonsLayout);
+    simpleLayout->addSpacing(6);
+
+    QPushButton* simpleFoulButton = new QPushButton("Faute", remotePanelSimple);
+    simpleFoulButton->setStyleSheet(secondaryButtonStyle);
+    connect(simpleFoulButton, &QPushButton::clicked, this, [this]()
+        {
+            m_pendingAction = PendingAction::Foul;
+            refreshDisplay();
+        });
+    simpleLayout->addWidget(simpleFoulButton);
+
+    QPushButton* simpleMissShotButton = new QPushButton("Fin de break", remotePanelSimple);
+    simpleMissShotButton->setStyleSheet(secondaryButtonStyle);
+    connect(simpleMissShotButton, &QPushButton::clicked, this, [this]()
+        {
+            snapshotFrameForUndo();
+            Frame& frame = m_gameManager.getMatch().getCurrentFrame();
+            frame.missShot();
+            m_gameManager.afterShot();
+            refreshDisplay();
+        });
+    simpleLayout->addWidget(simpleMissShotButton);
+
+    // Retour : annule le dernier coup (bille empochee, faute ou "Fin de
+    // break"), voir snapshotFrameForUndo(). Un seul niveau d'annulation.
+    QPushButton* simpleUndoButton = new QPushButton("Retour", remotePanelSimple);
+    simpleUndoButton->setStyleSheet(secondaryButtonStyle);
+    connect(simpleUndoButton, &QPushButton::clicked, this, [this]()
+        {
+            if (!m_hasUndoSnapshot)
+            {
+                return;
+            }
+            m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+            m_hasUndoSnapshot = false;
+            m_pendingAction = PendingAction::None;
+            refreshDisplay();
+        });
+    simpleLayout->addWidget(simpleUndoButton);
+
+    // Game : valide la fin de la frame en cours, meme logique que "Fin
+    // de frame" sur la telecommande 1.0 (refuse sur une egalite stricte).
+    QPushButton* simpleGameButton = new QPushButton("Game", remotePanelSimple);
+    simpleGameButton->setStyleSheet(secondaryButtonStyle);
+    connect(simpleGameButton, &QPushButton::clicked, this, [this]()
+        {
+            Frame& frame = m_gameManager.getMatch().getCurrentFrame();
+            if (!frame.forceFinishFrame())
+            {
+                showStyledMessage(this, QMessageBox::Information, "Fin de frame",
+                    "Impossible : les scores sont a egalite. Il faut d'abord departager "
+                    "l'egalite (billes suivantes) avant de pouvoir terminer la frame.");
+                return;
+            }
+            m_gameManager.afterShot();
+            refreshDisplay();
+        });
+    simpleLayout->addWidget(simpleGameButton);
+
+    // Esc (dernier bouton) : quitte l'ecran de match et revient a
+    // l'accueil (voir m_rootStack, index 1). Le match reste construit et
+    // en l'etat en arriere-plan -- pas de moyen pour l'instant d'y
+    // revenir autrement qu'en relancant un nouveau match depuis l'accueil.
+    QPushButton* simpleExitButton = new QPushButton("Esc", remotePanelSimple);
+    simpleExitButton->setStyleSheet(secondaryButtonStyle);
+    connect(simpleExitButton, &QPushButton::clicked, this, [this]()
+        {
+            m_rootStack->setCurrentIndex(1);
+        });
+    simpleLayout->addWidget(simpleExitButton);
+
+    simpleLayout->addStretch();
+
+    outerLayout->addWidget(remotePanelSimple, 0);
+    m_remotePanelSimple = remotePanelSimple;
+
+    {
+        QSettings settings(QCoreApplication::applicationDirPath() + "/settings.ini", QSettings::IniFormat);
+        m_remoteManualVisible = settings.value("ui/remoteVisible", true).toBool();
+    }
+    applyRemotePanelVisibility();
 
     // Ecran d'accueil (voir HomeScreen) : affiche en premier, avant que
     // le match (deja entierement construit ci-dessus, juste cache) ne
@@ -1837,6 +2006,15 @@ MainWindow::MainWindow(QWidget* parent)
                     {
                         m_speech->setPreferredGender(gender);
                     }
+                });
+            connect(&dialog, &SettingsDialog::remoteVersionChanged, this, [this](const QString&)
+                {
+                    // Sans effet tant qu'aucun match n'existe (les deux
+                    // panneaux ne sont construits que dans beginMatch()) --
+                    // applyRemotePanelVisibility() se garde contre les
+                    // pointeurs nuls. Utile si Parametres devient un jour
+                    // accessible pendant un match en cours.
+                    applyRemotePanelVisibility();
                 });
             dialog.exec();
         });
@@ -1908,6 +2086,12 @@ void MainWindow::beginMatch(const QString& player1Name, const QString& player2Na
         {
             qint64 matchSecs = m_matchStartTime.secsTo(QDateTime::currentDateTime());
             m_durationLabel->setText(formatDuration(matchSecs));
+
+            // Verifie ici aussi (pas seulement dans refreshDisplay()) pour
+            // reagir a une connexion telephone sans attendre le prochain
+            // coup joue (ex. le telephone se connecte avant le tout
+            // premier coup de la frame).
+            applyRemotePanelVisibility();
         });
     m_durationTimer->start();
 
@@ -1972,18 +2156,6 @@ void MainWindow::beginMatch(const QString& player1Name, const QString& player2Na
                 return;
             }
 
-            // Apercu en direct : mis a jour a chaque image, independamment
-            // de la detection, pour toujours voir ce que la camera capture.
-            cv::Mat previewRgb;
-            cv::cvtColor(image, previewRgb, cv::COLOR_BGR2RGB);
-            QImage previewImage(previewRgb.data, previewRgb.cols, previewRgb.rows,
-                static_cast<int>(previewRgb.step), QImage::Format_RGB888);
-            m_cameraPreviewLabel->setPixmap(
-                QPixmap::fromImage(previewImage.copy()).scaled(
-                    m_cameraPreviewLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation
-                )
-            );
-
             Frame& frame = m_gameManager.getMatch().getCurrentFrame();
             m_visionBridge->processImage(image, frame);
 
@@ -2017,6 +2189,16 @@ void MainWindow::beginMatch(const QString& player1Name, const QString& player2Na
             m_toggleLogButton->setText(
                 nowVisible ? "Masquer le journal des coups" : "Afficher le journal des coups"
             );
+        });
+
+    connect(m_toggleRemoteButton, &QPushButton::clicked, this, [this]()
+        {
+            m_remoteManualVisible = !m_remoteManualVisible;
+
+            QSettings settings(QCoreApplication::applicationDirPath() + "/settings.ini", QSettings::IniFormat);
+            settings.setValue("ui/remoteVisible", m_remoteManualVisible);
+
+            applyRemotePanelVisibility();
         });
 
     m_scenarioRunner = new TestScenarioRunner(m_gameManager, this);
@@ -2350,6 +2532,12 @@ void MainWindow::refreshDisplay()
 {
     Frame& frame = m_gameManager.getMatch().getCurrentFrame();
 
+    // Reagit a une connexion/deconnexion telephone survenue depuis le
+    // dernier appel (voir applyRemotePanelVisibility()) : refreshDisplay()
+    // est appele apres chaque coup et par le minuteur de duree du match,
+    // donc assez souvent pour que le masquage/reaffichage semble immediat.
+    applyRemotePanelVisibility();
+
     announceNewEvents(frame);
 
     bool p1Active = (&frame.currentPlayer() == &frame.getPlayer1());
@@ -2381,11 +2569,9 @@ void MainWindow::refreshDisplay()
     m_player2ScoreBoxValue->setText(QString::number(frame.getPlayer2().getScore()));
 
     m_player1DetailPotted->setText(QString::number(frame.getPlayer1().getPottedPoints()));
-    m_player1DetailFreeBall->setText(QString::number(frame.getPlayer1().getFreeBallPoints()));
     m_player1DetailFouls->setText(QString::number(frame.getPlayer1().getFoulPoints()));
 
     m_player2DetailPotted->setText(QString::number(frame.getPlayer2().getPottedPoints()));
-    m_player2DetailFreeBall->setText(QString::number(frame.getPlayer2().getFreeBallPoints()));
     m_player2DetailFouls->setText(QString::number(frame.getPlayer2().getFoulPoints()));
 
     m_pointsRemainingLabel->setText(
@@ -2429,7 +2615,10 @@ void MainWindow::refreshDisplay()
             continue;
         }
         ballLabel->setVisible(true);
-        ballLabel->setText(QString::number(ballSet.countBalls(ballName)));
+        // Le chiffre n'a d'interet que pour la rouge (nombre de rouges
+        // restantes, decroit au fil de la frame) : les couleurs n'existent
+        // qu'en un seul exemplaire, afficher "1" dessus n'apporte rien.
+        ballLabel->setText(ballName == "Rouge" ? QString::number(ballSet.countBalls(ballName)) : QString());
     }
 
     if (frame.isFreeBall())
@@ -2724,8 +2913,43 @@ void MainWindow::announceNewEvents(Frame& frame)
     }
 }
 
+void MainWindow::snapshotFrameForUndo()
+{
+    m_undoSnapshot = m_gameManager.getMatch().getCurrentFrame();
+    m_hasUndoSnapshot = true;
+}
+
+void MainWindow::applyRemotePanelVisibility()
+{
+    if (!m_remotePanel || !m_remotePanelSimple)
+    {
+        return;
+    }
+
+    // Un telephone connecte prend le relais de la telecommande de bureau
+    // (voir MatchWebServer::hasActiveClient()) : elle se masque toute
+    // seule, sans toucher a la preference manuelle de l'utilisateur
+    // (m_remoteManualVisible), qui reprend effet des que le telephone
+    // se deconnecte.
+    bool phoneConnected = m_webServer && m_webServer->hasActiveClient();
+    bool effectiveVisible = m_remoteManualVisible && !phoneConnected;
+
+    QString version = SettingsDialog::loadRemoteVersion();
+    m_remotePanel->setVisible(effectiveVisible && version != "2.0");
+    m_remotePanelSimple->setVisible(effectiveVisible && version == "2.0");
+
+    if (m_toggleRemoteButton)
+    {
+        m_toggleRemoteButton->setText(
+            m_remoteManualVisible ? "Masquer telecommande" : "Afficher telecommande"
+        );
+    }
+}
+
 void MainWindow::handleBallAction(const QString& ballName, int ballValue)
 {
+    snapshotFrameForUndo();
+
     Frame& frame = m_gameManager.getMatch().getCurrentFrame();
     Ball clickedBall(ballName.toStdString(), ballValue);
 
@@ -2937,8 +3161,6 @@ void MainWindow::toggleVisionTracking()
         m_camera2.release();
         m_multiCameraMode = false;
         m_visionButton->setText("Demarrer suivi camera");
-        m_cameraPreviewLabel->clear();
-        m_cameraPreviewLabel->setText("Pas d'image");
         m_edgeWarningLabel->setVisible(false);
         return;
     }

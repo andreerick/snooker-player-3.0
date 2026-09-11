@@ -132,6 +132,13 @@ QVoice::Gender SettingsDialog::loadSpeechGender()
     return (value == "male") ? QVoice::Male : QVoice::Female;
 }
 
+QString SettingsDialog::loadRemoteVersion()
+{
+    QSettings settings(settingsFilePath(), QSettings::IniFormat);
+    QString value = settings.value("ui/remoteVersion", "2.0").toString();
+    return (value == "2.0") ? "2.0" : "1.0";
+}
+
 SettingsDialog::SettingsDialog(QWidget* parent)
     : QDialog(parent)
 {
@@ -212,6 +219,42 @@ SettingsDialog::SettingsDialog(QWidget* parent)
     genderHint->setWordWrap(true);
     genderHint->setStyleSheet("color: " + kGray + "; font-size: 10px; background: transparent;");
     soundCard->addWidget(genderHint);
+
+    // --- Telecommande ---
+    QVBoxLayout* remoteCard = addSettingsCard(layout, content, "TELECOMMANDE");
+
+    QWidget* remoteVersionRow = new QWidget(content);
+    QHBoxLayout* remoteVersionRowLayout = new QHBoxLayout(remoteVersionRow);
+    remoteVersionRowLayout->setContentsMargins(0, 0, 0, 0);
+    QLabel* remoteVersionLabel = new QLabel("Modele :", remoteVersionRow);
+    remoteVersionLabel->setStyleSheet("color: " + kWhite + "; font-size: 13px; background: transparent;");
+    m_remoteVersionCombo = new QComboBox(remoteVersionRow);
+    m_remoteVersionCombo->setStyleSheet(comboStyle);
+    m_remoteVersionCombo->addItem("1 - Telecommande test (scenarios)", "1.0");
+    m_remoteVersionCombo->addItem("2 - Telecommande simplifiee", "2.0");
+    m_remoteVersionCombo->setCurrentIndex(loadRemoteVersion() == "2.0" ? 1 : 0);
+    connect(m_remoteVersionCombo, &QComboBox::currentTextChanged, this, [this](const QString&)
+        {
+            QString value = m_remoteVersionCombo->currentData().toString();
+            QSettings settings(settingsFilePath(), QSettings::IniFormat);
+            settings.setValue("ui/remoteVersion", value);
+            settings.sync();
+            emit remoteVersionChanged(value);
+        });
+    remoteVersionRowLayout->addWidget(remoteVersionLabel);
+    remoteVersionRowLayout->addWidget(m_remoteVersionCombo, 1);
+    remoteCard->addWidget(remoteVersionRow);
+
+    QLabel* remoteVersionHint = new QLabel(
+        "La 1 garde tous les boutons de test (scenarios, rejeu, historique...). La 2 ne garde que "
+        "les couleurs, Faute, Fin de break, Esc et Game -- pour jouer sans se perdre dans les "
+        "options. Dans les deux cas, la telecommande se masque automatiquement des qu'un "
+        "telephone se connecte (voir tuile Smartphone).",
+        content
+    );
+    remoteVersionHint->setWordWrap(true);
+    remoteVersionHint->setStyleSheet("color: " + kGray + "; font-size: 10px; background: transparent;");
+    remoteCard->addWidget(remoteVersionHint);
 
     // --- Camera ---
     QVBoxLayout* cameraCard = addSettingsCard(layout, content, "CAMERA");
