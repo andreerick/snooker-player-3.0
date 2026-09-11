@@ -1,0 +1,22 @@
+# Fichiers de compilation (regenerables via CMake, ne pas versionner)
+/out/
+/build/
+*.obj
+*.ilk
+*.pdb
+*.exe
+*.dll
+*.lib
+
+# Cache Visual Studio (local a la machine, pas du contenu de projet)
+/.vs/
+
+# Donnees locales generees par l'appli en cours d'utilisation (pas du
+# code source -- specifiques a chaque installation/table)
+joueurs.ini
+matchs.json
+players.json
+players_photos/
+tournoi.json
+settings.ini
+table.ini

@@ -1,0 +1,1623 @@
+       RÈGLES
+ OFFICIELLES DU
+
+        JEU DE
+     SNOOKER
+
+C.S.N. Snooker – MAJ Septembre 2024
+  RÈGLES DU JEU DE SNOOKER
+
+Traduction des Règles officielles révisées, Septembre 2024.
+Nota : Les expressions et termes anglais ont tous été traduits en
+français à l’exception des mots suivants :
+Break, Frame, Free ball, Miss, Snooker (et ses dérivés) et Touching-
+ball.
+Vous trouverez aussi en Annexe 2 un lexique reprenant tous les
+termes d’usage en anglais ainsi que leur traduction.
+
+                                                         2
+INDEX
+
+SECTION 1 : MATÉRIEL
+
+01) Les normes de la table                    05
+
+02) Billes                                    06
+
+03) Queue                                     06
+
+04) Accessoires                               06
+
+SECTION 2 : DÉFINITIONS
+
+01) Frame (Manche)                            07
+
+02) Match                                     07
+
+03) Compétition                               07
+
+04) Billes                                    07
+
+05) Joueur actif et visite                    07
+
+06) Coup                                      08
+
+07) Empocher et blouser                       08
+
+08) Break (série de points)                   08
+
+09) Bille en main                             08
+
+10) Bille en jeu                              09
+
+11) Bille jouable                             09
+
+12) Bille désignée                            09
+
+13) Free-Ball (Bille libre)                   09
+
+14) Bille forcée hors de la table             09
+
+15) Infractions, fautes et pénalités          10
+
+16) Points de pénalité                        10
+
+17) Position de snooker                       10
+
+18) Mouche occupée                            10
+
+19) Poussé de bille                           10
+
+20) Coup sauté                                11
+
+21) Miss (Manqué) ou Bille manquée            11
+
+22) Période de consultation                   11
+
+SECTION 3 : LE JEU
+
+01) Description                               12
+
+02) Position des billes                       12
+
+03) Déroulement du jeu                        13
+
+04) Fin de frame, de match ou de compétition  15
+
+05) Bille en main                             15
+
+06) Toucher deux billes simultanément         15
+
+07) Remettre les couleurs sur les mouches     16
+
+                                      3
+08) Touching-Ball (Bille en contact)            17
+
+09) Bille en bord de poche                      18
+
+10) Fautes                                      18
+
+11) Valeurs des pénalités                       19
+
+12) Position de snooker après une faute         21
+
+13) Faire rejouer                               21
+
+14) Faute et Miss                               22
+
+15) Bille déplacée par quelqu’un d’autre que le joueur actif 23
+
+16) Bille déplacée en dehors d’un coup          23
+
+17) Pat (Stalemate)                             24
+
+18) Snooker à quatre joueurs                    24
+
+19) Snooker à six rouges                        25
+
+20) Utilisation des accessoires                 25
+
+21) Interprétation                          26
+
+SECTION 4 : LES JOUEURS
+
+01) Comportement antisportif                    27
+
+02) Concession                                  27
+
+03) Perte de temps                              28
+
+04) Pénalités                                   28
+
+05) Joueur non actif                            28
+
+06) Responsabilité du marquage des points       28
+
+07) Absence                                     29
+
+SECTION 5 : LES OFFICIELS
+
+01) L’arbitre                                   30
+
+02) Le marqueur                                 30
+
+03) L’archiviste                                30
+
+04) Aide des officiels                          30
+
+                            ANNEXES
+
+Règles du snooker, édition révisée de 2019
+
+01) Notes explicatives                          31
+
+02) Lexique                                     34
+
+                                 4
+                             SECTION 1 : MATÉRIEL
+
+Les mesures sont indiquées dans le système métrique dans la présente
+traduction. Les mesures britanniques officielles figurent entre parenthèses.
+[ft = foot (pied) ; in = inch (pouce)]
+
+1) Les normes de la table
+
+(a) La surface de jeu
+La surface de jeu entre les bords intérieurs des bandes doit mesurer 3 569 mm
+sur 1 778 mm (11 ft 8½ in x 5ft 10 in) avec une tolérance de plus ou moins 13
+mm (½ in) dans les deux dimensions.
+
+(b) Hauteur
+La hauteur de la table, du sol jusqu’au sommet des bandes doit être de 864 mm
+(2ft 9½ in) avec une tolérance de plus ou moins 13 mm (½ in).
+
+(c) Bande inférieure et bande supérieure
+Les deux côtés courts de la table sont appelés bande inférieure et bande
+supérieure. Si la table est pourvue d’un tapis avec des poils, ceux-ci sont
+orientés de la bande inférieure vers la bande supérieure.
+
+(d) La ligne de cadre et le cadre (Baulk Line & Baulk)
+La ligne de cadre est une ligne droite tracée à 737 mm (29 in) de la face interne
+de la bande inférieure, parallèle à celle-ci et allant d’une grande bande à l’autre.
+La surface délimitée par cette ligne et la bande inférieure est appelée le cadre.
+
+(e) Le “ D ”
+
+Le “ D ” est un demi-cercle tracé dans le cadre. Le centre de sa section droite
+coïncide avec celui de la ligne de cadre et son rayon est de 292 mm (11½ in).
+(f) Les mouches
+Tracées à chaque coin du “ D ” et vues depuis la bande inférieure, il y a à droite
+la mouche de la jaune et à gauche la mouche de la verte.
+
+Quatre mouches sont tracées sur la ligne centrale longitudinale de la table :
+
+    (i) La mouche de la marron, au milieu de la ligne de cadre (Baulk Line) ;
+    (ii) La mouche de la bleue, située à égale distance des faces internes des
+
+         petites bandes ;
+    (iii) La mouche de la rose, située à égale distance entre la mouche de la
+
+         bleue et la face interne de la bande supérieure ; et
+    (iv) La mouche de la noire, située à 324 mm (12¾ in) de la face interne de la
+
+         bande supérieure.
+(g) Les poches
+Des poches sont disposées aux quatre coins de la table ainsi qu’au milieu de
+chaque grande bande.
+
+                                                         5
+2) Billes
+(a) Un jeu de billes comprend 15 rouges et une seule bille de chacune des
+couleurs suivantes : jaune, verte, marron, bleue, rose, noire et une blanche.
+(b) Les billes doivent être fabriquées dans un composé approuvé et avoir
+chacune un diamètre de 52,5 mm avec une tolérance de plus ou moins 0,05
+mm.
+(c) Elles doivent avoir un poids égal si possible mais la différence entre la plus
+légère et la plus lourde d’un même jeu sera de 3 g au maximum.
+(d) Une bille ou un jeu complet de billes peut être changé d’un commun accord
+entre les joueurs ou sur décision de l’arbitre.
+3. Queue
+Une queue ne doit pas mesurer moins de 914 mm (3 ft). Elle doit avoir une
+forme et une apparence conique et effilée traditionnelle et être munie d’un
+procédé fixé à l’extrémité la plus fine afin de frapper la bille de choc.
+4. Accessoires
+Les joueurs peuvent utiliser toutes sortes de reposoirs, de rallonges,
+d’extensions et d’adaptateurs. Ces accessoires font partie du matériel que l’on
+trouve habituellement à la table mais les joueurs ou même l’arbitre peuvent
+également les apporter. Les extensions, adaptateurs et autres accessoires
+utilisés pour jouer et/ou viser doivent d’abord avoir été approuvés par les
+instances dirigeantes.
+
+                                                         6
+                           SECTION 2 : DÉFINITIONS
+
+Les définitions courantes employées dans ces règles sont en caractères
+italiques.
+
+1. Frame (Manche)
+
+Une frame de snooker commence par le coup d’ouverture (voir Sect. 3 § 3 (c)),
+chaque joueur jouant à son tour jusqu’à ce que la frame se termine par :
+
+(a) la concession volontaire par n’importe quel joueur ;
+
+(b) l’attribution au joueur actif lorsque la seule bille objet restant sur la table est
+la noire, que le cumul des points est sans importance et qu’il y a plus de sept
+points de différence au score en sa faveur ;
+
+(c) l’attribution au joueur non-actif, lorsque la seule bille objet restant sur la table
+est la noire, que le cumul des points est sans importance et qu’il y a plus de
+sept points de différence au score en sa faveur ; ou
+
+(d) le premier empochage ou la première infraction lorsque la noire est la seule
+bille objet restant sur la table (voir Sect. 3 § 4); ou
+
+(e) l’attribution par l’arbitre conformément à la Sect. 3 § 14 (d) (ii) ou Sect. 4 §
+1 (b), 1 (d), 3 (b) ou 3 (c).
+
+2. Match
+
+Un match est constitué d’un certain nombre de frames défini par avance.
+
+3. Compétition
+
+Une compétition est constituée d’un certain nombre de matchs défini par
+avance.
+
+4. Billes
+
+(a) La bille blanche est appelée bille de choc.
+
+(b) Les 15 rouges et les 6 couleurs sont appelées billes objets.
+
+5. Joueur actif et visite
+
+La personne qui s’apprête à jouer ou qui joue est le joueur actif. Sa visite prend
+fin lorsque :
+
+(a) il joue un coup sans marquer de point ; ou
+
+(b) il commet une faute, que toutes les billes s’arrêtent et que l’arbitre estime
+qu’il a quitté la table ; ou
+(c) il demande à son adversaire de rejouer après une faute de ce dernier ; ou
+
+                                                         7
+(d) la frame est attribuée au joueur actif, alors que la seule bille objet restant sur
+la table est la noire, que le cumul des points est sans importance et qu’il y a plus
+de sept points de différence au score en sa faveur ; ou
+
+(e) la noire finale est empochée et que la bille de choc s’est arrêtée.
+
+6. Coup
+
+(a) Un coup est joué lorsque le joueur actif frappe la bille de choc avec le
+procédé, sauf pendant la préparation du coup (appelée limage).
+
+(b) La bille de choc ne doit être frappée qu’une seule fois et non pas poussée.
+Le procédé peut rester brièvement en contact avec la bille de choc une fois
+qu’elle commence à bouger.
+
+(c) Un coup est valide lorsqu’aucune infraction aux présentes règles n’est
+commise.
+
+(d) Un coup n’est pas terminé tant que :
+
+    (i) toutes les billes ne se sont pas arrêtées ;
+    (ii) l’empochage des billes n’est pas terminé ;
+    (iii) le joueur actif n’a pas retiré le ou les accessoires qu’il a utilisés.
+
+(e) Un coup peut être direct ou indirect, comme suit :
+
+    (i) un coup est direct si la bille de choc touche une bille objet sans toucher
+         une bande en premier lieu ;
+
+    (ii) un coup est indirect si la bille de choc touche une ou plusieurs bandes
+         avant de toucher une bille objet.
+
+7. Empocher et blouser
+
+Il y a empochage lorsqu’une bille objet entre dans une poche après un contact
+avec une autre bille sans qu’il n’y ait eu infraction aux présentes règles. On dit
+que la bille a été empochée.
+Si une bille entre dans une poche lors d’un coup fautif on parlera de blousage.
+
+8. Break
+
+Un break est constitué d’un certain nombre d’empochages effectués par le
+joueur actif lors de coups successifs et en une seule visite.
+
+9. Bille en main
+
+(a) La bille de choc est dite en main :
+
+    (i) avant le début de chaque frame ;
+    (ii) lorsqu’elle a été blousée ;
+    (iii) lorsqu’elle a été forcée hors de la table ; ou
+
+                                                         8
+    (iv) lorsque la noire est remise sur sa mouche conformément à la Sect. 3
+         § 4 (b).
+
+(b) Elle reste en main jusqu’à ce que :
+
+    (i) elle soit légalement jouée depuis la position choisie ; ou
+    (ii) elle ne soit impliquée dans une faute une fois déposée sur la surface de
+
+         jeu.
+
+(c) Le joueur actif a bille en main lorsque la bille de choc se trouve dans les
+situations décrites ci-dessus.
+
+10. Bille en jeu
+
+(a) La bille de choc est en jeu lorsqu’elle n’est pas en situation de bille en main.
+
+(b) Les billes objets sont en jeu depuis le début de la frame jusqu’à ce qu’elles
+soient empochées, blousées ou forcées hors de la table.
+
+(c) Les couleurs sont à nouveau en jeu une fois remises sur leurs mouches.
+
+11. Bille jouable (Ball On)
+
+Toute bille est jouable si elle peut être légalement touchée en premier impact
+par la bille de choc ou si elle peut être empochée sans être ainsi impactée.
+
+12. Bille désignée
+
+(a) La bille désignée est une bille objet que le joueur actif annonce
+(verbalement) ou indique clairement à l’arbitre, s’engageant ainsi à la toucher
+en premier impact avec la bille de choc.
+
+(b) Si l’arbitre le lui demande, le joueur actif doit annoncer quelle bille il veut
+jouer.
+
+13. Free Ball (Bille libre)
+
+Une free ball est une bille qui n’est pas jouable mais que le joueur actif désigne
+comme telle lorsqu’il se retrouve snooké après une faute (voir Sect. 3 § 12).
+
+14. Bille forcée hors de la table
+
+Une bille est forcée hors de la table si elle s’arrête ailleurs que sur la surface de
+jeu ou dans une poche.
+
+15. Infractions, fautes et pénalités
+
+Toute violation des présentes règles constitue une infraction. Une faute est une
+infraction qui met fin à la visite du joueur fautif. Les pénalités sont des
+infractions qui n’affectent pas le tour de jeu.
+
+                                                         9
+16. Points de pénalité
+
+Des points de pénalité sont accordés au joueur non fautif après toute infraction.
+
+17. Position de snooker
+
+La bille de choc est en position de snooker si un coup direct en ligne droite vers
+chaque bille jouable est totalement ou partiellement bloqué par une ou plusieurs
+billes non jouables. La bille de choc n’est pas en position de snooker si une ou
+plusieurs billes jouables peuvent être touchées à leurs deux extrémités par un tir
+direct.
+
+(a) En cas de bille en main, la bille de choc est en position de snooker si elle est
+bloquée comme indiqué plus haut depuis toutes les positions à l’intérieur ou sur
+les lignes du “ D ”.
+
+(b) Si la bille de choc est ainsi bloquée par plusieurs billes qui ne sont pas
+jouables :
+
+    (i) la bille la plus proche de la bille de choc est considérée comme bille
+         réalisant le snooker ; et
+
+    (ii) si plusieurs billes faisant obstacle sont à égale distance de la bille de
+         choc, chacune d’elle sera considérée comme bille réalisant le snooker.
+
+(c) Lorsque les rouges sont jouables, si plusieurs billes non jouables empêchent
+la bille de choc d’impacter différentes rouges, alors il n’y a pas de bille réalisant
+le snooker.
+
+(d) On dit que le joueur actif est en position de snooker ou snooké ou lorsque la
+bille de choc est en position de snooker comme indiqué ci-dessus.
+
+(e) La bille de choc ne peut pas être snookée par une bande.
+
+18. Mouche occupée
+
+Une mouche est dite occupée si une bille ne peut pas y être déposée sans
+entrer en contact avec une autre bille.
+
+19. Poussé de bille (Suivi de bille ou Push Stroke)
+
+Il y a poussé de bille lorsque le procédé reste en contact avec la bille de choc :
+
+(a) après que la bille de choc a commencé son mouvement, sauf
+momentanément lors du contact initial ; ou
+(b) quand la bille de choc est également en contact avec une bille objet ;
+toutefois, dans le cas où la bille de choc et une bille objet sont presque en
+contact, il n’y a pas de poussé de bille si la bille de choc touche très finement la
+bille objet.
+
+                                                         10
+20. Coup sauté (Jump Shot)
+Il y a un coup sauté lorsque la bille de choc passe par-dessus n’importe quelle
+partie d’une bille objet, qu’elle la touche ou pas pendant le coup, sauf :
+(a) lorsque la bille de choc touche d’abord une bille objet — autre qu’une
+touching ball — avant de passer par-dessus une autre bille ; ou
+(b) lorsque la bille de choc saute et touche une bille objet — autre qu’une
+touching ball — et ne se trouve pas du côté le plus éloigné de cette bille objet
+lorsqu’elle retombe sur la surface de jeu ; ou
+(c) lorsque, ayant touché légalement une bille objet, — autre qu’une touching
+ball — la bille de choc saute par-dessus cette bille après avoir heurté une bande
+ou une autre bille.
+21. Miss (Manqué ou Bille manquée)
+Il y a miss ou bille manquée lorsque la bille de choc ne touche pas en premier
+contact une bille jouable (voir Sect. 3 § 14).
+22. Période de consultation
+La période de consultation est la période pendant laquelle les joueurs peuvent
+aider l’arbitre à replacer la ou les billes dans leurs positions d’origine après
+qu’une infraction a été commise (Sect. 3 §§ 2 (c) (ii), 3 (k), 10 (i), 14, 15 et
+16 (c)) ou comme indiqué dans la Sect. 3 § 9. Cette période de consultation
+débute dès que la décision de replacer la ou les billes a été prise ; elle prend fin
+lorsque les deux joueurs sont satisfaits de ces positions ou sur décision de
+l’arbitre.
+
+                                                         11
+                               SECTION 3 : LE JEU
+
+1. Description
+
+Le snooker peut se jouer à deux joueurs ou plus, individuellement ou par
+équipes. Le jeu peut se résumer comme suit :
+
+(a) Chaque joueur utilise la même bille de choc blanche. Il y a aussi vingt-et-une
+billes objets : quinze rouges valant chacune 1 point et six couleurs : la jaune
+vaut 2 points, la verte 3, la marron 4, la bleue 5, la rose 6 et la noire 7.
+
+(b) Les coups rapportent des points au joueur si celui-ci, lors de sa visite,
+empoche alternativement les rouges et les couleurs jusqu’à ce que les rouges
+soient toutes hors de la table, puis les couleurs dans l’ordre croissant de leurs
+valeurs.
+
+(c) Les points marqués par le joueur actif sont ajoutés à ses points déjà
+marqués.
+
+(d) Des points de pénalité sont ajoutés aux points de l’adversaire en cas
+d’infraction.
+
+(e) Une tactique utilisable à tout moment au cours d’une frame (manche)
+consiste à laisser la bille de choc derrière une bille non jouable de manière à
+mettre l’adversaire en position de snooker. Si un joueur ou une équipe a plus de
+points de retard qu’il n’en reste sur la table, alors la perspective de gagner des
+points en provoquant des fautes par ce moyen prend de l’importance.
+
+(f) Le vainqueur d’une frame est le joueur ou l’équipe :
+
+    (i) qui a le score le plus élevé ;
+    (ii) à qui l’on a concédé la frame ; ou
+    (iii) à qui elle a été attribuée selon la Sect. 3 § 14 (d) (ii) ou la Sect. 4 § 1 (b),
+
+         1 (d), 3 (b) ou 3 (c).
+
+(g) Le vainqueur d’un match est le joueur ou l’équipe :
+
+    (i) qui remporte le plus ou le nombre requis de frames ;
+    (ii) qui réalise le meilleur total de points lorsque leur cumul est important ; ou
+    (iii) à qui le match a été attribué selon la Sect. 4 § 1 (c) ou 1 (d).
+
+(h) Le vainqueur d’une compétition est le joueur ou l’équipe qui remporte le plus
+de matchs ou le meilleur total de points lorsque leur cumul est important.
+
+2. Position des billes
+
+(a) Au début de chaque frame le joueur qui commence a bille en main et les
+billes objets sont disposées sur la table comme suit :
+
+    (i) les rouges forment un triangle équilatéral serré, la bille de tête étant sur
+         la ligne centrale juste au-dessus de la mouche de la rose. Elle en sera le
+                                                         12
+         plus proche possible mais sans l’occuper, tandis que la base du triangle
+         sera parallèle à la bande supérieure ;
+    (ii) les six couleurs sur les mouches comme indiqué à la Sect. 1 § 1 (f).
+
+(b) En cas d’erreur lors de la mise en place de la table on appliquera la Sect. 3
+§ 7 (c), la frame débutant comme indiqué à la Sect. 3 § 3 (c).
+
+(c) Une fois qu’une frame a débuté, une bille en jeu ne peut être nettoyée que
+par l’arbitre, si le joueur actif en fait la demande de façon raisonnable, et :
+
+    (i) si la bille n’est pas sur une mouche, sa position sera repérée par un
+         dispositif approprié avant de la prendre pour la nettoyer ;
+
+    (ii) Tout contact d'un joueur avec le dispositif constitue une infraction.
+                  L'arbitre attribuera les points de pénalité correspondants au non-
+
+         contrevenant et replacera le dispositif ou la bille à son emplacement
+         d'origine, si nécessaire, même s'il a été ramassé.
+
+         Une période de consultation débute dès que la décision de replacer le
+         dispositif ou la bille a été prise.
+
+3. Déroulement du jeu
+
+Les joueurs détermineront l’ordre de jeu par tirage au sort ou par tout autre
+moyen déterminé par accord mutuel, le gagnant ayant le choix de commencer
+ou pas.
+
+(a) L’ordre de jeu ainsi déterminé restera inchangé tout au long de la frame,
+sauf si un joueur demande à son adversaire de rejouer à la suite d’une faute.
+
+(b) Le joueur ou l’équipe qui ouvre le jeu doit alterner à chaque frame pendant
+un match.
+
+(c) Le premier joueur a bille en main et la frame commence lorsque la bille de
+choc a été placée sur la table et a été touchée par le procédé, soit :
+
+    (i) lorsqu’un coup est joué ; ou
+    (ii) pendant la préparation du coup.
+
+(d) Si une frame est commencée par le mauvais joueur ou la mauvaise équipe :
+
+    (i) il faudra la recommencer, sans pénalité, si un seul coup a été joué et
+         qu’aucune infraction n’a été commise; ou
+
+    (ii) il faudra la continuer normalement si un autre coup a été joué ou si une
+         infraction a été commise pendant le premier coup ou après la fin de celui-
+         ci ; on reprendra l’ordre correct lors de la frame suivante, le même joueur
+         ou la même équipe devant ainsi débuter trois frame consécutives ; ou
+
+    (iii) si une situation de pat est déclarée (voir Sect. 3 § 17), il faudra faire
+         recommencer la frame par le bon joueur ou la bonne équipe.
+
+                                                         13
+(e) Pour qu’un coup soit légal, aucune des infractions décrites plus loin dans la
+Sect. 3 § 11 (Valeurs des pénalités) ne doit avoir eu lieu.
+
+(f) Il est de la responsabilité du joueur actif de s’assurer que tout objet ou
+accessoire utilisé pendant la visite en cours ou précédente a été retiré de la
+table.
+
+(g) À chaque visite, pour le premier coup, la bille jouable est une rouge ou une
+free ball (bille libre) désignée comme rouge ; on marquera les points pour
+chaque rouge ou free ball désignée comme rouge empochée dans le même
+coup.
+
+(h) (i)    Si une rouge ou une free ball désignée comme rouge est empochée, le
+    (ii)   même joueur joue le coup suivant et la bille jouable suivante est une
+    (iii)  couleur au choix du joueur actif. Si elle est empochée, elle sera remise
+    (iv)   sur sa mouche et ses points sont comptés ;
+           Le break se poursuit en empochant alternativement des rouges et des
+           couleurs jusqu’à ce qu’il ne reste plus de rouge sur la table et, le cas
+           échéant, qu’une couleur ait été jouée suite à l’empochage de la
+           dernière rouge ;
+           Les couleurs deviennent alors jouables en suivant l’ordre croissant de
+           leurs valeurs conformément à la Sect. 3 § 1 (a) et restent hors de la
+           table lorsqu’elles sont empochées, sauf dans le cas prévu dans la Sect.
+           3 § 4. Le joueur actif joue alors la couleur jouable suivante ;
+           Si le joueur actif, pendant un break, joue avant que l’arbitre n’ait fini de
+           remettre une couleur sur mouche alors que les autres billes sont
+           immobiles, la valeur de cette couleur ne sera pas comptée et on
+           appliquera la Sect. 3 § 11 (a) (i) ou la Sect. 3 § 11 (b) (ii).
+
+(i) En général on ne replace pas les rouges sur la table une fois qu’elles ont été
+empochées, blousées ou forcées hors de la table, même si un joueur pourrait
+ainsi tirer bénéfice d’une faute. Des exceptions sont cependant prévues aux
+Sect. 3 § 2 (c) (ii), 3 (k), 9, 10 (i), 14 (b), 14 (e), 15, 16 (c), 19 (b) et Sect. 5 §
+1 (a) (i).
+
+(j) Si le joueur actif n’empoche pas de bille, il doit quitter la table sans délai. S’il
+commet une faute avant ou pendant qu’il quitte la table, il sera pénalisé comme
+indiqué à la Sect. 3 § 11. Le coup suivant sera joué depuis l’endroit où la bille de
+choc se sera arrêtée ou depuis la position de bille en main si elle n’est pas en
+jeu, sauf dans les cas où elle doit être replacée selon la Sect. 3 § 10 (i) et 14
+(e).
+
+(k) Il y a pénalité si le joueur non actif vient à la table alors que ce n’est pas à lui
+de jouer et commet une infraction. L’arbitre annoncera PÉNALITÉ et toute bille
+qui aura été déplacée sera replacée comme avant l’infraction. La visite du
+joueur actif continuera alors normalement. Une période de consultation débute
+dès que la décision de replacer la ou les billes a été prise.
+(l) Si, suite au dernier coup de son adversaire, un joueur joue la bille de choc ou
+commet une infraction avant l’arrêt complet des billes ou avant que l’arbitre n’ait
+fini de remettre une couleur sur mouche, il sera pénalisé comme s’il était le
+joueur actif et sa visite prendra fin.
+
+                                                         14
+(m) Si une bille entre dans une poche et rebondit sur la surface de jeu, elle n’est
+pas considérée comme empochée ou blousée. Le joueur actif n’a aucun recours
+si cela arrive.
+
+4. Fin de frame, de match ou de compétition
+
+(a) Lorsque la seule bille objet restant sur la table est la noire, la frame prend fin
+avec le premier empochage ou la première faute, sauf si les deux conditions
+suivantes sont réunies :
+
+    (i) si les scores deviennent égaux ; et
+    (ii) les scores cumulés n’ont pas d’importance.
+
+(b) Lorsque les deux conditions décrites ci-dessus en (a) s’appliquent :
+
+    (i) la noire est remise sur sa mouche ;
+    (ii) les joueurs tirent au sort celui qui va jouer ;
+    (iii) le joueur qui commence a bille en main ; et
+    (iv) le premier empochage ou la première infraction met fin à la frame.
+
+(c) Lorsque le vainqueur d’un match ou d’une compétition est déterminé par les
+points cumulés et que ceux-ci sont égaux à la fin de la dernière frame, les
+joueurs suivront la procédure de noire remise sur sa mouche décrite ci-dessus
+en (b).
+
+5. Bille en main
+
+Lorsqu’un joueur a bille en main, la bille de choc doit être jouée depuis l’intérieur
+du “ D ” ou sur une de ses lignes, et ce dans n’importe quelle direction.
+
+(a) Si l’on le lui demande, l’arbitre doit indiquer si la bille de choc est
+correctement placée (à savoir si elle n’est pas à l’extérieur des lignes du “ D ”).
+
+(b) Si le procédé touche la bille de choc pendant qu’elle est mise en position et
+que l’arbitre estime que le joueur actif ne tentait pas de jouer un coup, alors la
+bille de choc n’est pas en jeu.
+
+6. Toucher deux billes simultanément
+Deux billes ne peuvent être touchées simultanément par la bille de choc en
+premier impact, sauf dans le cas de deux rouges ou d’une free ball et d’une bille
+jouable.
+
+7. Remettre les couleurs sur les mouches
+Toute couleur empochée, blousée ou forcée hors de la table sera remise sur
+mouche avant de jouer le coup suivant, jusqu’à ce qu’elle soit empochée
+conformément à la Sect. 3 § 3 (h) (iii).
+
+(a) un joueur ne pourra être tenu pour responsable si l’arbitre repositionne
+incorrectement quelque bille que ce soit.
+
+                                                         15
+(b) Si une couleur est repositionnée par erreur après avoir été empochée dans
+l’ordre croissant prévu dans la Sect. 3 § 3 (h) (iii), elle sera retirée de la table
+sans pénalité dès que l’erreur aura été découverte et le jeu continuera depuis la
+position résultante. Si l’erreur est découverte après que la couleur a été
+empochée, les points marqués compteront après que le coup suivant aura été
+joué ou après qu’une infraction aura été commise avant de jouer le coup
+suivant.
+
+(c) Si un coup est joué alors qu’une ou plusieurs billes ne sont pas correctement
+positionnées, elles seront considérées comme correctement positionnées pour
+les coups suivants. Toute couleur non présente sur la table sera remise sur sa
+mouche :
+
+    (i) sans pénalité si son absence est constatée suite à un oubli antérieur, à
+         condition que la frame n’ait pas pris fin conformément à la Sect. 2 § 1. Le
+         jeu continuera à partir de la position résultante.
+
+    (ii) avec une pénalité si le joueur actif a joué avant que l’arbitre n’ait eu le
+         temps d’effectuer la remise sur mouche.
+
+(d) Si une rouge est repositionnée sur une mouche à la place d’une couleur, une
+fois l’erreur découverte :
+
+    (i) si la rouge peut être identifiée elle sera retirée de la table ; ou
+    (ii) si la rouge peut être identifiée mais a été empochée, blousée, ou forcée
+
+         hors de la table, ou si la couleur était déjà repositionnée comme décrit en
+         (c) ci-dessus, ou si la rouge ne peut être identifiée, la frame continuera,
+         ce qui créera de ce fait une frame à seize rouges. Dans l’éventualité où la
+         couleur n’est pas sur la table elle sera repositionnée et dans tous les cas
+         le jeu se poursuivra depuis la position résultante, sans pénalité.
+
+(e) Si une couleur doit être repositionnée et que sa mouche est occupée, elle
+sera placée sur la mouche de plus haute valeur disponible.
+
+(f) Si plusieurs couleurs doivent être repositionnées et que leurs mouches sont
+occupées, la bille de plus haute valeur sera privilégiée dans l’ordre de
+remplacement.
+
+(g) Si toutes les mouches sont occupées, la couleur sera placée le plus près
+possible de sa mouche entre celle-ci et la partie la plus proche de la bande
+supérieure.
+
+(h) Dans le cas de la rose et de la noire, si toutes les mouches sont occupées et
+qu’il n’y a aucun espace entre la mouche appropriée et la partie la plus proche
+de la bande supérieure, la couleur sera placée le plus près possible de sa
+mouche dans l’axe longitudinal central de la table.
+
+(i) Dans tous les cas, une couleur remise sur mouche ne doit pas être en
+contact avec une autre bille.
+
+(j) Pour être correctement replacée, une couleur doit être mise sur la mouche
+désignée dans les présentes Règles
+
+                                                         16
+8. Touching Ball (Bille en contact)
+
+(a) Si, à la fin d’un coup, la bille de choc est en contact avec une ou plusieurs
+billes qui sont ou qui pourraient être jouables, l’arbitre annoncera “ Touching
+Ball ” et, en cas de doute, indiquera la ou les billes jouables en contact avec la
+bille de choc. Si cette dernière est en contact avec une ou plusieurs couleurs
+après qu’une rouge (ou une free ball désignée comme rouge) a été empochée,
+l’arbitre demandera aussi au joueur actif d’INDIQUER quelle est la couleur qu’il
+veut jouer.
+
+(b) Lorsqu’une Touching Ball a été annoncée, le joueur actif doit éloigner la bille
+de choc de cette bille sans la faire bouger, sinon il y aurait un poussé de bille.
+
+(c) Si le joueur actif, en jouant un coup, ne fait bouger aucune bille objet en
+contact avec la bille de choc, il n’y aura pas de pénalité si :
+
+    (i) la bille est jouable ;
+    (ii) la bille pourrait être jouable et que le joueur actif annonce vouloir la
+
+         jouer ; ou
+    (iii) la bille pourrait être jouable et que le joueur actif annonce et touche en
+
+         premier contact une autre bille qui pourrait être jouable.
+
+(d) Si la bille de choc s’arrête en contact ou très près d’une bille qui n’est pas
+jouable, l’arbitre, si on lui demande si les billes sont en contact, clarifiera la
+situation.
+
+(e) Si la bille de choc est en contact avec une bille jouable et une bille non
+jouable, l’arbitre n’indiquera que la bille jouable comme touching ball. Si le
+joueur actif demande à l’arbitre si la bille non jouable est aussi en contact avec
+la bille de choc, il devra le lui dire.
+
+(f) Il n’y a pas de faute si l’arbitre estime que ce n’est pas du fait du joueur actif
+qu’une touching ball a bougé au moment où le coup a été joué.
+
+(g) Si l’arbitre constate qu’une une bille objet immobile ne touche pas la bille de
+choc et qu’un contact soit ensuite constaté avant de jouer le coup, l’arbitre
+repositionnera les billes comme il le jugera bon. Ceci s’applique aussi dans le
+cas où l’arbitre constate qu’une touching ball ne l’est plus après un examen
+ultérieur.
+
+9. Bille en bord de poche
+
+Si une bille tombe dans une poche sans avoir été touchée par une autre bille :
+
+(a) Si elle n’était impliquée dans aucun coup en en train d’être joué, elle sera
+remise en place et les points marqués seront comptés.
+
+(b) Si elle pouvait être touchée par une bille quelconque impliquée dans un
+coup :
+
+                                                         17
+    (i) sans infraction aux présentes règles (y compris les cas où une infraction
+         aurait été commise si la bille n’était pas tombée en poche), toutes les
+         billes seront replacées et le même coup sera rejoué ; si le joueur actif le
+         juge bon, il pourra jouer un autre coup ;
+
+    (ii) si une faute est commise, le joueur actif se verra infliger la pénalité
+         prévue à la Sect. 3 § 11, toutes les billes seront replacées et l’autre
+         joueur pourra choisir l’une des options habituelles après une faute.
+
+(c) Si une bille reste momentanément en équilibre en bord de poche et y tombe,
+elle sera considérée comme empochée ou blousée et ne sera pas replacée.
+
+Une période de consultation débute dès que la décision de replacer la ou les
+billes a été prise.
+
+10. Les fautes
+
+Si une faute est commise, l’arbitre annoncera immédiatement FAUTE.
+
+(a) Si le joueur actif n’a pas encore joué de coup, sa visite prend fin
+immédiatement et l’arbitre annoncera la pénalité.
+
+(b) Si un coup a été joué, l’arbitre attendra la fin de celui-ci avant d’annoncer la
+pénalité.
+
+(c) Si une faute ou une pénalité n’a pas été annoncée par l’arbitre et que le
+joueur non actif ne la réclame pas avant que le prochain coup ne soit joué, il
+n’en sera pas tenu compte.
+
+(d) Toute couleur qui n’a pas été remise correctement sur mouche restera là où
+elle a été positionnée sauf si elle est hors de la table ; dans ce cas elle sera
+correctement remise sur mouche.
+
+(e) Tous les points inscrits avant une faute lors d’un break sont acquis mais le
+joueur actif ne marquera pas de points pour toute bille blousée lors d’un coup
+fautif.
+
+(f) Le coup suivant est joué de là où la bille de choc s’est arrêtée ; si elle n’est
+plus en jeu, il y aura bille en main.
+
+(g) Si plusieurs fautes sont commise lors du même coup, c’est celle donnant la
+plus haute pénalité qui sera appliquée.
+
+(h) Le joueur qui a commis la faute :
+
+    (i) encourt la pénalité prévue à la Sect. 3 § 11 ; et
+    (ii) doit jouer le coup suivant si son adversaire le demande.
+
+(i) Si le joueur actif commet une faute sur n’importe quelle bille, y compris la bille
+de choc avant de la jouer, la pénalité appropriée sera appliquée. Le joueur non
+fautif peut alors choisir de jouer lui-même depuis la position nouvelle ou
+demander au fautif de rejouer depuis la position nouvelle ou la position
+
+                                                         18
+d’origine. Dans ce dernier cas toutes les billes seront replacées et la bille
+jouable sera la même qu’avant l’infraction, à savoir :
+
+    (i) N’importe quelle rouge si les rouges étaient jouables :
+    (ii) La couleur jouable lorsqu’il ne reste plus de rouge sur la table ;
+    (iii) Une couleur au choix du joueur actif si la bille jouable était une couleur
+
+         après qu’une rouge ou une free ball désignée à la place d’une rouge a
+         été empochée.
+
+11. Valeurs des pénalités.
+
+Les actions suivantes constituent des fautes et sont passibles d’une pénalité de
+quatre points, sauf si une pénalité plus importante est prévue aux §§ (a) à (d) ci-
+dessous :
+
+(a) la valeur de la bille jouable :
+
+    (i) jouer avant que l’arbitre n’ait replacé une couleur désignée comme free
+         ball ;
+
+    (ii) jouer la bille de choc plus d’une fois lors d’un coup ;
+    (iii) jouer alors qu’aucun pied ne touche le sol ;
+    (iv) jouer lorsque ce n’est pas à son tour dans le snooker à quatre joueurs ;
+    (v) jouer de façon irrégulière avec bille en main, y compris le coup
+
+         d’ouverture ;
+    (vi) n’impacter aucune bille objet avec la bille de choc ;
+    (vii) blouser la bille de choc ;
+    (viii) créer une position de snooker derrière une free ball désignée, sauf dans
+
+         le cas prévu à la Sect. 3 § 12 (b) (ii) ;
+    (ix) jouer un coup sauté ;
+    (x) jouer avec une queue hors normes ; ou
+    (xi) consulter ou communiquer avec un partenaire à l’encontre de la Sect. 3
+
+         § 18 (e) ;
+
+(b) la valeur de la bille jouable ou la valeur la plus élevée des billes concernées :
+
+    (i) jouer lorsqu’une ou plusieurs billes sont encore en mouvement ;
+    (ii) jouer avant que l’arbitre n’ait fini de remettre sur mouche une couleur qui
+
+         n’est pas une free ball ;
+    (iii) blouser une bille non jouable ;
+    (iv) toucher en premier impact une bille non jouable avec la bille de choc ou,
+
+         lorsqu’une free ball a été désignée, toucher en premier impact avec la
+         bille de choc toute autre bille que la free ball désignée, sauf si elle a été
+         impactée simultanément avec une bille jouable ;
+    (v) faire un poussé de bille ;
+    (vi) toucher une bille en jeu ou un marque-bille indiquant l’emplacement
+         d’une bille en jeu avec n’importe quelle partie du corps, des vêtements ou
+         d’un accessoire ;
+    (vii) provoquer un contact entre n’importe quelle bille et tout objet ou
+         accessoire laissé sur la table pendant sa visite ou lors d’une visite
+         précédente ;
+
+                                                         19
+    (viii) jouer avant que n’importe quelle bille retirée pour être nettoyée n’ait été
+         remise sur la table ;
+
+    (ix) forcer une bille hors de la table ;
+    (x) au snooker à six rouges, mettre la bille de choc en position de snooker
+
+         derrière la bille désignée.
+
+(c) la valeur de la bille jouable ou la valeur la plus haute des deux billes
+concernées si l’on touche simultanément deux billes avec la bille de choc (sauf
+dans le cas de deux rouges si elles sont jouables ou d’une free ball et d’une bille
+jouable) ;
+
+(d) sept points si le joueur actif :
+
+    (i) se sert d’une bille qui est hors de la table dans quelque but que ce soit ;
+    (ii) se sert de n’importe quel objet pour mesurer un espace ou une distance ;
+    (iii) joue successivement deux rouges ou une free ball suivie d’une rouge ;
+    (iv) se sert d’une autre bille que la blanche comme bille de choc après que la
+
+         frame a commencé ;
+    (v) n’indique pas quelle bille il va jouer lorsqu’il est en position de snooker ou
+
+         lorsque l’arbitre le lui demande ; ou
+    (vi) commet une faute avant de désigner une couleur après avoir empoché
+
+         une rouge (ou une free ball désignée comme rouge).
+
+Les actions suivantes constituent des pénalités valant quatre points sauf si des
+pénalités plus élevées sont prévues aux §§ (e) à (g) ci-dessous :
+
+(e) la valeur de la bille jouable ou de la bille concernée de plus haute valeur en
+commettant une infraction en dehors de sa visite, comme indiqué dans la Sect.
+3 § 3 (l).
+
+(f) sept points si n’importe quel joueur touche une bille ou le marque bille avec
+n’importe quelle partie du corps, des vêtements ou d’un accessoire, pendant
+une période de consultation.
+
+(g) sept points si le joueur non actif :
+
+    (i) se sert d’une bille qui est hors de la table dans quelque but que ce soit ;
+    (ii) se sert de n’importe quel objet pour mesurer un espace ou une distance.
+Toute bille déplacée sera remise sur sa position d’origine par l’arbitre sur
+demande du joueur non fautif.
+
+12. Position de snooker après une faute
+
+Si la bille de choc est en position de snooker après une faute (voir Sect. 2 § 17),
+l’arbitre annoncera Free Ball (Bille libre).
+
+(a) Si le joueur non fautif choisit de jouer le coup suivant :
+    (i) il peut designer n’importe quelle bille comme bille jouable, mais la bille
+         jouable ne peut pas être désignée comme free ball ;
+
+                                                         20
+    (ii) toute bille désignée sera considérée comme la bille jouable et en
+         acquerra la valeur, à la différence qu’elle sera remise sur mouche si elle
+         est empochée.
+
+(b) Il y a faute si la bille de choc :
+    (i) ne touche pas en premier impact la free ball désignée, sauf en cas de
+         contact simultané avec une bille jouable ; ou
+    (ii) après un coup qui ne rapporte pas de point, se retrouve en position de
+         snooker sur toutes les rouges ou la bille jouable par la free ball désignée,
+         sauf s’il ne reste que deux billes sur la table, c'est-à-dire la Rose et la
+         Noire, ou la Noire et une autre couleur comme décrit dans la Section 3,
+         Règle 7.
+
+(c) Si la free ball désignée est empochée, elle est remise sur mouche et la
+valeur de la bille jouable est marquée.
+
+(d) Si une bille jouable est empochée après que la bille de choc a touché en
+premier la bille désignée ou si le contact avec une bille jouable a été simultané,
+la bille jouable est comptée et reste hors de la table.
+
+(e) Si la bille désignée et une bille jouable sont empochées, seule la bille
+jouable est comptée, sauf si c’est une rouge, auquel cas toutes les billes
+empochées sont comptées. La free ball est alors remise sur mouche et la bille
+jouable reste hors de la table.
+
+(f) Si l’on demande au joueur fautif de rejouer ou que le non fautif demande que
+la ou les billes soient replacées (selon la Section 3 §§ 10 (i), 14 (b) et 14 (e)), la
+free ball sera annulée.
+
+13. Rejouer
+
+Une fois qu’un joueur a demandé à son adversaire de rejouer après une faute
+ou a demandé le replacement de la ou des billes après une faute ou une Faute
+et Miss, il ne pourra pas revenir sur sa décision. Le fautif, à qui l’on a demandé
+de rejouer, a le droit de :
+
+(a) changer d’avis sur :
+    (i) le coup qu’il jouera ; et
+    (ii) la bille jouable qu’il tentera de toucher ;
+
+(b) marquer des points pour la ou les billes qu’il pourrait empocher.
+14. Faute et Miss (Bille manquée)
+
+(a) Le joueur actif devra, au mieux de ses capacités, s’efforcer de toucher la
+bille jouable ou une bille qui pourrait être jouable après qu’une rouge aura été
+empochée. Si l’arbitre estime que cette règle a été enfreinte, il annoncera
+FAUTE ET MISS, sauf si :
+
+    (i) l’un ou l’autre des joueurs avait besoin de points de pénalité avant le coup
+         ou suite à celui-ci, et que l’arbitre estime que le MISS n’était pas
+         intentionnel ;
+
+                                                         21
+    (ii) la situation est telle qu’il est impossible de toucher la bille jouable. Dans
+         ce dernier cas il doit être tenu comme établi que le joueur actif tente bien
+         de toucher la bille jouable en tirant, directement ou indirectement, dans
+         sa direction avec suffisamment de puissance, aux yeux de l’arbitre, pour
+         l’atteindre si aucune bille ne faisait obstruction.
+
+(b) Quand l’arbitre annonce FAUTE ET MISS, le joueur non fautif peut
+demander au fautif de rejouer depuis la nouvelle position ou depuis la position
+d’origine ; dans ce cas toutes les billes seront replacées et la bille jouable sera
+la même qu’avant de jouer le dernier coup, à savoir :
+
+    (i) n’importe quelle rouge si la bille jouable était une rouge ;
+    (ii) la couleur jouable si toutes les rouges étaient hors de la table ; ou
+    (iii) une couleur au choix du joueur actif si la bille jouable était une couleur
+
+         après qu’une rouge eut été empochée.
+
+(c) Si le joueur actif, lors de son coup, échoue à toucher en premier une bille
+jouable alors qu’il existe un passage direct en ligne droite entre la bille de choc
+et tout ou partie de n’importe quelle bille qui est ou pourrait être jouable, l’arbitre
+annoncera FAUTE ET MISS, sauf dans les cas prévus à la Sect.3 § 14 (a) (i).
+
+(d) Après qu’un MISS a été annoncé selon le paragraphe (c) ci-dessus, alors
+qu’il y a un passage direct en ligne droite entre la bille de choc et une bille qui
+est ou pourrait être jouable, et qu’un contact central en pleine bille était possible
+(dans le cas des rouges on prend en compte le diamètre complet de toute rouge
+qui n’est pas obstruée par une couleur), ou lorsque la bille de choc est au
+contact d’une bille qui pourrait être jouable après qu’une rouge a été empochée,
+alors :
+
+    (i) une FAUTE ET MISS sera annoncée si une deuxième tentative d’impacter
+         une bille jouable depuis la position d’origine se solde par un échec, et ce
+         sans tenir compte de la différence au score ;
+
+    (ii) dans le cas d’un deuxième échec, comme décrit ci-dessus en (i) et s’il est
+         demandé au joueur fautif de rejouer depuis la position d’origine, l’arbitre
+         l’avertira qu’en cas de nouvel échec la frame sera accordée à son
+         adversaire. Toutefois, une frame ne pourra pas être accordée si
+         l’avertissement n’a pas été donné. Si l’arbitre n’a pas donné
+         l’avertissement et que la séquence de FAUTE ET MISS s’est poursuivie,
+         le joueur actif sera averti dès la première occasion ;
+
+    (iii) s’il est demandé au fautif de jouer depuis la nouvelle position, la
+         séquence de FAUTE ET MISS décrite en (d) (i) et d (ii) prend fin.
+
+(e) Une fois que toutes les billes ont été replacées selon cette règle, si le joueur
+actif commet une faute sur n’importe quelle bille (y compris la bille de choc), on
+n’annoncera pas de MISS si aucun coup n’a été joué. Dans ce cas on
+appliquera la pénalité appropriée. Le joueur non fautif pourra choisir de jouer lui-
+même depuis la nouvelle position ou de demander au joueur fautif de rejouer
+depuis la nouvelle position ou la position d’origine. Dans ce dernier cas toutes
+les billes seront replacées et la bille jouable sera la même qu’avant de jouer le
+dernier coup, à savoir :
+
+                                                         22
+    (i) n’importe quelle rouge si la bille jouable était une rouge ;
+    (ii la couleur jouable si toutes les rouges étaient hors de la table ; ou
+    (iii) une couleur au choix du joueur actif si la bille jouable était une couleur
+
+         après qu’une rouge ou une free ball désignée comme rouge eut été
+         empochée.
+
+Si la situation décrite ci-dessus se produit lors d’une séquence de FAUTE ET
+MISS comme indiqué au paragraphe (d) ci-dessus, tout avertissement
+concernant la possible attribution de la frame à l’adversaire ne restera effectif
+que dans le cas où toutes les billes auront été remises dans leurs positions
+précédant l’infraction.
+
+(f) Une période de consultation débutera dès lors qu’un repositionnement des
+billes aura été demandé après l’annonce d’une FAUTE ET MISS.
+
+15. Bille déplacée par quelqu’un d’autre que le joueur actif
+
+Si une bille, immobile ou en mouvement, est perturbée par quelqu’un d’autre
+que le joueur actif, elle sera replacée par l’arbitre à l’endroit où, selon son
+jugement, elle était ou se serait arrêtée, et ce sans pénalité pour le joueur actif.
+Une période de consultation débute dès que la décision de replacer la ou les
+billes a été prise.
+
+(a) Cette règle inclut les cas où le joueur actif bouge une bille à cause d’un
+événement extérieur ou d’une personne autre que son coéquipier. Elle ne
+s’appliquera pas lorsque la bille bouge à cause d’un défaut sur la table, sauf
+dans le cas où une bille remise sur mouche bouge avant que le coup suivant
+n’ait été joué.
+
+(b) Aucun joueur ne sera pénalisé si l’arbitre dérange des billes.
+
+16. Bille déplacée intentionnellement
+
+En dehors du fait de frapper la bille de choc pour effectuer un coup, ou de
+toucher une bille pendant une période de consultation, si une bille est déplacée
+ou ramassée intentionnellement par le joueur dans l'aire de jeu, l'arbitre
+annoncera FAUTE.
+
+(a) Dans une situation où une bille immobile est intentionnellement déplacée ou
+ramassée, le joueur non fautif peut alors :
+
+         (i) choisir de jouer lui-même ou demander à son adversaire de jouer de la
+position qu'il a laissée. Dans cette situation, toute bille qui ne s'est pas
+immobilisée sur l'aire de jeu sera considérée comme ayant été forcée de quitter
+la table.
+
+         (ii) choisir de replacer toutes les billes à leur position d'origine et jouer lui-
+         même ou demander à son adversaire de jouer à nouveau.
+         Dans ce dernier cas, la bille jouable sera la même qu'avant l'infraction, à
+         savoir :
+
+                                                         23
+                          (i) toute rouge, lorsque la bille jouable était une rouge ;
+                          (ii) la couleur jouable, lorsque toutes les rouges étaient
+
+                                   hors de la table ;
+                          (iii) une couleur au choix de l'attaquant, lorsque la bille
+
+                                   jouable était une couleur après qu'une rouge, ou une
+                                   free ball désignée comme une rouge, a été
+                                   empochée.
+                          Si la situation ci-dessus se produit au cours d'une séquence
+                          d'appels FAUTE ET MISS tels que décrits dans la Section 3
+                          Règle 14(d) et qu'il est demandé au joueur fautif de rejouer,
+                          tout avertissement concernant l'attribution possible de la
+                          frame à son adversaire doit rester en vigueur.
+
+(b) Dans une situation où une bille en mouvement est intentionnellement
+déplacée ou ramassée, l'arbitre doit prendre la meilleure décision possible dans
+l'intérêt de l'équité du jeu.
+
+(c) Si l'attaquant frappe la bille blanche pour effectuer un coup dans le cadre
+d'un comportement antisportif, il peut être averti comme décrit dans la section 4,
+règle 1, et le non-contrevenant aura les options décrites aux points (a) et (b) ci-
+dessus. Une période de consultation commence lorsque la décision est prise de
+replacer la/les bille(s).
+
+17. Pat (Stalemate)
+
+Si l’arbitre estime qu’il existe ou se prépare une situation de pat, ou si les deux
+joueurs le lui signalent, il leur proposera de recommencer immédiatement la
+frame. Si l’un des joueurs s’y oppose, il permettra au jeu de continuer à la
+condition que la situation évolue au bout d’un temps donné, en général après
+que chaque camp aura joué trois coups de plus, à la discrétion de l’arbitre. Si la
+situation reste globalement la même après cette période, l’arbitre annulera tous
+les points et replacera les billes pour recommencer la frame. Le même joueur
+exécutera le coup d’ouverture, comme indiqué à la Sect. 3 § 3 (d) (iii), et le
+même ordre de jeu sera maintenu. Cette procédure est appelée un
+recommencement.
+Si une situation de pat se présente après une noire remise sur sa mouche,
+comme décrit dans la Sect. 3 § 4 (b), seule la noire sera remise sur la mouche
+et le même joueur effectuera le premier coup.
+
+18. Snooker à quatre joueurs
+
+(a) Dans un match à quatre joueurs (entre deux équipes de deux joueurs),
+chaque camp ouvrira alternativement les frames (manches) et l’ordre de jeu
+sera déterminé au début de chacune d’elles. Une fois cet ordre décidé, il devra
+être maintenu durant toute la frame.
+
+                                                         24
+(b) Les joueurs pourront modifier l’ordre de jeu au début de chaque nouvelle
+frame.
+
+(c) Si une faute a été commise et que l’on demande à ce que le coup soit
+rejoué, c’est le joueur qui a commis la faute qui devra rejouer et l’ordre de jeu
+sera inchangé. Si la faute est annoncée parce qu’un joueur a joué en dehors de
+son tour, l’équipier du fautif perdra un tour que l’on demande ou non au
+coupable de rejouer.
+
+(d) Lorsqu’une frame se termine sur un score égal, c’est la Section 3 § 4 qui
+s’applique. S’il faut jouer une noire remise sur sa mouche, l’équipe qui joue le
+premier coup peut choisir lequel des joueur commencera. L’ordre de jeu
+continuera alors comme pendant la frame.
+
+(e) Les équipiers peuvent se consulter ou communiquer pendant une frame
+mais pas pendant que l’un d’eux est le joueur actif ou qu’il s’est approché de la
+table, et ce jusqu’à ce que sa visite prenne fin.
+(f) Si le partenaire du joueur actif commet une infraction, c’est le joueur actif qui
+sera considéré comme le fautif.
+
+19. Snooker à six rouges
+
+Dans un match de snooker à six rouges, les Règles Officielles du Jeu de
+Snooker s’appliquent avec les variantes suivantes :
+
+(a) Il ne pourra y avoir plus de cinq annonces consécutives de FAUTE ET MISS
+si l’on demande au fautif de rejouer depuis la position initiale.
+
+(b) Après la quatrième annonce consécutive de FAUTE ET MISS, l’arbitre
+avertira le joueur fautif que si une nouvelle FAUTE ET MISS était annoncée, le
+joueur non fautif pourrait :
+
+    (i) jouer depuis l’endroit où les billes se seront arrêtées ; ou
+    (ii) demander à son adversaire de jouer depuis l’endroit où les billes se
+
+         seront arrêtées ; ou
+    (iii) jouer la bille de choc depuis n’importe quel endroit de la surface de jeu,
+
+         sauf si l’un ou l’autre des joueurs avait besoin de points de pénalité avant
+         le coup ou suite à celui-ci. Si cette option est choisie, la Section 3 § 12 ne
+         s’appliquera pas.
+
+(c) Si l’on demande au fautif de jouer depuis la nouvelle position après une
+annonce de FAUTE ET MISS, la séquence de Faute et Miss précédente prend
+fin.
+
+(d) Après avoir empoché une rouge ou une free ball désignée comme rouge, le
+joueur actif ne doit pas mettre son adversaire en position de snooker derrière la
+couleur désignée, comme indiqué dans la Sect. 2 § 17.
+
+                                                         25
+20. Utilisation des accessoires
+Il est de la responsabilité du joueur actif d’installer et de retirer les accessoires
+qu’il utilise à la table.
+(a) Le joueur actif est responsable de tous les accessoires, ce qui inclut — mais
+sans se limiter à ceux-ci — les reposoirs et extensions qu’il apporte à la table,
+que ces derniers lui appartiennent ou qu’il les ait empruntés (sauf si c’est à
+l’arbitre) ; il sera pénalisé pour toute faute qu’il commettra en utilisant ces
+accessoires
+(b) Le joueur actif n’est pas responsable de l’état des accessoires que l’on
+trouve habituellement à la table et qui sont fournis par des tiers, y compris
+l’arbitre. Si l’un de ces accessoires s’avérait défectueux et que le joueur actif, à
+cause de cela, touchait une ou plusieurs billes, il n’y aurait pas de faute. Si
+nécessaire, l’arbitre repositionnerait alors toutes les billes conformément à la
+Sect. 3 § 15 et le joueur actif pourrait continuer un éventuel break en cours sans
+encourir de pénalité.
+21. Interprétation
+(a) Les circonstances peuvent rendre nécessaires des ajustements dans
+l’application des règles pour les personnes handicapées, en particulier et par
+exemple :
+
+    (i) la Section 3 § 11 (a) (iii) ne peut pas s’appliquer aux joueurs en fauteuil
+         roulant ; et
+
+    (ii) l’arbitre, sur demande d’un joueur, devra lui indiquer la couleur d’une bille
+         s’il est incapable de faire la différence entre certaines d’entre elles
+         comme, par exemple, entre le rouge et le vert.
+
+(b) Lorsqu’il n’y a pas d’arbitre, le joueur (ou l’équipe) adverse sera considéré
+comme tel pour faire appliquer ces règles.
+
+                                                         26
+                          SECTION 4 : LES JOUEURS
+
+1. Comportement antisportif
+
+(a) Si un joueur :
+
+    (i) utilise un langage agressif ou fait des gestes agressifs ; ou
+    (ii) a un comportement qui, aux yeux de l’arbitre, est volontairement ou
+
+         constamment antisportif ; ou
+    (iii) a un comportement qui, de quelque manière que ce soit, est antisportif ;
+
+         ou
+    (iv) refuse de poursuivre une frame (manche) en cours ;
+
+l’arbitre devra avertir ce joueur qu’en cas de récidive dans sa conduite
+antisportive la frame serait attribuée à son adversaire.
+
+(b) Si l’arbitre a averti le joueur selon le paragraphe (a) ci-dessus et que ce
+dernier persiste dans sa conduite antisportive, l’arbitre attribuera la frame à son
+adversaire ; si cela se passe entre deux frames, l’arbitre attribuera la frame
+suivante à son adversaire. L’arbitre avertira le joueur qu’en cas de récidive dans
+sa conduite antisportive le match sera attribué à son adversaire.
+
+(c) Si l’arbitre a attribué une frame à l’adversaire d’un joueur selon (b) ci-dessus
+ou (d) ci-dessous et que ce joueur persiste dans sa conduite antisportive,
+l’arbitre attribuera le match à son adversaire.
+
+(d) Si la mauvaise conduite d’un joueur, dans l’opinion de l’arbitre, est
+particulièrement grave, il attribuera la frame ou le match à son adversaire même
+si aucun avertissement pour conduite antisportive n’avait été donné auparavant.
+
+(e) Toute décision prise par l’arbitre d’attribuer une frame et/ou le match à
+l’adversaire d’un joueur sera définitive et ne pourra pas être l’objet d’un appel.
+
+2. Concession
+
+(a) Un joueur peut proposer une concession mais celle-ci devient nulle et non
+avenue si son adversaire choisit de continuer le jeu.
+
+(b) Un joueur ne pourra concéder une frame, dans n’importe quel match ou
+compétition, que si des points de pénalité lui sont nécessaires. Tout
+manquement à cette règle sera considéré comme une conduite antisportive de
+sa part. Si l’arbitre a déjà averti le joueur selon le § 1 (a) ci-dessus, la frame
+suivante sera attribuée à son adversaire.
+
+(c) Si un joueur touche ou déplace une (des) bille(s) en jeu pour indiquer qu'il
+offre une concession, l'arbitre ne signalera pas de FAULE ou de PÉNALITÉ si la
+concession est acceptée par l'adversaire.
+
+                                                         27
+Si la concession n'est pas acceptée, la Règle 16 de la Section 3 ou la Règle
+3(k) de la Section 3 s'appliquera.
+
+(d) Si un joueur, avant d'avoir besoin de points de pénalité pour gagner la frame,
+commet intentionnellement une infraction de sorte qu'il a maintenant besoin de
+points de pénalité, cela sera considéré comme une conduite antisportive et le
+joueur sera averti par l'arbitre comme dans la Règle 1(a) ou 1(b) ci-dessus.
+
+(e) L'offre ou l'acceptation d'une concession ne peut être retirée.
+
+(f) Lorsque le score global détermine le vainqueur d'une compétition ou d'un
+match et qu'une frame est concédée, l'adversaire recevra l'équivalent de la
+valeur de toutes les billes restant sur la table, les rouges comptant pour huit
+points chacune et toute couleur irrégulièrement hors de la table étant comptée
+comme étant sur sa mouche.
+
+3. Perte de temps
+
+(a) Si un joueur prend un temps anormalement long pour jouer ou sélectionner
+un coup, l’arbitre l’avertira que, en cas de récidive pendant le match en cours, la
+frame sera attribuée à son adversaire.
+
+(b) Si l’arbitre a donné un avertissement à un joueur pour perte de temps selon
+(a) ci-dessus, il l’avertira que la frame sera attribuée à son adversaire en cas de
+récidive.
+
+(c) Si l’arbitre a attribué une frame à un joueur pour perte de temps de la part de
+son adversaire et que ce dernier recommence à perdre du temps, l’arbitre
+attribuera une frame à ce joueur à chaque récidive de son adversaire.
+
+4. Les pénalités
+
+(a) Si une frame est perdue conformément à ce chapitre, le coupable :
+
+    (i) perdra la frame concernée ; et
+    (ii) lorsque le cumul des points détermine le vainqueur d’un match ou d’une
+
+         compétition, il perdra tous les points marqués tandis que son adversaire
+         se verra créditer du nombre de points équivalent à la valeur des billes
+         restant sur la table, chaque rouge comptant pour huit points et toute
+         couleur se trouvant irrégulièrement hors de la table étant comptée
+         comme étant sur sa mouche.
+
+(b) Si un match est perdu conformément à ce chapitre, le fautif :
+                                                         28
+    (i) perdra la frame concernée ; et
+    (ii) perdra, de plus, le nombre de frames non encore jouées pour compléter
+
+         le match lorsque le nombre de frames est important ; ou
+    (iii) perdra, de plus, les frames restantes, chacune valant 147 points lorsque
+
+         le nombre de points cumulés détermine le vainqueur du match.
+5. Le joueur non actif
+Le joueur non actif, lorsque son adversaire est à la table, évitera de se tenir ou
+de se mouvoir dans sa ligne de visée. Il restera assis ou debout à une distance
+raisonnable de la table et évitera tout mouvement qui pourrait interrompre la
+concentration du joueur actif.
+6. Responsabilité du marquage des points
+Les joueurs partagent avec l’arbitre la responsabilité de s’assurer que le score
+exact est indiqué, que ce soit au tableau de marquage ou lors de l’annonce de
+l’arbitre. Si un joueur remarque que le score est inexact, il en informera l’arbitre
+à la première occasion.
+
+7. Absence
+S’il doit s’absenter de la table, le joueur non actif peut désigner quelqu’un pour
+veiller à ses intérêts et réclamer une infraction si nécessaire. Ce choix doit être
+indiqué à l’arbitre avant de quitter la salle.
+
+                                                         29
+                         SECTION 5 : LES OFFICIELS
+
+1. L’arbitre
+
+(a) L’arbitre :
+
+    (i) prendra des décisions allant dans le sens de l’équité dans toute situation
+         qui ne serait pas convenablement couverte par les présentes règles ;
+
+    (ii) sera responsable du bon déroulement du jeu lors d’une compétition,
+         conformément aux présentes règles ;
+
+    (iii) interviendra s’il constate toute infraction aux présentes règles ;
+    (iv) indiquera la couleur ou la position d’une bille à tout joueur qui lui en ferait
+
+         la demande ; et
+    (v) nettoiera toute bille si un joueur en fait la demande de façon raisonnable.
+
+(b) L’arbitre ne devra pas :
+
+    (i) répondre aux questions non autorisées par les présentes règles ; ni
+    (ii) indiquer par quelque moyen que ce soit qu’un joueur est sur le point de
+
+         commettre une infraction ; ni
+    (iii) donner son avis ou son opinion sur des situations qui pourraient affecter
+
+         le jeu ; ni
+    (iv) répondre à quelque question que ce soit au sujet de la différence de
+
+         points.
+
+(c) Si un incident, quel qu’il soit, a échappé à l’attention de l’arbitre, ce dernier
+peut consulter le marqueur, un autre officiel ou même des spectateurs qui
+auraient été mieux placés que lui pour l’observer. Il peut aussi, pour l’aider à
+prendre sa décision, regarder un éventuel enregistrement vidéo de l’incident.
+
+2. Le marqueur
+
+Le marqueur indiquera les scores sur le tableau de marquage et assistera
+l’arbitre dans l’exercice de sa fonction. Il pourra aussi servir d’archiviste si
+nécessaire.
+
+3. L’archiviste
+
+L’archiviste tiendra un registre de chaque coup ou infraction ainsi que du
+nombre de points marqués par chaque joueur ou équipe. Il notera aussi le total
+des breaks ainsi que les avertissements le cas échéant.
+
+4. Aide des officiels
+
+(a) Sur demande du joueur actif, l’arbitre ou le marqueur tiendra écarté le
+système d’éclairage si ce dernier le gêne dans l’exécution de son coup.
+
+(b) Il est admis, en fonction des circonstances, que l’arbitre ou le marqueur
+puisse aider les joueurs handicapés si cela était nécessaire.
+
+                                                         30
+ANNEXE – 1
+
+RÈGLES DU SNOOKER, ÉDITION RÉVISÉE DE 2019 — NOTES EXPLICATIVES
+
+Les termes utilisés dans tout le document sont au genre neutre et non sexué [ne
+concerne que le texte anglais].
+
+RÈGLES DU JEU DE SNOOKER
+
+Section 1 : Matériel
+Toutes les mesures et les tolérances ont été normalisées ; les bandes inférieures et
+supérieures sont maintenant décrites et nommées.
+
+Section 2 § 5 : Joueur actif et visite
+Cette définition précise plus clairement le début et la fin de la visite d’un joueur. Le
+mot “ visite ” est maintenant plus couramment et largement employé.
+
+Section 2 § 7 : Empocher et blouser
+La nécessaire addition du mot “ blouser ” montre plus clairement dans toutes ces
+règles que l’empochage est valide tandis que le blousage ne l’est pas.
+
+Section 2 § 9 : Bille en main
+La règle indique maintenant, à l’alinéa (b) (ii), que la bille de choc reste en main
+pour le coup suivant lorsqu’une infraction qui n’implique pas cette bille est commise.
+Après que la bille de choc a été blousée, la pratique normale est que l’arbitre la
+dépose sur la table (contre la bande inférieure). Maintenant, toute infraction
+n’impliquant pas la bille de choc signifie que celle-ci est toujours en main,
+contrairement à l’ancienne règle, dans laquelle elle aurait été en jeu. Ceci est
+également expliqué au § 16 de la Section 3.
+
+Section 2 § 15 : Infractions, fautes et pénalités
+Les règles définissent maintenant clairement la différence entre une faute et une
+pénalité. On y trouve maintenant plus de cas où un joueur concède des points de
+pénalité sans que cela n’affecte le tour de jeu.
+
+Section 2 § 17 : Position de snooker
+La règle disant que la courbure de la bande avait priorité sur une bille non jouable
+pour déterminer si la bille de choc était en position de snooker ou pas a été
+supprimée. La bille de choc ne peut être snookée que par une bille non jouable.
+
+Section 2 § 19 : Poussé de bille
+La définition est plus claire.
+
+Section 2 § 20 : Coup sauté
+La définition est plus claire.
+
+Section 2 § 21 : Miss
+L’alinéa (b) a été ajouté pour bien montrer que l’arbitre peut annoncer FAUTE
+ET MISS si un joueur échoue à atteindre en premier impact la free ball désignée
+mais touche une bille jouable en premier impact avec la bille de choc.
+
+Section 2 § 22 : Période de consultation
+                                                         31
+Cette définition a été ajoutée pour clarifier le début et la fin d’une période de
+consultation lorsque le cas se présente.
+
+Section 3 § 3 : Déroulement du jeu
+L’alinéa (f) clarifie le fait que si un joueur laisse un objet sur la table et que le joueur
+suivant joue un coup, une faute sera annoncée à l’encontre du joueur actif si une
+bille entre en contact avec cet objet.
+L’alinéa (k) clarifie le fait qu’on ne peut annoncer une faute contre le joueur non
+actif s’il commet une infraction alors que le joueur actif est dans un break. Le joueur
+non actif donnera maintenant des points de pénalité sans que cela ne change le
+tour de jeu.
+
+Section 3 § 7 : Remettre les couleurs sur les mouches
+L’alinéa (b) clarifie maintenant ce qui se passe lorsqu’une couleur qui est
+repositionnée par erreur est à nouveau empochée.
+L’alinéa (c) (i) clarifie maintenant la possibilité de repositionner une couleur
+manquante sur la table.
+L’alinéa (d) a été ajouté afin de clarifier la procédure à suivre si une rouge est
+repositionnée à la place d’une couleur. Une modification dans le libellé de la
+première publication du texte du 12 août indique maintenant clairement que la
+rouge doit être retirée en premier et qu’ensuite la couleur doit être replacée. De
+plus, dans les cas où la couleur avait déjà été replacée et que l’on découvre plus
+tard au cours de la frame que c’était parce qu’une rouge avait été repositionnée sur
+une mouche, la situation est maintenant entérinée et la rouge ne sera plus retirée.
+À l’alinéa (j), les mots “ à la main ” ont été supprimés afin d’arranger les joueurs qui
+ont du mal à remettre les couleurs sur mouche lorsqu’il n’y a pas d’arbitre.
+
+Section 3 § 10 : Fautes
+L’alinéa (i) a été réécrit afin de mieux préciser les différentes options possibles
+lorsque le joueur actif commet une faute sur une bille avant de jouer un coup.
+
+Section 3 § 11 : Valeurs des pénalités
+Dans cette règle une nette différence est maintenant faite entre les fautes et les
+pénalités.
+L’alinéa (b) (x) a été ajouté.
+Les alinéas (e), (f) et (g) ont été ajoutés afin de montrer que ces actions sont des
+pénalités.
+
+Section 3 § 12 : Position de snooker après une faute
+L’alinéa (b) (ii) a été réécrit pour bien expliquer qu’il n’y a pas de faute si, alors qu’il
+n’y a pas de rouge sur la surface de jeu, un joueur se sert d’une free ball désignée
+pour empocher la bille jouable puis laisse la bille de choc en position de snooker
+derrière cette même bille désignée pour le coup sur la couleur suivante.
+L’alinéa (f) clarifie le fait que l’option de la free ball devient caduque si l’on demande
+à un joueur de jouer depuis la position d’origine.
+
+Section 3 § 14 : Faute et miss
+À l’alinéa (a), l’ancienne option d’annoncer une FAUTE ET MISS lorsque, avant ou
+après un coup, les points restants sur la table sont égaux à la différence de points
+sans tenir compte de la noire remise sur sa mouche, a été supprimée. L’arbitre
+pourra maintenant annoncer une FAUTE ET MISS dans cette situation.
+À l’alinéa (e) un changement a été apporté par rapport aux règles de 2014 qui
+indiquaient qu’un joueur à qui l’on demandait de rejouer depuis la nouvelle position
+
+                                                         32
+ou celle d’origine, devait garder la même bille jouable qu’avant le dernier coup joué
+(options (i), (ii) ou (iii)). Les règles de 2019 montrent maintenant que la bille jouable
+sera différente selon que le joueur non fautif demandera à son adversaire de
+rejouer depuis la nouvelle position ou celle d’origine.
+Section 3 § 16 : Bille déplacée en dehors d’un coup
+Cette règle a été ajoutée afin de clarifier des situations où une ou plusieurs billes
+sont déplacées sans qu’un coup ne soit joué.
+Section 3 § 17 : Pat
+La procédure à suivre en cas de pat lors d’une noire remise sur mouche a été
+ajoutée.
+Section 3 § 18 : Snooker à quatre joueurs
+L’alinéa (f) a été ajouté afin de préciser que le partenaire du joueur actif ne peut pas
+changer délibérément l’ordre de jeu.
+Section 3 § 19 : Snooker à six rouges
+Ce mode de jeu est maintenant inclus de façon formelle dans les Règles.
+Les alinéas (b) et (c) clarifient le fait que la séquence de cinq annonces de FAUTE
+ET MISS ne peut compter que si l’on demande au joueur fautif de de rejouer depuis
+la position d’origine.
+Section 3 § 21 : Interprétation
+Dans cette règle, la mention des mots impliquant le genre masculin a été
+supprimée. Le genre neutre est employé dans tout le document [anglais
+uniquement].
+Section 4 : LES JOUEURS
+Ce chapitre a été entièrement remanié.
+Le comportement antisportif et la perte de temps constituent maintenant des sujets
+distincts.
+
+                                                         33
+Annexe – 2
+
+            LEXIQUE : Traduction des termes anglais d’usage
+
+               TERMES                                                EXPLICATION
+BALL MARKER               Dispositif utilisé pour marquer la position de la bille qui a été soulevée pour être
+                          nettoyée
+BALL ON                   Bille jouable
+BAULK                     Cadre : La surface de jeu comprise entre la ligne de cadre et la bande inférieure
+BAULK LINE                Ligne de Cadre : Une ligne droite située à 737 mm de la face de la bande
+                          inférieure et parallèle à celle-ci
+BLACK                     La Noire, la Bille noire
+BLACK SPOT                Mouche de la Noire
+BREAK                     Série de points successifs
+BUTT                      Rallonge pour la queue
+CENTRE SPOT               Mouche de la Bleue
+CUE                       Queue
+CUE RESTS                 Reposoirs
+CUE-BALL                  Bille Blanche ou Bille de choc
+CUEING                    Coup de queue
+EFFECTIVE SNOOKERING      Bille réalisant le snooker
+BALL
+FOUL                      Faute
+FOUL STROKE               Coup fautif
+FRAME                     Manche
+FREE BALL                 Bille Libre
+CENTER FULL BALL CONTACT  Contact en Pleine Bille
+GAME                      Match
+GREEN SPOT                Mouche de la Verte
+HALF-BUTT                 Petite rallonge pour la queue
+IN-HAND                   Bille en main
+JUMP SHOT                 Coup sauté
+LE ‘D’                    Le “D” est un demi-cercle tracé dans le cadre
+
+MATCH                     Compétition
+MIDDLE OF THE BAULK LINE  Mouche de la Marron
+MISS                      Manqué Volontairement
+NOMINATED BALL            Bille désignée
+NON-STRIKER               Joueur non-actif
+OBJECT-BALLS              Billes objets
+ON                        Jouable
+PLAY AGAIN                Faire rejouer
+POCKETING                 Blousage (empochage fautif)
+POT ou POTTING            Empochage
+POTTED                    Empochée
+PUSH STROKE               Coup poussé
+PYRAMID SPOT              Mouche de la Rose
+RED                       Rouge
+SNOOKERED                 En position de Snooker
+SPOTS                     Mouches
+SPOTTED                   Repositionnée
+SPOTTING                  Repositionnement
+STALEMATE                 Pat ou Jeu Bloqué
+STRIKER                   Joueur actif
+STRIKING                  Jouer
+STROKE                    Coup
+STRUCK                    Touchée
+THE MARKER                Le Marqueur (des points sur le Tableau)
+THE RECORDER              L’Archiviste (des points, des infractions et des breaks sur un document)
+THE REFEREE               L’Arbitre
+TOUCHING BALL             Bille en Contact
+YELLOW SPOT               Mouche de la Jaune
+
+                          34
+
