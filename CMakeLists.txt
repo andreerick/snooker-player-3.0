@@ -12,7 +12,17 @@ if(WIN32)
     )
 endif()
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets TextToSpeech)
+# Bundle .app macOS : sans lui, l'executable brut n'a pas d'Info.plist et
+# macOS refuse silencieusement l'acces camera (pas de NSCameraUsageDescription),
+# sans meme afficher la demande d'autorisation a l'utilisateur.
+if(APPLE)
+    set(MACOSX_BUNDLE_BUNDLE_NAME "SnookerPlayer")
+    set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.andreerick.snookerplayer")
+    set(MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}")
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}")
+endif()
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets TextToSpeech Network)
 qt_standard_project_setup()
 
 # ---------------------------------------------------------------------
@@ -157,13 +167,20 @@ target_include_directories(SnookerPlayer PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party
 )
 
-target_link_libraries(SnookerPlayer PRIVATE Qt6::Widgets Qt6::TextToSpeech MesureVision)
+target_link_libraries(SnookerPlayer PRIVATE Qt6::Widgets Qt6::TextToSpeech Qt6::Network MesureVision)
 
 # ws2_32 : sockets Windows, necessaires a cpp-httplib (voir MatchWebServer)
 # meme en HTTP simple (pas de HTTPS, donc pas besoin d'OpenSSL ici).
 # Sur macOS/Linux, cpp-httplib utilise directement les sockets POSIX du systeme.
 if(WIN32)
     target_link_libraries(SnookerPlayer PRIVATE ws2_32)
+endif()
+
+if(APPLE)
+    set_target_properties(SnookerPlayer PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/macos/Info.plist.in"
+    )
 endif()
 
 # Chemin du texte du reglement officiel (voir RulesReferenceDialog) et de
