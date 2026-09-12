@@ -10,8 +10,15 @@
 namespace
 {
     // Chemin local du dossier CueSense (fichiers statiques a plat, voir
-    // son README). A ajuster ici si ce dossier est deplace/reorganise.
+    // son README). Sur Windows, chemin fixe propre a la machine de dev
+    // d'origine (A ajuster ici si ce dossier est deplace/reorganise). Sur
+    // les autres plateformes, copie vendoree du meme site statique dans
+    // third_party/cuesense (voir CUESENSE_DIR_PATH, injecte par CMake).
+#if defined(Q_OS_WIN)
     const char* kCueSenseDir = "C:/CueSense/cuesense-main/cuesense-main";
+#else
+    const char* kCueSenseDir = CUESENSE_DIR_PATH;
+#endif
 }
 
 CueSenseLauncher::CueSenseLauncher() = default;
