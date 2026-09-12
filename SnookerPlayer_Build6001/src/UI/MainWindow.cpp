@@ -1734,10 +1734,13 @@ MainWindow::MainWindow(QWidget* parent)
     // leurs propres actions d'effacement).
     // ---------------------------------------------------
     QPushButton* clearHistoryButton = new QPushButton("Effacer l'historique des matchs", remotePanel);
+    // Libelle le plus long du panneau (32 caracteres) : padding horizontal
+    // reduit par rapport aux autres boutons, sinon le texte deborde du
+    // panneau (220px de large) et se retrouve rogne a l'affichage.
     clearHistoryButton->setStyleSheet(
         "QPushButton {"
         "  background-color: " + kPanel + "; color: #e74c3c;"
-        "  border: 1px solid " + kBorder + "; border-radius: 5px; padding: 8px 10px;"
+        "  border: 1px solid " + kBorder + "; border-radius: 5px; padding: 8px 2px; font-size: 12px;"
         "}"
         "QPushButton:hover { border-color: #e74c3c; }"
     );
