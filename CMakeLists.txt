@@ -232,3 +232,13 @@ target_compile_definitions(SnookerPlayer PRIVATE
     RULES_TEXT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/docs/reglement_snooker/Regles_officielles_snooker_FR_sept2024.txt"
     HOME_SCREEN_IMAGE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/accueil_v3.png"
 )
+
+# CueSense (voir CueSenseLauncher) : sur Windows le chemin reste code en
+# dur (C:/CueSense/...) dans le .cpp, propre a la machine de dev d'origine.
+# Sur les autres plateformes, on sert plutot la copie vendoree du site
+# statique dans third_party/cuesense (voir CueSenseLauncher.cpp).
+if(NOT WIN32)
+    target_compile_definitions(SnookerPlayer PRIVATE
+        CUESENSE_DIR_PATH="${CMAKE_CURRENT_SOURCE_DIR}/third_party/cuesense"
+    )
+endif()
