@@ -58,6 +58,19 @@ target_link_libraries(MesureVision PUBLIC ${OpenCV_LIBS})
 add_executable(CalibrationTool CalibrationTool.cpp)
 target_link_libraries(CalibrationTool PRIVATE MesureVision)
 
+# Sur macOS, CalibrationTool est un executable brut (pas de bundle .app,
+# lance directement par SettingsDialog::launchCalibrationTool()) : sans
+# Info.plist, impossible d'y associer NSCameraUsageDescription, donc macOS
+# refuse l'acces camera sans meme demander -- la fenetre de calibration
+# s'ouvre mais reste noire. On l'y embarque directement dans le binaire
+# (section __TEXT,__info_plist), technique standard pour les outils en
+# ligne de commande qui ont besoin d'un Info.plist sans etre un bundle.
+if(APPLE)
+    target_link_options(CalibrationTool PRIVATE
+        "-Wl,-sectcreate,__TEXT,__info_plist,${CMAKE_CURRENT_SOURCE_DIR}/macos/CalibrationTool-Info.plist"
+    )
+endif()
+
 # Outil de calibration automatique par marqueurs ArUco.
 # Utilisation : ArucoCalibrationTool.exe --generate
 #               ArucoCalibrationTool.exe <index_camera 0/1/2> <image.jpg ou index camera>
@@ -181,6 +194,34 @@ if(APPLE)
         MACOSX_BUNDLE TRUE
         MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/macos/Info.plist.in"
     )
+
+    # SettingsDialog::launchCalibrationTool() cherche CalibrationTool a cote
+    # de l'executable principal (QCoreApplication::applicationDirPath()) --
+    # vrai sur Windows ou les deux .exe sortent dans le meme dossier, mais
+    # plus une fois SnookerPlayer empaquete en .app : applicationDirPath()
+    # pointe alors vers SnookerPlayer.app/Contents/MacOS, ou CalibrationTool
+    # n'est jamais copie. On l'y copie donc explicitement apres compilation.
+    #
+    # Attachee au POST_BUILD de CalibrationTool (pas de SnookerPlayer) pour
+    # que la copie se refasse bien a chaque recompilation de CalibrationTool
+    # meme si SnookerPlayer lui-meme n'a pas change -- un POST_BUILD de
+    # SnookerPlayer ne se redeclenche pas dans ce cas (sa propre regle est
+    # deja a jour, Make saute alors aussi son etape post-build). Le
+    # make_directory prealable evite tout probleme d'ordre de compilation
+    # entre les deux cibles (peu importe laquelle finit de compiler en
+    # premier, le dossier de destination existe toujours).
+    add_custom_command(TARGET CalibrationTool POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_FILE_DIR:SnookerPlayer>"
+        COMMAND ${CMAKE_COMMAND} -E copy
+            $<TARGET_FILE:CalibrationTool>
+            "$<TARGET_FILE_DIR:SnookerPlayer>"
+    )
+    # Construire SnookerPlayer construit aussi CalibrationTool (et donc la
+    # copie ci-dessus) : indispensable pour qu'un premier build cible
+    # uniquement "SnookerPlayer" (cas le plus courant) embarque quand meme
+    # l'outil de calibration.
+    add_dependencies(SnookerPlayer CalibrationTool)
 endif()
 
 # Chemin du texte du reglement officiel (voir RulesReferenceDialog) et de
