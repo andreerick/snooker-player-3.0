@@ -113,6 +113,17 @@ public:
 
     Ball getFreeBallColor() const;
 
+    // Vrai si, au moment de l'armement du Free Ball, la bille normalement
+    // due etait ambigue ("n'importe quelle couleur", voir getRequiredBall())
+    // -- dans ce cas la valeur a compter doit etre annoncee explicitement
+    // via setFreeBallValue() avant de pouvoir jouer le coup (voir
+    // MainWindow::handleBallAction(), PendingAction::ArmFreeBallValue).
+    bool isFreeBallValueAmbiguous() const;
+
+    // Annonce explicitement la valeur que le Free Ball doit compter (cas
+    // ambigu seulement, voir isFreeBallValueAmbiguous()).
+    void setFreeBallValue(const Ball& ball);
+
 
     // Couleurs finales
     bool isCorrectFinalColor(const Ball& ball) const;
@@ -172,6 +183,13 @@ private:
     // finales avance si applicable). Necessaire pour que playFreeBall()
     // fasse progresser la partie correctement, comme un coup normal.
     bool m_freeBallForRed = true;
+
+    // Valeur que le Free Ball doit compter s'il est reussi (voir
+    // playFreeBall()) : deduite automatiquement de Frame::getRequiredBall()
+    // au moment de l'armement (rouge = 1, couleur des couleurs finales =
+    // sa valeur reelle), OU annoncee explicitement via setFreeBallValue()
+    // quand getRequiredBall() est ambigu ("n'importe quelle couleur").
+    Ball m_freeBallValueBall = Ball("Rouge", 1);
 
     int m_nextColor;
 

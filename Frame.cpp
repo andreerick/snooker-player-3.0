@@ -501,7 +501,13 @@ bool Frame::playFreeBall(const Ball& ball)
         }
     }
 
-    m_currentPlayer->addFreeBallPoints(1);
+    // Compte pour la valeur de la bille NORMALEMENT due (1 pour une
+    // rouge, ou la vraie valeur de la couleur si les couleurs finales
+    // etaient dues), pas forcement 1 -- voir m_freeBallValueBall, deduite
+    // automatiquement a l'armement ou annoncee explicitement si ambigu
+    // (voir isFreeBallValueAmbiguous()/setFreeBallValue()).
+    int value = m_freeBallValueBall.getValue();
+    m_currentPlayer->addFreeBallPoints(value);
 
     // Synchronisation avec la table reelle (voir shouldRespot ci-dessus) :
     // manquait entierement avant, ce qui faussait "points restants sur la
@@ -515,7 +521,9 @@ bool Frame::playFreeBall(const Ball& ball)
     std::cout
         << "Free Ball : "
         << ball.getName()
-        << " compte pour 1 point"
+        << " compte pour "
+        << value
+        << " point(s)"
         << std::endl;
 
     Shot shot(
@@ -769,7 +777,29 @@ void Frame::setFreeBall(bool value)
         // playFreeBall()).
         m_freeBallForRed =
             (m_phase == FramePhase::Reds || m_phase == FramePhase::LastRedColor) && !m_needColor;
+
+        // Deduit la valeur a compter (voir m_freeBallValueBall) de la
+        // bille normalement due. Non ambigu dans tous les cas SAUF quand
+        // "n'importe quelle couleur" est legale (getRequiredBall() renvoie
+        // alors "Couleur", valeur 0) : dans ce cas on garde la derniere
+        // valeur connue en attendant l'annonce explicite (voir
+        // isFreeBallValueAmbiguous()/setFreeBallValue()).
+        Ball required = getRequiredBall();
+        if (required.getName() != "Couleur")
+        {
+            m_freeBallValueBall = required;
+        }
     }
+}
+
+bool Frame::isFreeBallValueAmbiguous() const
+{
+    return getRequiredBall().getName() == "Couleur";
+}
+
+void Frame::setFreeBallValue(const Ball& ball)
+{
+    m_freeBallValueBall = ball;
 }
 
 bool Frame::isFreeBall() const

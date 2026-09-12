@@ -32,6 +32,7 @@
 #include <QJsonArray>
 #include <QScreen>
 #include <QGuiApplication>
+#include <QShortcut>
 #include <QJsonObject>
 #include <QTableWidget>
 #include <QHeaderView>
@@ -442,39 +443,78 @@ namespace
     }
 
     // Affiche le guide de repositionnement (image generee par
-    // BallMapRecorder::renderRepositioningGuide) dans une boite de
-    // dialogue simple : pointille = position cible, plein = position
-    // actuelle, fleche = a deplacer, "MANQUANTE" = bille absente.
-    void showRepositioningGuideDialog(QWidget* parent, const cv::Mat& guideImage)
+    // BallMapRecorder::renderRepositioningGuide) en PLEIN ECRAN :
+    // pointille = position cible, plein = position actuelle, fleche = a
+    // deplacer, "MANQUANTE" = bille absente. Plein ecran a la demande de
+    // l'utilisateur (visibilite depuis l'autre bout de la table).
+    // NON MODAL (setWindowModality(Qt::NonModal) + show(), pas exec()) et
+    // alloue sur le tas avec WA_DeleteOnClose : la fenetre principale
+    // (et donc les telecommandes 1.0/2.0) reste utilisable pendant que
+    // le guide est affiche, notamment sur une installation a deux ecrans
+    // (guide plein ecran sur l'un, telecommande sur l'autre). Le pointeur
+    // retourne est stocke par l'appelant (MainWindow::m_repositionGuideDialog)
+    // pour permettre sa fermeture depuis N'IMPORTE QUELLE telecommande :
+    // bouton "Fermer" sur le dialogue lui-meme, Echap au clavier, action
+    // telephone "closeRepositionGuide" (voir kPageHtml), OU bouton
+    // "Fermer le guide" des telecommandes 1.0/2.0 (voir
+    // MainWindow::closeRepositioningGuide()).
+    QDialog* showRepositioningGuideDialog(QWidget* parent, const cv::Mat& guideImage, MatchWebServer* webServer)
     {
         cv::Mat rgb;
         cv::cvtColor(guideImage, rgb, cv::COLOR_BGR2RGB);
         QImage qImage(rgb.data, rgb.cols, rgb.rows, static_cast<int>(rgb.step), QImage::Format_RGB888);
 
-        QDialog dialog(parent);
-        dialog.setWindowTitle("Guide de repositionnement");
-        dialog.setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
+        QDialog* dialog = new QDialog(parent);
+        dialog->setAttribute(Qt::WA_DeleteOnClose);
+        dialog->setWindowModality(Qt::NonModal);
+        dialog->setWindowTitle("Guide de repositionnement");
+        dialog->setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
 
-        QVBoxLayout* layout = new QVBoxLayout(&dialog);
+        QVBoxLayout* layout = new QVBoxLayout(dialog);
+        layout->setAlignment(Qt::AlignCenter);
 
-        QLabel* imageLabel = new QLabel(&dialog);
-        imageLabel->setPixmap(QPixmap::fromImage(qImage.copy()));
+        QLabel* imageLabel = new QLabel(dialog);
+        QPixmap pixmap = QPixmap::fromImage(qImage.copy());
+        QSize screenSize = QGuiApplication::primaryScreen()
+            ? QGuiApplication::primaryScreen()->availableSize()
+            : QSize(1280, 720);
+        imageLabel->setPixmap(pixmap.scaled(
+            screenSize * 0.9, Qt::KeepAspectRatio, Qt::SmoothTransformation
+        ));
+        imageLabel->setAlignment(Qt::AlignCenter);
         layout->addWidget(imageLabel);
 
-        QPushButton* closeGuideButton = new QPushButton("Fermer", &dialog);
+        QPushButton* closeGuideButton = new QPushButton("Fermer", dialog);
         closeGuideButton->setStyleSheet(
             "QPushButton {"
             "  background-color: " + kPanel + ";"
             "  color: " + kWhite + ";"
             "  border: 1px solid " + kBorder + ";"
             "  border-radius: 5px;"
-            "  padding: 8px 10px;"
+            "  padding: 12px 24px;"
+            "  font-size: 15px;"
             "}"
         );
-        QObject::connect(closeGuideButton, &QPushButton::clicked, &dialog, &QDialog::accept);
-        layout->addWidget(closeGuideButton);
+        QObject::connect(closeGuideButton, &QPushButton::clicked, dialog, &QDialog::close);
+        layout->addWidget(closeGuideButton, 0, Qt::AlignHCenter);
 
-        dialog.exec();
+        QShortcut* escShortcut = new QShortcut(QKeySequence(Qt::Key_Escape), dialog);
+        QObject::connect(escShortcut, &QShortcut::activated, dialog, &QDialog::close);
+
+        if (webServer)
+        {
+            QObject::connect(webServer, &MatchWebServer::controlActionRequested, dialog,
+                [dialog](const QString& action, const QJsonObject&)
+                {
+                    if (action == "closeRepositionGuide")
+                    {
+                        dialog->close();
+                    }
+                });
+        }
+
+        dialog->showFullScreen();
+        return dialog;
     }
 
     // Exporte l'etat courant (scores, joueur au tir, break) et le journal
@@ -1355,6 +1395,21 @@ MainWindow::MainWindow(QWidget* parent)
     remoteLayout->addLayout(ballButtonsLayout);
     remoteLayout->addSpacing(6);
 
+    // ---------------------------------------------------
+    // Grille d'actions : meme disposition (2 colonnes) et meme ordre que
+    // la page telephone (voir kPageHtml, .actiongrid) -- Faute / Fin de
+    // break / Free ball / Miss / Retour / Fin de frame / Esc / Nouveau
+    // match, puis Guide de repositionnement et Fermer le guide en pleine
+    // largeur. Les boutons sont crees plus bas (avec le reste de la
+    // telecommande 1.0) mais places ICI via actionsGrid->addWidget() --
+    // le reste des boutons (avances/tests) continue d'aller directement
+    // dans remoteLayout et s'affiche donc EN DESSOUS de cette grille.
+    // ---------------------------------------------------
+    QGridLayout* actionsGrid = new QGridLayout();
+    actionsGrid->setSpacing(8);
+    remoteLayout->addLayout(actionsGrid);
+    remoteLayout->addSpacing(6);
+
     QPushButton* missShotButton = new QPushButton("Fin de break", remotePanel);
     missShotButton->setStyleSheet(
         "QPushButton {"
@@ -1373,7 +1428,7 @@ MainWindow::MainWindow(QWidget* parent)
             m_gameManager.afterShot();
             refreshDisplay();
         });
-    remoteLayout->addWidget(missShotButton);
+    actionsGrid->addWidget(missShotButton, 0, 1);
 
     // ---------------------------------------------------
     // Fin de frame : force la fin de la frame en cours (le vainqueur
@@ -1404,7 +1459,7 @@ MainWindow::MainWindow(QWidget* parent)
             m_gameManager.afterShot();
             refreshDisplay();
         });
-    remoteLayout->addWidget(finishFrameButton);
+    actionsGrid->addWidget(finishFrameButton, 2, 1);
 
     // ---------------------------------------------------
     // Faute : arme une action en attente. Le prochain bouton de bille
@@ -1436,7 +1491,7 @@ MainWindow::MainWindow(QWidget* parent)
             promptPlayerNames(player1Name, player2Name, framesToWin);
             restartMatch(player1Name, player2Name, framesToWin);
         });
-    remoteLayout->addWidget(newMatchButton);
+    actionsGrid->addWidget(newMatchButton, 3, 1);
 
     QPushButton* foulButton = new QPushButton("Faute", remotePanel);
     foulButton->setStyleSheet(secondaryButtonStyle);
@@ -1445,7 +1500,7 @@ MainWindow::MainWindow(QWidget* parent)
             m_pendingAction = PendingAction::Foul;
             refreshDisplay();
         });
-    remoteLayout->addWidget(foulButton);
+    actionsGrid->addWidget(foulButton, 0, 0);
 
     // ---------------------------------------------------
     // Bille sortie de table : meme mecanique que "Faute" (meme calcul de
@@ -1472,7 +1527,7 @@ MainWindow::MainWindow(QWidget* parent)
             m_pendingAction = PendingAction::ArmFreeBall;
             refreshDisplay();
         });
-    remoteLayout->addWidget(freeBallButton);
+    actionsGrid->addWidget(freeBallButton, 1, 0);
 
     // ---------------------------------------------------
     // Miss : le referee juge que le joueur n'a pas veritablement tente
@@ -1515,7 +1570,40 @@ MainWindow::MainWindow(QWidget* parent)
         });
 
     missButton->setMenu(missMenu);
-    remoteLayout->addWidget(missButton);
+    actionsGrid->addWidget(missButton, 1, 1);
+
+    // ---------------------------------------------------
+    // Retour : annule le dernier coup (bille empochee, faute ou "Fin de
+    // break"), voir snapshotFrameForUndo(). Un seul niveau d'annulation.
+    // Meme mecanique que sur les telecommandes 2.0 et telephone.
+    // ---------------------------------------------------
+    QPushButton* undoButton = new QPushButton("Retour", remotePanel);
+    undoButton->setStyleSheet(secondaryButtonStyle);
+    connect(undoButton, &QPushButton::clicked, this, [this]()
+        {
+            if (!m_hasUndoSnapshot)
+            {
+                return;
+            }
+            m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+            m_hasUndoSnapshot = false;
+            m_pendingAction = PendingAction::None;
+            refreshDisplay();
+        });
+    actionsGrid->addWidget(undoButton, 2, 0);
+
+    // ---------------------------------------------------
+    // Esc : quitte l'ecran de match et revient a l'accueil (voir
+    // m_rootStack, index 1). Meme mecanique que sur les telecommandes
+    // 2.0 et telephone.
+    // ---------------------------------------------------
+    QPushButton* exitButton = new QPushButton("Esc", remotePanel);
+    exitButton->setStyleSheet(secondaryButtonStyle);
+    connect(exitButton, &QPushButton::clicked, this, [this]()
+        {
+            m_rootStack->setCurrentIndex(1);
+        });
+    actionsGrid->addWidget(exitButton, 3, 0);
 
     // ---------------------------------------------------
     // Reglement : recherche rapide dans le texte officiel (voir
@@ -1794,52 +1882,20 @@ MainWindow::MainWindow(QWidget* parent)
     repositionButton->setStyleSheet(secondaryButtonStyle);
     connect(repositionButton, &QPushButton::clicked, this, [this]()
         {
-            if (!m_visionTimer->isActive())
-            {
-                showStyledMessage(this, QMessageBox::Information, "Guide de repositionnement",
-                    "Demarrez d'abord le suivi camera.");
-                return;
-            }
-            if (m_visionBridge->lastBallMapPath().empty())
-            {
-                showStyledMessage(this, QMessageBox::Information, "Guide de repositionnement",
-                    "Aucun coup confirme pour l'instant : rien a comparer.");
-                return;
-            }
-
-            cv::Mat image;
-            if (m_multiCameraMode)
-            {
-                cv::Mat img0, img1, img2;
-                if (!m_camera.read(img0) || img0.empty() ||
-                    !m_camera1.read(img1) || img1.empty() ||
-                    !m_camera2.read(img2) || img2.empty())
-                {
-                    showStyledMessage(this, QMessageBox::Warning, "Guide de repositionnement", "Impossible de lire l'image camera.");
-                    return;
-                }
-                image = m_tableCapture.buildFullTableImage(img0, img1, img2);
-            }
-            else if (!m_camera.read(image) || image.empty())
-            {
-                showStyledMessage(this, QMessageBox::Warning, "Guide de repositionnement", "Impossible de lire l'image camera.");
-                return;
-            }
-
-            if (image.empty())
-            {
-                showStyledMessage(this, QMessageBox::Warning, "Guide de repositionnement", "Impossible de lire l'image camera.");
-                return;
-            }
-
-            BallMapRecorder recorder(image.size());
-            std::map<std::string, std::vector<cv::Point2f>> target =
-                recorder.loadSnapshot(m_visionBridge->lastBallMapPath());
-            cv::Mat guide = recorder.renderRepositioningGuide(m_visionBridge->tracker().getAllTracked(), target);
-
-            showRepositioningGuideDialog(this, guide);
+            showRepositioningGuide(/*silentIfUnavailable=*/false);
         });
-    remoteLayout->addWidget(repositionButton);
+    actionsGrid->addWidget(repositionButton, 4, 0, 1, 2);
+
+    // Fermer le guide : ferme le guide de repositionnement s'il est
+    // actuellement affiche (non modal -- voir closeRepositioningGuide()
+    // et m_repositionGuideDialog). Ne fait rien s'il n'y en a pas.
+    QPushButton* closeGuideButton = new QPushButton("Fermer le guide", remotePanel);
+    closeGuideButton->setStyleSheet(secondaryButtonStyle);
+    connect(closeGuideButton, &QPushButton::clicked, this, [this]()
+        {
+            closeRepositioningGuide();
+        });
+    actionsGrid->addWidget(closeGuideButton, 5, 0, 1, 2);
 
     remoteLayout->addStretch();
 
@@ -1931,6 +1987,30 @@ MainWindow::MainWindow(QWidget* parent)
         });
     simpleLayout->addWidget(simpleMissShotButton);
 
+    // Free ball : arme une action en attente, meme mecanique que sur la
+    // telecommande 1.0 (voir freeBallButton plus haut) et le telephone.
+    QPushButton* simpleFreeBallButton = new QPushButton("Free ball", remotePanelSimple);
+    simpleFreeBallButton->setStyleSheet(secondaryButtonStyle);
+    connect(simpleFreeBallButton, &QPushButton::clicked, this, [this]()
+        {
+            m_pendingAction = PendingAction::ArmFreeBall;
+            refreshDisplay();
+        });
+    simpleLayout->addWidget(simpleFreeBallButton);
+
+    // Miss : contrairement au menu deroulant de la 1.0 (3 variantes), un
+    // seul bouton simplifie qui arme directement "Remettre en place (le
+    // fautif rejoue)" -- meme choix que sur le telephone, pour rester
+    // coherent entre les deux telecommandes simplifiees.
+    QPushButton* simpleMissButton = new QPushButton("Miss", remotePanelSimple);
+    simpleMissButton->setStyleSheet(secondaryButtonStyle);
+    connect(simpleMissButton, &QPushButton::clicked, this, [this]()
+        {
+            m_pendingAction = PendingAction::MissReplay;
+            refreshDisplay();
+        });
+    simpleLayout->addWidget(simpleMissButton);
+
     // Retour : annule le dernier coup (bille empochee, faute ou "Fin de
     // break"), voir snapshotFrameForUndo(). Un seul niveau d'annulation.
     QPushButton* simpleUndoButton = new QPushButton("Retour", remotePanelSimple);
@@ -1966,6 +2046,26 @@ MainWindow::MainWindow(QWidget* parent)
             refreshDisplay();
         });
     simpleLayout->addWidget(simpleGameButton);
+
+    // Guide de repositionnement : meme fonction que sur la telecommande
+    // 1.0 (voir showRepositioningGuide()), affiche en plein ecran.
+    QPushButton* simpleRepositionButton = new QPushButton("Guide de repositionnement", remotePanelSimple);
+    simpleRepositionButton->setStyleSheet(secondaryButtonStyle);
+    connect(simpleRepositionButton, &QPushButton::clicked, this, [this]()
+        {
+            showRepositioningGuide(/*silentIfUnavailable=*/false);
+        });
+    simpleLayout->addWidget(simpleRepositionButton);
+
+    // Fermer le guide : meme fonction que sur la telecommande 1.0 (voir
+    // closeGuideButton plus haut) et le telephone.
+    QPushButton* simpleCloseGuideButton = new QPushButton("Fermer le guide", remotePanelSimple);
+    simpleCloseGuideButton->setStyleSheet(secondaryButtonStyle);
+    connect(simpleCloseGuideButton, &QPushButton::clicked, this, [this]()
+        {
+            closeRepositioningGuide();
+        });
+    simpleLayout->addWidget(simpleCloseGuideButton);
 
     // Esc (dernier bouton) : quitte l'ecran de match et revient a
     // l'accueil (voir m_rootStack, index 1). Le match reste construit et
@@ -2710,6 +2810,12 @@ void MainWindow::refreshDisplay()
     case PendingAction::ArmFreeBall:
         pendingText = "FREE BALL : cliquez la bille de depart";
         break;
+    case PendingAction::ArmFreeBallValue:
+        pendingText = "FREE BALL : quelle valeur cette bille remplace-t-elle ? (annoncez la couleur)";
+        break;
+    case PendingAction::AnnounceFoulTarget:
+        pendingText = "FAUTE : quelle bille visiez-vous ? (annoncez la couleur)";
+        break;
     case PendingAction::MissReplay:
         pendingText = "MISS : cliquez la bille fautee (le fautif rejouera)";
         break;
@@ -3011,6 +3117,84 @@ void MainWindow::applyRemotePanelVisibility()
     }
 }
 
+void MainWindow::showRepositioningGuide(bool silentIfUnavailable)
+{
+    if (m_repositionGuideDialog)
+    {
+        m_repositionGuideDialog->raise();
+        m_repositionGuideDialog->activateWindow();
+        return;
+    }
+
+    if (!m_visionTimer->isActive())
+    {
+        if (!silentIfUnavailable)
+        {
+            showStyledMessage(this, QMessageBox::Information, "Guide de repositionnement",
+                "Demarrez d'abord le suivi camera.");
+        }
+        return;
+    }
+    if (m_visionBridge->lastBallMapPath().empty())
+    {
+        if (!silentIfUnavailable)
+        {
+            showStyledMessage(this, QMessageBox::Information, "Guide de repositionnement",
+                "Aucun coup confirme pour l'instant : rien a comparer.");
+        }
+        return;
+    }
+
+    cv::Mat image;
+    if (m_multiCameraMode)
+    {
+        cv::Mat img0, img1, img2;
+        if (!m_camera.read(img0) || img0.empty() ||
+            !m_camera1.read(img1) || img1.empty() ||
+            !m_camera2.read(img2) || img2.empty())
+        {
+            if (!silentIfUnavailable)
+            {
+                showStyledMessage(this, QMessageBox::Warning, "Guide de repositionnement", "Impossible de lire l'image camera.");
+            }
+            return;
+        }
+        image = m_tableCapture.buildFullTableImage(img0, img1, img2);
+    }
+    else if (!m_camera.read(image) || image.empty())
+    {
+        if (!silentIfUnavailable)
+        {
+            showStyledMessage(this, QMessageBox::Warning, "Guide de repositionnement", "Impossible de lire l'image camera.");
+        }
+        return;
+    }
+
+    if (image.empty())
+    {
+        if (!silentIfUnavailable)
+        {
+            showStyledMessage(this, QMessageBox::Warning, "Guide de repositionnement", "Impossible de lire l'image camera.");
+        }
+        return;
+    }
+
+    BallMapRecorder recorder(image.size());
+    std::map<std::string, std::vector<cv::Point2f>> target =
+        recorder.loadSnapshot(m_visionBridge->lastBallMapPath());
+    cv::Mat guide = recorder.renderRepositioningGuide(m_visionBridge->tracker().getAllTracked(), target);
+
+    m_repositionGuideDialog = showRepositioningGuideDialog(this, guide, m_webServer);
+}
+
+void MainWindow::closeRepositioningGuide()
+{
+    if (m_repositionGuideDialog)
+    {
+        m_repositionGuideDialog->close();
+    }
+}
+
 void MainWindow::handleBallAction(const QString& ballName, int ballValue)
 {
     snapshotFrameForUndo();
@@ -3030,6 +3214,19 @@ void MainWindow::handleBallAction(const QString& ballName, int ballValue)
     case PendingAction::Foul:
     {
         Ball required = frame.getRequiredBall();
+        // "N'importe quelle couleur" etait legale (meme ambiguite que pour
+        // le Free Ball, voir Frame::isFreeBallValueAmbiguous()) : impossible
+        // de calculer la penalite sans savoir quelle bille etait visee.
+        // On memorise la bille touchee et on demande l'annonce au clic
+        // suivant (voir PendingAction::AnnounceFoulTarget ci-dessous).
+        if (required.getName() == "Couleur")
+        {
+            m_pendingFoulTouchedBall = clickedBall;
+            m_pendingFoulReason = "Mauvaise bille touchee";
+            m_pendingAction = PendingAction::AnnounceFoulTarget;
+            refreshDisplay();
+            return;
+        }
         int penalty = foulReferee.calculateFoul(required, clickedBall);
         frame.foul(required, clickedBall, penalty);
         m_gameManager.afterShot();
@@ -3040,8 +3237,28 @@ void MainWindow::handleBallAction(const QString& ballName, int ballValue)
     case PendingAction::BallOffTable:
     {
         Ball required = frame.getRequiredBall();
+        if (required.getName() == "Couleur")
+        {
+            m_pendingFoulTouchedBall = clickedBall;
+            m_pendingFoulReason = "Bille sortie de la table";
+            m_pendingAction = PendingAction::AnnounceFoulTarget;
+            refreshDisplay();
+            return;
+        }
         int penalty = foulReferee.calculateFoul(required, clickedBall);
         frame.foul(required, clickedBall, penalty, "Bille sortie de la table");
+        m_gameManager.afterShot();
+        m_pendingAction = PendingAction::None;
+        refreshDisplay();
+        return;
+    }
+    case PendingAction::AnnounceFoulTarget:
+    {
+        // clickedBall est ici la bille VISEE/annoncee par l'arbitre (pas
+        // la bille touchee, deja memorisee dans m_pendingFoulTouchedBall
+        // au clic precedent, voir Foul/BallOffTable ci-dessus).
+        int penalty = foulReferee.calculateFoul(clickedBall, m_pendingFoulTouchedBall);
+        frame.foul(clickedBall, m_pendingFoulTouchedBall, penalty, m_pendingFoulReason);
         m_gameManager.afterShot();
         m_pendingAction = PendingAction::None;
         refreshDisplay();
@@ -3051,6 +3268,20 @@ void MainWindow::handleBallAction(const QString& ballName, int ballValue)
     {
         frame.setFreeBall(true);
         frame.setFreeBallColor(clickedBall);
+        // Si "n'importe quelle couleur" etait legale (Frame::getRequiredBall()
+        // ambigu), impossible de deduire automatiquement la valeur a
+        // compter : on demande explicitement a l'arbitre de l'annoncer
+        // avant de pouvoir jouer le coup (voir isFreeBallValueAmbiguous()).
+        // Sinon (rouge ou couleur des couleurs finales) c'est deja deduit.
+        m_pendingAction = frame.isFreeBallValueAmbiguous()
+            ? PendingAction::ArmFreeBallValue
+            : PendingAction::None;
+        refreshDisplay();
+        return;
+    }
+    case PendingAction::ArmFreeBallValue:
+    {
+        frame.setFreeBallValue(clickedBall);
         m_pendingAction = PendingAction::None;
         refreshDisplay();
         return;
@@ -3066,6 +3297,15 @@ void MainWindow::handleBallAction(const QString& ballName, int ballValue)
         m_gameManager.afterShot();
         m_pendingAction = PendingAction::None;
         refreshDisplay();
+        // "Remettre en place" implique de replacer physiquement les
+        // billes : ouvre automatiquement le guide de repositionnement en
+        // plein ecran (voir showRepositioningGuide()), que ce Miss ait
+        // ete arme depuis le PC ou le telephone -- les deux passent par
+        // ici. Silencieux si le suivi camera n'est pas actif : on ne
+        // veut pas interrompre la partie avec un message d'erreur pour
+        // une action automatique (voir discussion utilisateur : dans ce
+        // cas c'est a l'arbitre de demander l'affichage manuellement).
+        showRepositioningGuide(/*silentIfUnavailable=*/true);
         return;
     }
     case PendingAction::MissSelfPlay:
@@ -3251,6 +3491,18 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
         restartMatch(p1.isEmpty() ? "Joueur 1" : p1, p2.isEmpty() ? "Joueur 2" : p2, frames);
         return;
     }
+    if (action == "openRepositionGuide")
+    {
+        // Meme bouton que sur les telecommandes de bureau (1.0 et 2.0) :
+        // declenchement manuel explicite, donc pas silencieux (affiche le
+        // message d'erreur habituel sur le PC si la camera n'est pas prete).
+        showRepositioningGuide(/*silentIfUnavailable=*/false);
+        return;
+    }
+    // "closeRepositionGuide" n'a rien a faire ici : gere directement par
+    // la connexion locale au dialogue dans showRepositioningGuideDialog()
+    // (voir MainWindow.cpp, plus haut), qui se deconnecte toute seule
+    // quand ce dialogue n'est pas ouvert.
 }
 
 // Demarre ou arrete le suivi camera en direct. Au demarrage, ouvre la

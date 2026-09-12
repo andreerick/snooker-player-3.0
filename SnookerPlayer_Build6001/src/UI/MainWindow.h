@@ -11,6 +11,8 @@
 #include <QScrollArea>
 #include <QTimer>
 #include <QDateTime>
+#include <QPointer>
+#include <QDialog>
 #include "GameManager.h"
 #include "MoveLogWidget.h"
 #include "TestScenarioRunner.h"
@@ -37,6 +39,22 @@ enum class PendingAction
     // toujours une faute, avec la meme formule de penalite (voir Referee).
     BallOffTable,
     ArmFreeBall,
+    // Free ball arme alors que "n'importe quelle couleur" etait legale
+    // (Frame::getRequiredBall() ambigu) : impossible de deduire quelle
+    // valeur le Free Ball remplace, donc on demande explicitement au
+    // arbitre de l'annoncer avant de pouvoir jouer le coup (voir
+    // Frame::setFreeBallValue()). Etape intermediaire uniquement dans ce
+    // cas ambigu -- sinon (rouge ou couleur des couleurs finales
+    // clairement dues) la valeur est deduite automatiquement.
+    ArmFreeBallValue,
+    // Faute (ou Bille sortie de table) survenue alors que "n'importe
+    // quelle couleur" etait legale (meme ambiguite que ArmFreeBallValue) :
+    // impossible de deduire automatiquement la bille visee pour calculer
+    // la penalite (Referee::calculateFoul utilise le MAX entre bille
+    // visee et bille touchee), donc on demande explicitement au arbitre
+    // de l'annoncer. La bille touchee (deja cliquee) est memorisee dans
+    // m_pendingFoulTouchedBall/m_pendingFoulReason en attendant.
+    AnnounceFoulTarget,
     MissReplay,
     MissSelfPlay,
     MissFoulThenFreeBall
@@ -84,6 +102,25 @@ private:
     // compteur de frames du match n'est pas revert -- cas rare, non gere
     // pour l'instant.
     void snapshotFrameForUndo();
+
+    // Capture l'image camera courante, compare aux dernieres positions
+    // connues (BallMapRecorder) et affiche le guide de repositionnement
+    // en plein ecran (voir showRepositioningGuideDialog()). Extrait du
+    // bouton "Guide de repositionnement" pour pouvoir aussi etre appelee
+    // automatiquement des que l'option Miss "Remettre en place" est
+    // resolue (voir handleBallAction(), cas PendingAction::MissReplay),
+    // que le clic vienne du PC ou du telephone -- les deux passent par
+    // handleBallAction(). Ne fait rien silencieusement si le suivi camera
+    // n'est pas actif ou qu'aucun coup n'a encore ete confirme (l'appel
+    // automatique ne doit pas interrompre la partie avec une erreur).
+    void showRepositioningGuide(bool silentIfUnavailable);
+
+    // Ferme le guide de repositionnement s'il est actuellement affiche
+    // (voir m_repositionGuideDialog). Ne fait rien s'il n'y en a pas --
+    // permet au bouton "Fermer le guide" d'etre present sur les 3
+    // telecommandes (1.0, 2.0, telephone) sans jamais planter si le
+    // guide n'est pas ouvert.
+    void closeRepositioningGuide();
 
     // Dispatche une action recue depuis la page de controle a distance
     // (telephone) vers la meme logique que les boutons de la
@@ -271,6 +308,20 @@ private:
     QFrame* m_remotePanel = nullptr;
     QFrame* m_remotePanelSimple = nullptr;
     QPushButton* m_toggleRemoteButton = nullptr;
+
+    // Guide de repositionnement actuellement affiche (fullscreen, non
+    // modal -- voir showRepositioningGuideDialog()), ou nullptr si aucun.
+    // QPointer se remet a nullptr automatiquement si le dialogue est
+    // ferme/detruit, meme depuis un autre bouton (telephone, 1.0, 2.0).
+    QPointer<QDialog> m_repositionGuideDialog;
+
+    // Memorise la bille reellement touchee et le motif de la faute
+    // (Foul ou BallOffTable) pendant l'etape intermediaire
+    // PendingAction::AnnounceFoulTarget (voir handleBallAction()) : la
+    // bille visee/annoncee arrive au clic SUIVANT, une fois l'ambiguite
+    // (n'importe quelle couleur legale) resolue par l'arbitre.
+    Ball m_pendingFoulTouchedBall = Ball("Aucune", 0);
+    std::string m_pendingFoulReason = "Mauvaise bille touchee";
 
     // Preference manuelle (bouton m_toggleRemoteButton, persistee dans
     // settings.ini "ui/remoteVisible") : independante du masquage

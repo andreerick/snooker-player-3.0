@@ -125,6 +125,8 @@ namespace
     <button class="actionbtn" onclick="sendAction('finishFrame')">Game</button>
     <button class="actionbtn" onclick="sendAction('goHome')">Esc</button>
     <button class="actionbtn" onclick="showNewMatchForm()">Nouveau match</button>
+    <button class="actionbtn wide" onclick="sendAction('openRepositionGuide')">Guide de repositionnement</button>
+    <button class="actionbtn wide" onclick="sendAction('closeRepositionGuide')">Fermer le guide</button>
   </div>
   </div>
 
