@@ -58,6 +58,13 @@ public:
     // pour publier l'etat courant du match. Thread-safe.
     void updateState(const QJsonObject& state);
 
+    // Vrai si au moins un telephone est actuellement connecte a cette
+    // table (a donne signe de vie il y a moins de kClientTimeoutMs), pour
+    // masquer automatiquement la telecommande de bureau -- voir
+    // MainWindow::refreshDisplay(). Purge les appareils perimes au
+    // passage, comme registerClient(). Thread-safe.
+    bool hasActiveClient() const;
+
 signals:
     // Emis depuis le thread du serveur HTTP (voir setupRoutes()) quand la
     // page de controle envoie une action (bille cliquee, faute armee...).
@@ -92,5 +99,6 @@ private:
     // identifiant -> horodatage (ms epoch) du dernier appel recu. Meme
     // mutex que m_state (contention negligeable, un seul point d'acces
     // partage entre les quelques requetes/seconde des 1-2 telephones vises).
-    QMap<QString, qint64> m_activeClients;
+    // mutable : hasActiveClient() (const) purge aussi les entrees perimees.
+    mutable QMap<QString, qint64> m_activeClients;
 };

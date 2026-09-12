@@ -56,15 +56,16 @@ namespace
   h2 { font-size: 11px; color:#7a7f87; letter-spacing: 1px; text-align:left;
        margin: 18px 2px 8px; }
   .ballgrid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .ballbtn { border:none; border-radius: 8px; padding: 14px 4px; font-weight:bold;
+  .ballbtn { border: 1px solid #fff; border-radius: 8px; padding: 13px 4px; font-weight:bold;
              font-size: 14px; }
+  .ballbtn.wide { grid-column: 1 / span 2; }
   .actiongrid { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .actionbtn { background:#111316; color:#f5f5f5; border:1px solid #2a2d31;
                border-radius: 8px; padding: 12px 6px; font-size: 13px; }
   .actionbtn.wide { grid-column: 1 / span 2; }
   .actionbtn.danger { color:#e74c3c; }
   .actionbtn:active, .ballbtn:active { opacity: 0.7; }
-  .namesform input { width: 100%; box-sizing: border-box; background:#111316; color:#f5f5f5;
+  .namesform input, .namesform select { width: 100%; box-sizing: border-box; background:#111316; color:#f5f5f5;
                       border:1px solid #2a2d31; border-radius: 6px; padding: 12px; font-size: 16px;
                       margin-bottom: 12px; }
   .namesform button { width: 100%; background:#1a9000; color:#fff; border:none;
@@ -83,6 +84,13 @@ namespace
     <h2 style="text-align:center">NOUVEAU MATCH</h2>
     <input type="text" id="p1input" placeholder="Nom du joueur 1">
     <input type="text" id="p2input" placeholder="Nom du joueur 2">
+    <select id="framesinput">
+      <option value="1" selected>1 frame (partie rapide)</option>
+      <option value="2">Meilleur des 3 frames</option>
+      <option value="3">Meilleur des 5 frames</option>
+      <option value="4">Meilleur des 7 frames</option>
+      <option value="5">Meilleur des 9 frames</option>
+    </select>
     <button onclick="submitNames()">Valider</button>
   </div>
   <div id="mainview">
@@ -110,14 +118,13 @@ namespace
   <h2>ACTIONS</h2>
   <div class="actiongrid">
     <button class="actionbtn" onclick="sendAction('armFoul')">Faute</button>
-    <button class="actionbtn" onclick="sendAction('armBallOffTable')">Bille sortie</button>
-    <button class="actionbtn" onclick="sendAction('armFreeBall')">Free ball</button>
     <button class="actionbtn" onclick="sendAction('missShot')">Fin de break</button>
-    <button class="actionbtn" onclick="sendAction('armMissReplay')">Miss (il rejoue)</button>
-    <button class="actionbtn" onclick="sendAction('armMissSelfPlay')">Miss (je joue)</button>
-    <button class="actionbtn wide" onclick="sendAction('armMissFoulThenFreeBall')">Miss + Free ball</button>
-    <button class="actionbtn wide" onclick="sendAction('finishFrame')">Fin de frame</button>
-    <button class="actionbtn wide danger" onclick="sendAction('cancel')">Annuler l'action en attente</button>
+    <button class="actionbtn" onclick="sendAction('armFreeBall')">Free ball</button>
+    <button class="actionbtn" onclick="sendAction('armMissReplay')">Miss</button>
+    <button class="actionbtn" onclick="sendAction('undo')">Retour</button>
+    <button class="actionbtn" onclick="sendAction('finishFrame')">Game</button>
+    <button class="actionbtn" onclick="sendAction('goHome')">Esc</button>
+    <button class="actionbtn" onclick="showNewMatchForm()">Nouveau match</button>
   </div>
   </div>
 
@@ -145,7 +152,9 @@ namespace
   const grid = document.getElementById('ballgrid');
   for (const name in ballColors) {
     const btn = document.createElement('button');
-    btn.className = 'ballbtn';
+    // La rouge occupe seule toute la largeur (une seule bille rouge peut
+    // etre jouee a la fois), comme sur la telecommande de bureau 2.0.
+    btn.className = name === 'Rouge' ? 'ballbtn wide' : 'ballbtn';
     btn.style.background = ballColors[name][0];
     btn.style.color = ballColors[name][1];
     btn.textContent = name + ' (' + ballValues[name] + ')';
@@ -164,13 +173,40 @@ namespace
     refresh();
   }
 
-  function submitNames() {
+  let startingNewMatch = false;
+  let namesFormShown = false;
+
+  async function submitNames() {
     const p1 = document.getElementById('p1input').value.trim();
     const p2 = document.getElementById('p2input').value.trim();
-    sendAction('submitNames', { p1, p2 });
+    const frames = parseInt(document.getElementById('framesinput').value, 10);
+    if (startingNewMatch) {
+      // Ne depend pas de namesFormShown/refresh() (etat pilote par le
+      // serveur, voir plus bas) : on gere nous-memes la transition
+      // puisque l'ouverture du formulaire etait volontaire, pas imposee
+      // par needsNames -- sinon le prochain rafraichissement automatique
+      // (1,5s) referme le formulaire avant meme que l'utilisateur ait pu
+      // saisir les noms.
+      startingNewMatch = false;
+      await sendAction('newMatch', { p1, p2, frames });
+      document.getElementById('namesform').style.display = 'none';
+      document.getElementById('mainview').style.display = 'block';
+    } else {
+      sendAction('submitNames', { p1, p2, frames });
+    }
   }
 
-  let namesFormShown = false;
+  // Bouton "Nouveau match" (redemande les noms) : contrairement au tout
+  // premier match, l'affichage du formulaire est ici declenche par
+  // l'utilisateur, pas par l'etat du serveur.
+  function showNewMatchForm() {
+    startingNewMatch = true;
+    document.getElementById('p1input').value = '';
+    document.getElementById('p2input').value = '';
+    document.getElementById('framesinput').value = '1';
+    document.getElementById('namesform').style.display = 'block';
+    document.getElementById('mainview').style.display = 'none';
+  }
 
   async function refresh() {
     try {
@@ -349,6 +385,25 @@ void MatchWebServer::updateState(const QJsonObject& state)
 {
     QMutexLocker locker(&m_stateMutex);
     m_state = state;
+}
+
+bool MatchWebServer::hasActiveClient() const
+{
+    QMutexLocker locker(&m_stateMutex);
+
+    const qint64 now = QDateTime::currentMSecsSinceEpoch();
+    for (auto it = m_activeClients.begin(); it != m_activeClients.end(); )
+    {
+        if (now - it.value() > kClientTimeoutMs)
+        {
+            it = m_activeClients.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+    return !m_activeClients.isEmpty();
 }
 
 bool MatchWebServer::registerClient(const QString& clientId)

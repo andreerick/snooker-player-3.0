@@ -185,6 +185,13 @@ void Frame::potColor(Ball ball)
 // =====================================
 int Frame::pointsRemaining() const
 {
+    // Frame terminee (forcee via forceFinishFrame() ou reellement finie) :
+    // plus rien a jouer, quel que soit ce qu'il reste sur la table.
+    if (m_phase == FramePhase::Finished)
+    {
+        return 0;
+    }
+
     int total = 0;
 
     for (const auto& ball : m_ballSet.getBalls())

@@ -76,6 +76,15 @@ private:
     // clic des boutons de bille pour eviter la duplication.
     void handleBallAction(const QString& ballName, int ballValue);
 
+    // Sauvegarde une copie du Frame courant juste AVANT d'appliquer un
+    // coup, pour permettre au bouton "Esc" de la telecommande 2.0
+    // d'annuler ce dernier coup (un seul niveau d'annulation -- pas de
+    // pile d'historique complete). Limite connue : si le coup annule
+    // avait termine la frame (victoire comptabilisee dans Match), le
+    // compteur de frames du match n'est pas revert -- cas rare, non gere
+    // pour l'instant.
+    void snapshotFrameForUndo();
+
     // Dispatche une action recue depuis la page de controle a distance
     // (telephone) vers la meme logique que les boutons de la
     // telecommande de bureau. Connecte au signal
@@ -126,6 +135,10 @@ private:
     void beginMatch(const QString& player1Name, const QString& player2Name, int framesToWin = 2);
 
     GameManager m_gameManager;
+
+    // Voir snapshotFrameForUndo() / le bouton "Esc" de la telecommande 2.0.
+    Frame m_undoSnapshot;
+    bool m_hasUndoSnapshot = false;
 
     SpeechAnnouncer* m_speech = nullptr;
     QPushButton* m_speechToggleButton = nullptr;
@@ -222,12 +235,10 @@ private:
     QLabel* m_player2ScoreBoxValue = nullptr;
 
     // Detail des points marques dans la frame en cours (billes empochees
-    // normalement / Free Ball / fautes adverses), un jeu de labels par joueur.
+    // normalement / fautes adverses), un jeu de labels par joueur.
     QLabel* m_player1DetailPotted = nullptr;
-    QLabel* m_player1DetailFreeBall = nullptr;
     QLabel* m_player1DetailFouls = nullptr;
     QLabel* m_player2DetailPotted = nullptr;
-    QLabel* m_player2DetailFreeBall = nullptr;
     QLabel* m_player2DetailFouls = nullptr;
 
     QWidget* m_successionRow = nullptr;
@@ -248,6 +259,33 @@ private:
     QPushButton* m_toggleLogButton = nullptr;
 
     MoveLogWidget* m_moveLogWidget = nullptr;
+
+    // Panneau de controles manuels (boutons de billes, faute, etc.),
+    // masquable pour afficher un tableau de score epure (voir
+    // m_toggleRemoteButton, dans le pied de page, toujours visible).
+    // Deux versions coexistent (voir Parametres > Telecommande) :
+    // m_remotePanel (1.0, complet, pour scenarios/tests) et
+    // m_remotePanelSimple (2.0, couleurs + Faute + Fin de break + Esc +
+    // Game seulement, pour l'usage courant). Une seule des deux est
+    // visible a la fois -- voir applyRemotePanelVisibility().
+    QFrame* m_remotePanel = nullptr;
+    QFrame* m_remotePanelSimple = nullptr;
+    QPushButton* m_toggleRemoteButton = nullptr;
+
+    // Preference manuelle (bouton m_toggleRemoteButton, persistee dans
+    // settings.ini "ui/remoteVisible") : independante du masquage
+    // automatique quand un telephone est connecte (voir
+    // applyRemotePanelVisibility()).
+    bool m_remoteManualVisible = true;
+
+    // Applique la visibilite effective des DEUX panneaux telecommande :
+    // le manuel (m_remoteManualVisible) ET l'auto-masquage si un
+    // telephone est connecte (voir MatchWebServer::hasActiveClient())
+    // ET le choix 1.0/2.0 (settings.ini "ui/remoteVersion"). Appelee a la
+    // construction, sur clic du bouton, a chaque refreshDisplay() (pour
+    // reagir a une connexion/deconnexion telephone) et si le choix change
+    // en direct depuis Parametres.
+    void applyRemotePanelVisibility();
 
     QTimer* m_nextFrameTimer = nullptr;
 
@@ -285,11 +323,6 @@ private:
     // en attendant les 3 cameras reelles) : le comportement est alors
     // identique a avant l'ajout du support multi-camera.
     bool m_multiCameraMode = false;
-
-    // Petit apercu en direct de ce que voit la camera (mis a jour a
-    // chaque tick de m_visionTimer), pour verifier visuellement le
-    // cadrage pendant les tests, sans camera physique bien positionnee.
-    QLabel* m_cameraPreviewLabel = nullptr;
 
     // Alerte precoce : liste (texte) des billes encore sur la table mais
     // detectees proches du bord (voir VisionGameBridge::ballsNearEdge()).
