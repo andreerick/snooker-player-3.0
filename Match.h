@@ -70,6 +70,15 @@ public:
     // et score final), dans l'ordre chronologique.
     const std::vector<FrameResult>& getFrameResults() const;
 
+    // A appeler quand le coup qui vient d'etre annule (bouton "Retour")
+    // etait celui qui venait de terminer la frame en cours : sans cela,
+    // restaurer directement Frame (getCurrentFrame() = ancienSnapshot)
+    // ne touche que l'objet Frame, laissant m_awaitingNextFrame et le
+    // tally de frames gagnees (m_framesPlayer1/2) bloques sur un
+    // resultat qui n'est plus valide. Ne fait rien si aucune frame
+    // n'est actuellement en attente de la frame suivante.
+    void undoFrameConclusion();
+
 
 
 private:

@@ -145,6 +145,30 @@ bool Match::isFrameJustFinished() const
     return m_awaitingNextFrame;
 }
 
+void Match::undoFrameConclusion()
+{
+    if (!m_awaitingNextFrame)
+    {
+        return;
+    }
+
+    if (!m_frameResults.empty())
+    {
+        const FrameResult& last = m_frameResults.back();
+        if (last.winnerName == m_player1.getName())
+        {
+            --m_framesPlayer1;
+        }
+        else if (last.winnerName == m_player2.getName())
+        {
+            --m_framesPlayer2;
+        }
+        m_frameResults.pop_back();
+    }
+
+    m_awaitingNextFrame = false;
+}
+
 void Match::proceedToNextFrame()
 {
     if (!m_awaitingNextFrame)

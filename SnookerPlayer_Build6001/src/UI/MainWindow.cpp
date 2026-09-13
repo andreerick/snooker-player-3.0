@@ -523,22 +523,12 @@ namespace
     // signaler un scenario/bug precisement (pas de captures d'ecran ni de
     // copier-coller a decouper a la main). Un nom different a chaque export
     // (horodatage a la seconde pres) : aucun scenario precedent n'est ecrase.
-    void exportMoveLogToFile(QWidget* parent, Frame& frame)
+    // Ecrit le journal des coups de la frame dans le flux donne (en-tete +
+    // toutes les lignes) : logique commune a l'export manuel
+    // (exportMoveLogToFile) et a la sauvegarde automatique silencieuse
+    // (autoSaveMoveLog), pour ne pas dupliquer le format.
+    void writeMoveLog(QTextStream& out, Match& match, Frame& frame)
     {
-        QString folder = QCoreApplication::applicationDirPath() + "/scenarios_test";
-        QDir().mkpath(folder);
-
-        QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss");
-        QString path = folder + "/scenario_" + timestamp + ".txt";
-
-        QFile file(path);
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-        {
-            showStyledMessage(parent, QMessageBox::Warning, "Export du journal", "Impossible d'ecrire le fichier :\n" + path);
-            return;
-        }
-
-        QTextStream out(&file);
         out << "=== Export du journal des coups ===\n";
         out << QDateTime::currentDateTime().toString(Qt::ISODate) << "\n\n";
         out << "Joueur 1 : " << QString::fromStdString(frame.getPlayer1().getName())
@@ -576,8 +566,167 @@ namespace
             }
         }
 
+        // Resume en fin de journal : score de CETTE frame (deja visible
+        // dans l'en-tete, repete ici pour une lecture rapide en bas de
+        // fichier) et score du match en nombre de frames gagnees.
+        //
+        // Match::checkFrameEnd() incremente le tally des frames DES que
+        // Frame::isFinished() devient vrai (avant meme que Match bascule
+        // sur l'objet Frame suivant, qui n'arrive que plus tard via
+        // proceedToNextFrame()) : match.getFramesPlayer1()/2() est donc
+        // deja a jour ici, y compris pour le tout dernier fichier de la
+        // frame qui vient de se terminer -- pas besoin de l'anticiper.
+        out << "\n";
+        out << "Score de la frame : " << QString::fromStdString(frame.getPlayer1().getName())
+            << " " << frame.getPlayer1().getScore() << " - "
+            << QString::fromStdString(frame.getPlayer2().getName())
+            << " " << frame.getPlayer2().getScore() << "\n";
+        out << "Score du match (frames) : " << QString::fromStdString(frame.getPlayer1().getName())
+            << " " << match.getFramesPlayer1() << " - "
+            << QString::fromStdString(frame.getPlayer2().getName())
+            << " " << match.getFramesPlayer2() << "\n";
+    }
+
+    void exportMoveLogToFile(QWidget* parent, Match& match, Frame& frame)
+    {
+        QString folder = QCoreApplication::applicationDirPath() + "/scenarios_test";
+        QDir().mkpath(folder);
+
+        QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss");
+        QString path = folder + "/scenario_" + timestamp + ".txt";
+
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            showStyledMessage(parent, QMessageBox::Warning, "Export du journal", "Impossible d'ecrire le fichier :\n" + path);
+            return;
+        }
+
+        QTextStream out(&file);
+        writeMoveLog(out, match, frame);
+
         file.close();
         showStyledMessage(parent, QMessageBox::Information, "Export du journal", "Journal exporte :\n" + path);
+    }
+
+    // Nettoie les fichiers intermediaires d'UNE frame donnee (meme
+    // prefixe "auto_frameNNN_"), ne gardant que le plus recent.
+    void cleanupFrameAutoSaves(const QString& folder, int frameNumber)
+    {
+        QString prefix = QString("auto_frame%1_").arg(frameNumber, 3, 10, QChar('0'));
+        QDir dir(folder);
+        QStringList files = dir.entryList(QStringList() << prefix + "*.txt", QDir::Files, QDir::Name);
+        for (int i = 0; i < files.size() - 1; ++i)
+        {
+            QFile::remove(folder + "/" + files[i]);
+        }
+    }
+
+    // Compteur de frame utilise par autoSaveMoveLog() ci-dessous, et son
+    // etat associe -- regroupes ici pour pouvoir les reinitialiser
+    // proprement au debut d'un nouveau match (voir resetAutoSaveTracking(),
+    // appelee depuis beginMatch()/restartMatch()) : sans cette remise a
+    // zero, un second match dans la meme session continuerait a numeroter
+    // ses fichiers a partir de la frame du match precedent.
+    int s_autoSaveFrameNumber = 0;
+    bool s_autoSaveWasAwaitingNextFrame = false;
+    int s_autoSaveLastTallySum = 0;
+
+    void resetAutoSaveTracking()
+    {
+        s_autoSaveFrameNumber = 0;
+        s_autoSaveWasAwaitingNextFrame = false;
+        s_autoSaveLastTallySum = 0;
+    }
+
+    // Sauvegarde automatique et silencieuse du journal de la frame en
+    // cours, appelee apres chaque coup (voir refreshDisplay()) : un
+    // NOUVEAU fichier horodate a chaque coup (pas d'ecrasement), pour
+    // garder une trace intermediaire exploitable meme si le tout dernier
+    // fichier est corrompu par un plantage pile pendant l'ecriture. Le nom
+    // inclut le numero de frame (voir frameNumber ci-dessous) : le
+    // nettoyage en fin de frame ne doit affecter QUE les fichiers
+    // intermediaires de CETTE frame, jamais ceux, deja definitifs, des
+    // frames precedentes -- une sauvegarde gardee par frame jouee dans le
+    // match, pas une seule pour tout le match. Aucune boite de dialogue :
+    // un echec d'ecriture ne doit jamais interrompre la partie.
+    void autoSaveMoveLog(Match& match, Frame& frame)
+    {
+        QString folder = QCoreApplication::applicationDirPath() + "/scenarios_test";
+        QDir().mkpath(folder);
+
+        // Le numero de frame NE DOIT PAS etre deduit du tally
+        // (match.getFramesPlayer1()+2()) : Match::checkFrameEnd()
+        // incremente ce tally DES que Frame::isFinished() devient vrai,
+        // donc avant meme que Match bascule reellement sur la frame
+        // suivante (qui n'arrive que plus tard, via proceedToNextFrame()).
+        // Deduire le numero du tally ferait donc basculer le fichier de
+        // toute derniere sauvegarde d'une frame qui vient de se terminer
+        // sur le prefixe de la frame SUIVANTE, alors que getCurrentFrame()
+        // pointe toujours sur la frame qui vient de finir -- observe en
+        // test (fichier "frame002" contenant encore les coups de la frame
+        // 1, avec un score du match double-compte).
+        //
+        // L'IDENTITE de l'objet Frame (&frame) ne marche pas non plus :
+        // Match::m_currentFrame est un membre par valeur reaffecte en
+        // place (m_currentFrame = Frame();), donc son adresse reste
+        // identique d'une frame a l'autre -- egalement observe en test
+        // (aucun changement detecte apres la frame 1).
+        //
+        // Signal fiable retenu : Match::isFrameJustFinished() (booleen
+        // m_awaitingNextFrame) passe a vrai des que la frame est gagnee,
+        // puis repasse a faux exactement au moment ou proceedToNextFrame()
+        // s'execute -- que ce soit pour reaffecter m_currentFrame (frame
+        // suivante reelle) ou parce que le match est termine (plus de
+        // frame suivante). On detecte donc le passage vrai -> faux.
+        //
+        // MAIS ce meme passage vrai -> faux se produit aussi quand
+        // "Retour" annule le coup qui venait de terminer la frame (voir
+        // Match::undoFrameConclusion(), appelee par les 3 telecommandes) :
+        // dans ce cas il ne s'agit PAS d'une nouvelle frame, juste d'une
+        // correction. On distingue les deux cas via le tally (nombre
+        // total de frames gagnees) : une vraie avancee le laisse identique
+        // (deja incremente par checkFrameEnd() pendant que le drapeau
+        // etait vrai ; proceedToNextFrame() n'y touche pas), alors qu'une
+        // annulation le fait REDESCENDRE (undoFrameConclusion() retire le
+        // point qu'elle vient d'annuler).
+        bool isAwaitingNextFrame = match.isFrameJustFinished();
+        int tallySum = match.getFramesPlayer1() + match.getFramesPlayer2();
+        if (s_autoSaveFrameNumber == 0)
+        {
+            s_autoSaveFrameNumber = 1;
+        }
+        else if (s_autoSaveWasAwaitingNextFrame && !isAwaitingNextFrame
+            && !match.isMatchFinished() && tallySum >= s_autoSaveLastTallySum)
+        {
+            cleanupFrameAutoSaves(folder, s_autoSaveFrameNumber);
+            ++s_autoSaveFrameNumber;
+        }
+        s_autoSaveWasAwaitingNextFrame = isAwaitingNextFrame;
+        s_autoSaveLastTallySum = tallySum;
+        int frameNumber = s_autoSaveFrameNumber;
+
+        QString prefix = QString("auto_frame%1_").arg(frameNumber, 3, 10, QChar('0'));
+        QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmsszzz");
+        QFile file(folder + "/" + prefix + timestamp + ".txt");
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            return;
+        }
+
+        QTextStream out(&file);
+        writeMoveLog(out, match, frame);
+
+        // Cas de la DERNIERE frame du match : Match ne bascule jamais sur
+        // une frame suivante (il n'y en a pas), donc le changement de
+        // numero ci-dessus ne se produira jamais. On nettoie alors ici,
+        // directement sur Frame::isFinished() (stable), a chaque appel
+        // suivant la fin de la frame (le minuteur de duree du match
+        // continue d'appeler refreshDisplay() pendant quelques secondes).
+        if (frame.isFinished())
+        {
+            cleanupFrameAutoSaves(folder, frameNumber);
+        }
     }
 
     // Valeur standard d'une bille par son nom (regles du snooker), utilisee
@@ -1594,6 +1743,7 @@ MainWindow::MainWindow(QWidget* parent)
                 return;
             }
             m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+            m_gameManager.getMatch().undoFrameConclusion();
             m_hasUndoSnapshot = false;
             m_pendingAction = PendingAction::None;
             refreshDisplay();
@@ -1671,7 +1821,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(exportLogButton, &QPushButton::clicked, this, [this]()
         {
             Frame& frame = m_gameManager.getMatch().getCurrentFrame();
-            exportMoveLogToFile(this, frame);
+            exportMoveLogToFile(this, m_gameManager.getMatch(), frame);
             refreshScenarioFileList(m_scenarioFileCombo);
         });
     remoteLayout->addWidget(exportLogButton);
@@ -2059,6 +2209,7 @@ MainWindow::MainWindow(QWidget* parent)
                 return;
             }
             m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+            m_gameManager.getMatch().undoFrameConclusion();
             m_hasUndoSnapshot = false;
             m_pendingAction = PendingAction::None;
             refreshDisplay();
@@ -2297,6 +2448,7 @@ void MainWindow::startNewMatchFromHome()
 void MainWindow::beginMatch(const QString& player1Name, const QString& player2Name, int framesToWin)
 {
     m_gameManager.startNewMatch(player1Name.toStdString(), player2Name.toStdString(), framesToWin);
+    resetAutoSaveTracking();
     // A partir d'ici, handleRemoteControlAction() traite les actions du
     // telephone normalement (bille, faute...) -- voir sa garde en debut
     // de fonction.
@@ -2444,6 +2596,7 @@ void MainWindow::restartMatch(const QString& player1Name, const QString& player2
     m_pendingAction = PendingAction::None;
 
     m_gameManager.startNewMatch(player1Name.toStdString(), player2Name.toStdString(), framesToWin);
+    resetAutoSaveTracking();
     m_bestOfLabel->setText(formatBestOfLabel(m_gameManager.getMatch().getFramesToWin()));
 
     m_matchStartTime = QDateTime::currentDateTime();
@@ -2761,6 +2914,11 @@ void MainWindow::refreshDisplay()
     // est appele apres chaque coup et par le minuteur de duree du match,
     // donc assez souvent pour que le masquage/reaffichage semble immediat.
     applyRemotePanelVisibility();
+
+    // Sauvegarde automatique et silencieuse du journal des coups (voir
+    // autoSaveMoveLog()) : toujours a jour, pour garder une trace
+    // exploitable en cas de plantage ou de bug pendant le match.
+    autoSaveMoveLog(m_gameManager.getMatch(), frame);
 
     announceNewEvents(frame);
 
@@ -3496,6 +3654,7 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
             return;
         }
         m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+        m_gameManager.getMatch().undoFrameConclusion();
         m_hasUndoSnapshot = false;
         m_pendingAction = PendingAction::None;
         refreshDisplay();
