@@ -36,12 +36,13 @@ namespace
   body { background:#000; color:#f5f5f5; font-family: -apple-system, Arial, sans-serif;
          text-align:center; padding: 20px 14px 40px; margin: 0; }
   .frames { color:#7a7f87; font-size: 13px; letter-spacing: 1px; margin-bottom: 16px; }
-  .row { background:#111316; border:1px solid #2a2d31; border-radius: 8px;
-         padding: 12px; margin-bottom: 10px; }
+  .scores { display:flex; gap: 10px; margin-bottom: 10px; }
+  .row { flex: 1; min-width: 0; background:#111316; border:1px solid #2a2d31; border-radius: 8px;
+         padding: 12px; }
   .row.active { border-color:#1a9000; background: rgba(26,144,0,0.12); }
-  .name { font-size: 16px; color:#7a7f87; }
+  .name { font-size: 15px; color:#7a7f87; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row.active .name { color:#1a9000; font-weight:bold; }
-  .score { font-size: 34px; font-weight:bold; margin-top: 2px; }
+  .score { font-size: 30px; font-weight:bold; margin-top: 2px; }
   .breakbox { margin: 12px 0 20px; color:#7a7f87; font-size: 13px; }
   .breakvalue { font-size: 22px; color:#f5f5f5; font-weight:bold; }
   .offline { color:#e74c3c; margin-top: 12px; font-size: 13px; }
@@ -64,6 +65,8 @@ namespace
                border-radius: 8px; padding: 12px 6px; font-size: 13px; }
   .actionbtn.wide { grid-column: 1 / span 2; }
   .actionbtn.danger { color:#e74c3c; }
+  .missmenu { display:none; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .missmenu.show { display:flex; }
   .actionbtn:active, .ballbtn:active { opacity: 0.7; }
   .namesform input, .namesform select { width: 100%; box-sizing: border-box; background:#111316; color:#f5f5f5;
                       border:1px solid #2a2d31; border-radius: 6px; padding: 12px; font-size: 16px;
@@ -95,13 +98,15 @@ namespace
   </div>
   <div id="mainview">
   <div class="frames" id="frames">Chargement...</div>
-  <div class="row" id="row1">
-    <div class="name" id="name1">-</div>
-    <div class="score" id="score1">-</div>
-  </div>
-  <div class="row" id="row2">
-    <div class="name" id="name2">-</div>
-    <div class="score" id="score2">-</div>
+  <div class="scores">
+    <div class="row" id="row1">
+      <div class="name" id="name1">-</div>
+      <div class="score" id="score1">-</div>
+    </div>
+    <div class="row" id="row2">
+      <div class="name" id="name2">-</div>
+      <div class="score" id="score2">-</div>
+    </div>
   </div>
   <div class="breakbox">
     BREAK EN COURS<br>
@@ -117,16 +122,20 @@ namespace
 
   <h2>ACTIONS</h2>
   <div class="actiongrid">
-    <button class="actionbtn" onclick="sendAction('armFoul')">Faute</button>
     <button class="actionbtn" onclick="sendAction('missShot')">Fin de break</button>
-    <button class="actionbtn" onclick="sendAction('armFreeBall')">Free ball</button>
-    <button class="actionbtn" onclick="sendAction('armMissReplay')">Miss</button>
+    <button class="actionbtn" onclick="sendAction('armFoul')">Faute</button>
     <button class="actionbtn" onclick="sendAction('undo')">Retour</button>
     <button class="actionbtn" onclick="sendAction('finishFrame')">Game</button>
-    <button class="actionbtn" onclick="sendAction('goHome')">Esc</button>
+    <button class="actionbtn" onclick="sendAction('armMiss')">Miss</button>
+    <button class="actionbtn" onclick="showFreeBallMenu()">Free ball</button>
     <button class="actionbtn" onclick="showNewMatchForm()">Nouveau match</button>
+    <button class="actionbtn" onclick="sendAction('goHome')">Esc</button>
     <button class="actionbtn wide" onclick="sendAction('openRepositionGuide')">Guide de repositionnement</button>
     <button class="actionbtn wide" onclick="sendAction('closeRepositionGuide')">Fermer le guide</button>
+  </div>
+  <div class="missmenu" id="freeballmenu">
+    <button class="actionbtn" onclick="chooseFreeBall('missReplay')">Remettre en place</button>
+    <button class="actionbtn" onclick="chooseFreeBall('armFreeBall')">Choisir la bille de depart</button>
   </div>
   </div>
 
@@ -173,6 +182,17 @@ namespace
       });
     } catch (e) {}
     refresh();
+  }
+
+  // Menu "Free ball" : choix entre faire rejouer le fautif ou choisir sa
+  // propre bille de depart, meme menu que sur les telecommandes de
+  // bureau 1.0 et 2.0 (voir freeBallMenu).
+  function showFreeBallMenu() {
+    document.getElementById('freeballmenu').classList.add('show');
+  }
+  function chooseFreeBall(action) {
+    document.getElementById('freeballmenu').classList.remove('show');
+    sendAction(action);
   }
 
   let startingNewMatch = false;

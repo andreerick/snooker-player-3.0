@@ -1428,14 +1428,15 @@ MainWindow::MainWindow(QWidget* parent)
             m_gameManager.afterShot();
             refreshDisplay();
         });
-    actionsGrid->addWidget(missShotButton, 0, 1);
+    actionsGrid->addWidget(missShotButton, 0, 0);
 
     // ---------------------------------------------------
-    // Fin de frame : force la fin de la frame en cours (le vainqueur
-    // est determine avec le score actuel), pour sauter directement a
-    // la frame suivante sans jouer toutes les billes restantes.
+    // Game : force la fin de la frame en cours (le vainqueur est
+    // determine avec le score actuel), pour sauter directement a la
+    // frame suivante sans jouer toutes les billes restantes. Meme
+    // libelle que sur le telephone ("Game"), pour rester coherent.
     // ---------------------------------------------------
-    QPushButton* finishFrameButton = new QPushButton("Fin de frame", remotePanel);
+    QPushButton* finishFrameButton = new QPushButton("Game", remotePanel);
     finishFrameButton->setStyleSheet(
         "QPushButton {"
         "  background-color: " + kPanel + ";"
@@ -1459,7 +1460,7 @@ MainWindow::MainWindow(QWidget* parent)
             m_gameManager.afterShot();
             refreshDisplay();
         });
-    actionsGrid->addWidget(finishFrameButton, 2, 1);
+    actionsGrid->addWidget(finishFrameButton, 1, 1);
 
     // ---------------------------------------------------
     // Faute : arme une action en attente. Le prochain bouton de bille
@@ -1482,7 +1483,16 @@ MainWindow::MainWindow(QWidget* parent)
     // match tout neuf (scores et frames a zero), sans relancer l'appli.
     // ---------------------------------------------------
     QPushButton* newMatchButton = new QPushButton("Nouveau match", remotePanel);
-    newMatchButton->setStyleSheet(secondaryButtonStyle);
+    // Libelle borderline pour la moitie de la grille (110px) : police
+    // reduite, meme technique que clearHistoryButton/freeBallButton plus
+    // bas, sinon le texte se retrouve rogne ("Nouveau matc").
+    newMatchButton->setStyleSheet(
+        "QPushButton {"
+        "  background-color: " + kPanel + "; color: " + kWhite + ";"
+        "  border: 1px solid " + kBorder + "; border-radius: 5px; padding: 8px 2px; font-size: 12px;"
+        "}"
+        "QPushButton:hover { border-color: " + kGreen + "; }"
+    );
     connect(newMatchButton, &QPushButton::clicked, this, [this]()
         {
             QString player1Name;
@@ -1491,7 +1501,7 @@ MainWindow::MainWindow(QWidget* parent)
             promptPlayerNames(player1Name, player2Name, framesToWin);
             restartMatch(player1Name, player2Name, framesToWin);
         });
-    actionsGrid->addWidget(newMatchButton, 3, 1);
+    actionsGrid->addWidget(newMatchButton, 3, 0);
 
     QPushButton* foulButton = new QPushButton("Faute", remotePanel);
     foulButton->setStyleSheet(secondaryButtonStyle);
@@ -1500,7 +1510,7 @@ MainWindow::MainWindow(QWidget* parent)
             m_pendingAction = PendingAction::Foul;
             refreshDisplay();
         });
-    actionsGrid->addWidget(foulButton, 0, 0);
+    actionsGrid->addWidget(foulButton, 0, 1);
 
     // ---------------------------------------------------
     // Bille sortie de table : meme mecanique que "Faute" (meme calcul de
@@ -1516,61 +1526,59 @@ MainWindow::MainWindow(QWidget* parent)
     remoteLayout->addWidget(ballOffTableButton);
 
     // ---------------------------------------------------
-    // Free ball : arme une action en attente. Le prochain bouton de bille
-    // clique nomme la bille de depart, et arme l'etat Free Ball (le clic
-    // suivant sur une bille sera alors traite via Frame::playFreeBall).
+    // Free ball : menu a 2 choix pour le joueur qui vient de recevoir la
+    // main apres une faute adverse (Miss ou Faute) et se retrouve snooke :
+    //  - Remettre en place : plutot que de jouer la position, il prefere
+    //    faire rejouer le fautif -- action immediate (pas d'attente de
+    //    bille), repasse la main et ouvre le guide de repositionnement
+    //    (implique de replacer physiquement les billes).
+    //  - Choisir la bille de depart : il joue lui-meme mais est snooke,
+    //    donc nomme une bille de remplacement (voir Frame::playFreeBall).
     // ---------------------------------------------------
     QPushButton* freeBallButton = new QPushButton("Free ball", remotePanel);
     freeBallButton->setStyleSheet(secondaryButtonStyle);
-    connect(freeBallButton, &QPushButton::clicked, this, [this]()
-        {
-            m_pendingAction = PendingAction::ArmFreeBall;
-            refreshDisplay();
-        });
-    actionsGrid->addWidget(freeBallButton, 1, 0);
 
-    // ---------------------------------------------------
-    // Miss : le referee juge que le joueur n'a pas veritablement tente
-    // la bille demandee. C'est toujours une faute (le prochain bouton de
-    // bille clique fournit la bille fautee, penalite calculee automatiquement),
-    // suivie du choix de l'adversaire (regle du snooker) :
-    //  - faire rejouer le fautif (les billes restent en l'etat)
-    //  - jouer lui-meme la position telle quelle
-    //  - demander un Free Ball s'il est snooke (choix de la bille de depart)
-    // ---------------------------------------------------
-    QPushButton* missButton = new QPushButton("Miss", remotePanel);
-    missButton->setStyleSheet(secondaryButtonStyle);
-
-    QMenu* missMenu = new QMenu(missButton);
-    missMenu->setStyleSheet(
+    QMenu* freeBallMenu = new QMenu(freeBallButton);
+    freeBallMenu->setStyleSheet(
         "QMenu { background-color: " + kPanel + "; color: " + kWhite + "; border: 1px solid " + kBorder + "; }"
         "QMenu::item:selected { background-color: " + kBorder + "; }"
     );
 
-    QAction* replayAction = missMenu->addAction("Remettre en place (le fautif rejoue)");
-    QAction* selfPlayAction = missMenu->addAction("Jouer moi-meme la bille");
-    QAction* freeBallMissAction = missMenu->addAction("Free ball (choisir la bille de depart)");
+    QAction* missReplayAction = freeBallMenu->addAction("Remettre en place");
+    QAction* chooseStartingBallAction = freeBallMenu->addAction("Choisir la bille de depart");
 
-    connect(replayAction, &QAction::triggered, this, [this]()
+    connect(missReplayAction, &QAction::triggered, this, [this]()
         {
-            m_pendingAction = PendingAction::MissReplay;
+            m_gameManager.getMatch().getCurrentFrame().switchPlayer();
+            refreshDisplay();
+            showRepositioningGuide(/*silentIfUnavailable=*/true);
+        });
+
+    connect(chooseStartingBallAction, &QAction::triggered, this, [this]()
+        {
+            m_pendingAction = PendingAction::ArmFreeBall;
             refreshDisplay();
         });
 
-    connect(selfPlayAction, &QAction::triggered, this, [this]()
+    freeBallButton->setMenu(freeBallMenu);
+    actionsGrid->addWidget(freeBallButton, 2, 1);
+
+    // ---------------------------------------------------
+    // Miss : le referee juge que le joueur n'a pas veritablement tente
+    // la bille demandee. Arme une action en attente, exactement comme
+    // "Faute" : le prochain bouton de bille clique fournit la bille
+    // fautee et la penalite est calculee automatiquement -- cela passe
+    // la main a l'adversaire, qui joue alors directement. S'il decouvre
+    // qu'il est snooke, il utilise le bouton "Free ball" ci-dessus.
+    // ---------------------------------------------------
+    QPushButton* missButton = new QPushButton("Miss", remotePanel);
+    missButton->setStyleSheet(secondaryButtonStyle);
+    connect(missButton, &QPushButton::clicked, this, [this]()
         {
-            m_pendingAction = PendingAction::MissSelfPlay;
+            m_pendingAction = PendingAction::Miss;
             refreshDisplay();
         });
-
-    connect(freeBallMissAction, &QAction::triggered, this, [this]()
-        {
-            m_pendingAction = PendingAction::MissFoulThenFreeBall;
-            refreshDisplay();
-        });
-
-    missButton->setMenu(missMenu);
-    actionsGrid->addWidget(missButton, 1, 1);
+    actionsGrid->addWidget(missButton, 2, 0);
 
     // ---------------------------------------------------
     // Retour : annule le dernier coup (bille empochee, faute ou "Fin de
@@ -1590,7 +1598,7 @@ MainWindow::MainWindow(QWidget* parent)
             m_pendingAction = PendingAction::None;
             refreshDisplay();
         });
-    actionsGrid->addWidget(undoButton, 2, 0);
+    actionsGrid->addWidget(undoButton, 1, 0);
 
     // ---------------------------------------------------
     // Esc : quitte l'ecran de match et revient a l'accueil (voir
@@ -1603,7 +1611,7 @@ MainWindow::MainWindow(QWidget* parent)
         {
             m_rootStack->setCurrentIndex(1);
         });
-    actionsGrid->addWidget(exitButton, 3, 0);
+    actionsGrid->addWidget(exitButton, 3, 1);
 
     // ---------------------------------------------------
     // Reglement : recherche rapide dans le texte officiel (voir
@@ -1969,14 +1977,13 @@ MainWindow::MainWindow(QWidget* parent)
     simpleLayout->addLayout(simpleBallButtonsLayout);
     simpleLayout->addSpacing(6);
 
-    QPushButton* simpleFoulButton = new QPushButton("Faute", remotePanelSimple);
-    simpleFoulButton->setStyleSheet(secondaryButtonStyle);
-    connect(simpleFoulButton, &QPushButton::clicked, this, [this]()
-        {
-            m_pendingAction = PendingAction::Foul;
-            refreshDisplay();
-        });
-    simpleLayout->addWidget(simpleFoulButton);
+    // Grille d'actions 2 colonnes : meme ordre et memes libelles que sur
+    // la telecommande 1.0 et le telephone (voir actionsGrid), pour que
+    // les 3 telecommandes soient identiques a l'exception du compteur
+    // (uniquement sur le telephone).
+    QGridLayout* simpleActionsGrid = new QGridLayout();
+    simpleActionsGrid->setSpacing(8);
+    simpleLayout->addLayout(simpleActionsGrid);
 
     QPushButton* simpleMissShotButton = new QPushButton("Fin de break", remotePanelSimple);
     simpleMissShotButton->setStyleSheet(secondaryButtonStyle);
@@ -1988,31 +1995,58 @@ MainWindow::MainWindow(QWidget* parent)
             m_gameManager.afterShot();
             refreshDisplay();
         });
-    simpleLayout->addWidget(simpleMissShotButton);
+    simpleActionsGrid->addWidget(simpleMissShotButton, 0, 0);
 
-    // Free ball : arme une action en attente, meme mecanique que sur la
-    // telecommande 1.0 (voir freeBallButton plus haut) et le telephone.
+    QPushButton* simpleFoulButton = new QPushButton("Faute", remotePanelSimple);
+    simpleFoulButton->setStyleSheet(secondaryButtonStyle);
+    connect(simpleFoulButton, &QPushButton::clicked, this, [this]()
+        {
+            m_pendingAction = PendingAction::Foul;
+            refreshDisplay();
+        });
+    simpleActionsGrid->addWidget(simpleFoulButton, 0, 1);
+
+    // Free ball : menu a 2 choix, meme mecanique que sur la telecommande
+    // 1.0 (voir freeBallMenu plus haut) et le telephone.
     QPushButton* simpleFreeBallButton = new QPushButton("Free ball", remotePanelSimple);
     simpleFreeBallButton->setStyleSheet(secondaryButtonStyle);
-    connect(simpleFreeBallButton, &QPushButton::clicked, this, [this]()
+
+    QMenu* simpleFreeBallMenu = new QMenu(simpleFreeBallButton);
+    simpleFreeBallMenu->setStyleSheet(
+        "QMenu { background-color: " + kPanel + "; color: " + kWhite + "; border: 1px solid " + kBorder + "; }"
+        "QMenu::item:selected { background-color: " + kBorder + "; }"
+    );
+
+    QAction* simpleMissReplayAction = simpleFreeBallMenu->addAction("Remettre en place");
+    QAction* simpleChooseStartingBallAction = simpleFreeBallMenu->addAction("Choisir la bille de depart");
+
+    connect(simpleMissReplayAction, &QAction::triggered, this, [this]()
+        {
+            m_gameManager.getMatch().getCurrentFrame().switchPlayer();
+            refreshDisplay();
+            showRepositioningGuide(/*silentIfUnavailable=*/true);
+        });
+
+    connect(simpleChooseStartingBallAction, &QAction::triggered, this, [this]()
         {
             m_pendingAction = PendingAction::ArmFreeBall;
             refreshDisplay();
         });
-    simpleLayout->addWidget(simpleFreeBallButton);
 
-    // Miss : contrairement au menu deroulant de la 1.0 (3 variantes), un
-    // seul bouton simplifie qui arme directement "Remettre en place (le
-    // fautif rejoue)" -- meme choix que sur le telephone, pour rester
-    // coherent entre les deux telecommandes simplifiees.
+    simpleFreeBallButton->setMenu(simpleFreeBallMenu);
+    simpleActionsGrid->addWidget(simpleFreeBallButton, 2, 1);
+
+    // Miss : arme une action en attente, meme mecanique que "Faute" (voir
+    // missButton sur la 1.0). Passe la main a l'adversaire des la bille
+    // fautee cliquee ; s'il est snooke, il utilise "Free ball" ci-dessus.
     QPushButton* simpleMissButton = new QPushButton("Miss", remotePanelSimple);
     simpleMissButton->setStyleSheet(secondaryButtonStyle);
     connect(simpleMissButton, &QPushButton::clicked, this, [this]()
         {
-            m_pendingAction = PendingAction::MissReplay;
+            m_pendingAction = PendingAction::Miss;
             refreshDisplay();
         });
-    simpleLayout->addWidget(simpleMissButton);
+    simpleActionsGrid->addWidget(simpleMissButton, 2, 0);
 
     // Retour : annule le dernier coup (bille empochee, faute ou "Fin de
     // break"), voir snapshotFrameForUndo(). Un seul niveau d'annulation.
@@ -2029,7 +2063,7 @@ MainWindow::MainWindow(QWidget* parent)
             m_pendingAction = PendingAction::None;
             refreshDisplay();
         });
-    simpleLayout->addWidget(simpleUndoButton);
+    simpleActionsGrid->addWidget(simpleUndoButton, 1, 0);
 
     // Game : valide la fin de la frame en cours, meme logique que "Fin
     // de frame" sur la telecommande 1.0 (refuse sur une egalite stricte).
@@ -2048,7 +2082,41 @@ MainWindow::MainWindow(QWidget* parent)
             m_gameManager.afterShot();
             refreshDisplay();
         });
-    simpleLayout->addWidget(simpleGameButton);
+    simpleActionsGrid->addWidget(simpleGameButton, 1, 1);
+
+    // Nouveau match : redemande les noms des joueurs et repart d'un
+    // match tout neuf, meme mecanique que sur la telecommande 1.0 (voir
+    // newMatchButton).
+    QPushButton* simpleNewMatchButton = new QPushButton("Nouveau match", remotePanelSimple);
+    // Meme correction que newMatchButton sur la 1.0 (voir plus haut).
+    simpleNewMatchButton->setStyleSheet(
+        "QPushButton {"
+        "  background-color: " + kPanel + "; color: " + kWhite + ";"
+        "  border: 1px solid " + kBorder + "; border-radius: 5px; padding: 8px 2px; font-size: 12px;"
+        "}"
+        "QPushButton:hover { border-color: " + kGreen + "; }"
+    );
+    connect(simpleNewMatchButton, &QPushButton::clicked, this, [this]()
+        {
+            QString player1Name;
+            QString player2Name;
+            int framesToWin = 2;
+            promptPlayerNames(player1Name, player2Name, framesToWin);
+            restartMatch(player1Name, player2Name, framesToWin);
+        });
+    simpleActionsGrid->addWidget(simpleNewMatchButton, 3, 0);
+
+    // Esc : quitte l'ecran de match et revient a l'accueil (voir
+    // m_rootStack, index 1). Le match reste construit et en l'etat en
+    // arriere-plan -- pas de moyen pour l'instant d'y revenir autrement
+    // qu'en relancant un nouveau match depuis l'accueil.
+    QPushButton* simpleExitButton = new QPushButton("Esc", remotePanelSimple);
+    simpleExitButton->setStyleSheet(secondaryButtonStyle);
+    connect(simpleExitButton, &QPushButton::clicked, this, [this]()
+        {
+            m_rootStack->setCurrentIndex(1);
+        });
+    simpleActionsGrid->addWidget(simpleExitButton, 3, 1);
 
     // Guide de repositionnement : meme fonction que sur la telecommande
     // 1.0 (voir showRepositioningGuide()), affiche en plein ecran.
@@ -2058,7 +2126,7 @@ MainWindow::MainWindow(QWidget* parent)
         {
             showRepositioningGuide(/*silentIfUnavailable=*/false);
         });
-    simpleLayout->addWidget(simpleRepositionButton);
+    simpleActionsGrid->addWidget(simpleRepositionButton, 4, 0, 1, 2);
 
     // Fermer le guide : meme fonction que sur la telecommande 1.0 (voir
     // closeGuideButton plus haut) et le telephone.
@@ -2068,19 +2136,7 @@ MainWindow::MainWindow(QWidget* parent)
         {
             closeRepositioningGuide();
         });
-    simpleLayout->addWidget(simpleCloseGuideButton);
-
-    // Esc (dernier bouton) : quitte l'ecran de match et revient a
-    // l'accueil (voir m_rootStack, index 1). Le match reste construit et
-    // en l'etat en arriere-plan -- pas de moyen pour l'instant d'y
-    // revenir autrement qu'en relancant un nouveau match depuis l'accueil.
-    QPushButton* simpleExitButton = new QPushButton("Esc", remotePanelSimple);
-    simpleExitButton->setStyleSheet(secondaryButtonStyle);
-    connect(simpleExitButton, &QPushButton::clicked, this, [this]()
-        {
-            m_rootStack->setCurrentIndex(1);
-        });
-    simpleLayout->addWidget(simpleExitButton);
+    simpleActionsGrid->addWidget(simpleCloseGuideButton, 5, 0, 1, 2);
 
     simpleLayout->addStretch();
 
@@ -2819,13 +2875,7 @@ void MainWindow::refreshDisplay()
     case PendingAction::AnnounceFoulTarget:
         pendingText = "FAUTE : quelle bille visiez-vous ? (annoncez la couleur)";
         break;
-    case PendingAction::MissReplay:
-        pendingText = "MISS : cliquez la bille fautee (le fautif rejouera)";
-        break;
-    case PendingAction::MissSelfPlay:
-        pendingText = "MISS : cliquez la bille fautee (vous jouerez)";
-        break;
-    case PendingAction::MissFoulThenFreeBall:
+    case PendingAction::Miss:
         pendingText = "MISS : cliquez la bille fautee";
         break;
     case PendingAction::None:
@@ -3289,48 +3339,30 @@ void MainWindow::handleBallAction(const QString& ballName, int ballValue)
         refreshDisplay();
         return;
     }
-    case PendingAction::MissReplay:
+    case PendingAction::Miss:
     {
         Ball required = frame.getRequiredBall();
+        // Meme ambiguite que Foul/BallOffTable ci-dessus (voir leurs
+        // commentaires) : reutilise le meme mecanisme d'annonce.
+        if (required.getName() == "Couleur")
+        {
+            m_pendingFoulTouchedBall = clickedBall;
+            m_pendingFoulReason = "Absence de veritable tentative (Miss)";
+            m_pendingAction = PendingAction::AnnounceFoulTarget;
+            refreshDisplay();
+            return;
+        }
         int penalty = foulReferee.calculateFoul(required, clickedBall);
-        frame.foul(required, clickedBall, penalty);
-        // La faute a fait passer la main a l'adversaire : on la
-        // redonne au fautif pour qu'il rejoue la meme position.
-        frame.switchPlayer();
+        frame.foul(required, clickedBall, penalty, "Absence de veritable tentative (Miss)");
         m_gameManager.afterShot();
         m_pendingAction = PendingAction::None;
         refreshDisplay();
-        // "Remettre en place" implique de replacer physiquement les
-        // billes : ouvre automatiquement le guide de repositionnement en
-        // plein ecran (voir showRepositioningGuide()), que ce Miss ait
-        // ete arme depuis le PC ou le telephone -- les deux passent par
-        // ici. Silencieux si le suivi camera n'est pas actif : on ne
-        // veut pas interrompre la partie avec un message d'erreur pour
-        // une action automatique (voir discussion utilisateur : dans ce
-        // cas c'est a l'arbitre de demander l'affichage manuellement).
-        showRepositioningGuide(/*silentIfUnavailable=*/true);
-        return;
-    }
-    case PendingAction::MissSelfPlay:
-    {
-        Ball required = frame.getRequiredBall();
-        int penalty = foulReferee.calculateFoul(required, clickedBall);
-        frame.foul(required, clickedBall, penalty);
-        m_gameManager.afterShot();
-        m_pendingAction = PendingAction::None;
-        refreshDisplay();
-        return;
-    }
-    case PendingAction::MissFoulThenFreeBall:
-    {
-        Ball required = frame.getRequiredBall();
-        int penalty = foulReferee.calculateFoul(required, clickedBall);
-        frame.foul(required, clickedBall, penalty);
-        m_gameManager.afterShot();
-        // Passe a l'etape suivante : le prochain clic nomme
-        // la bille de depart du Free Ball.
-        m_pendingAction = PendingAction::ArmFreeBall;
-        refreshDisplay();
+        // La main passe naturellement a l'adversaire (comme une faute
+        // normale, equivalent a "il joue la position telle quelle"). Si
+        // l'adversaire prefere faire rejouer le fautif, il clique
+        // ensuite sur le bouton separe "Remettre en place" (voir
+        // missReplayButton), qui repasse la main et ouvre le guide de
+        // repositionnement -- pas ici.
         return;
     }
     case PendingAction::None:
@@ -3409,22 +3441,19 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
         refreshDisplay();
         return;
     }
-    if (action == "armMissReplay")
+    if (action == "armMiss")
     {
-        m_pendingAction = PendingAction::MissReplay;
+        m_pendingAction = PendingAction::Miss;
         refreshDisplay();
         return;
     }
-    if (action == "armMissSelfPlay")
+    if (action == "missReplay")
     {
-        m_pendingAction = PendingAction::MissSelfPlay;
+        // Action immediate (pas d'attente de bille), voir
+        // missReplayButton sur la telecommande 1.0 pour le detail.
+        frame.switchPlayer();
         refreshDisplay();
-        return;
-    }
-    if (action == "armMissFoulThenFreeBall")
-    {
-        m_pendingAction = PendingAction::MissFoulThenFreeBall;
-        refreshDisplay();
+        showRepositioningGuide(/*silentIfUnavailable=*/true);
         return;
     }
     if (action == "cancel")

@@ -33,7 +33,21 @@
 enum class PendingAction
 {
     None,
+    // Faute simple : le joueur a tente sa bille mais commet une faute.
     Foul,
+    // L'arbitre juge que le joueur n'a pas veritablement tente la bille
+    // demandee. Meme mecanique de resolution que Foul (bille cliquee ->
+    // penalite calculee), mais motif distinct dans le journal des coups.
+    // Contrairement a l'ancienne conception (menu "Remettre en place" /
+    // "Jouer moi-meme" AVANT de cliquer la bille fautee), l'arbitre
+    // clique d'abord la bille pour fixer la valeur de la faute -- cela
+    // fait automatiquement passer la main a l'adversaire (comme une
+    // faute normale, equivalent a "il joue lui-meme la position"). Si
+    // l'adversaire prefere faire rejouer le fautif, l'arbitre clique
+    // ensuite sur le bouton separe "Remettre en place" (action immediate,
+    // voir son connect()), qui repasse la main et ouvre le guide de
+    // repositionnement.
+    Miss,
     // Meme mecanique que Foul (meme calcul de penalite), mais motif distinct
     // dans le journal des coups : une bille forcee hors de la table est
     // toujours une faute, avec la meme formule de penalite (voir Referee).
@@ -54,10 +68,7 @@ enum class PendingAction
     // visee et bille touchee), donc on demande explicitement au arbitre
     // de l'annoncer. La bille touchee (deja cliquee) est memorisee dans
     // m_pendingFoulTouchedBall/m_pendingFoulReason en attendant.
-    AnnounceFoulTarget,
-    MissReplay,
-    MissSelfPlay,
-    MissFoulThenFreeBall
+    AnnounceFoulTarget
 };
 
 class MainWindow : public QMainWindow
