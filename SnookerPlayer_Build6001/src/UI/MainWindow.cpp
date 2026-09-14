@@ -1477,6 +1477,44 @@ MainWindow::MainWindow(QWidget* parent)
         });
     remoteLayout->addWidget(m_cancelPendingButton);
 
+    // Choix suivant un Miss (voir PendingAction::MissChoice) : la faute est
+    // deja appliquee et la main deja passee, ce panneau ne fait que
+    // demander confirmation du parti pris par l'adversaire.
+    m_missChoicePanel = new QWidget(remotePanel);
+    {
+        QString missChoiceButtonStyle =
+            "QPushButton {"
+            "  background-color: " + kPanel + ";"
+            "  color: " + kWhite + ";"
+            "  border: 1px solid " + kBorder + ";"
+            "  border-radius: 5px;"
+            "  padding: 8px 10px;"
+            "}"
+            "QPushButton:hover { border-color: " + kGreen + "; }";
+        QHBoxLayout* missChoiceLayout = new QHBoxLayout(m_missChoicePanel);
+        missChoiceLayout->setContentsMargins(0, 0, 0, 0);
+        QPushButton* replayButton = new QPushButton("Remettre en place", m_missChoicePanel);
+        replayButton->setStyleSheet(missChoiceButtonStyle);
+        connect(replayButton, &QPushButton::clicked, this, [this]()
+            {
+                m_gameManager.getMatch().getCurrentFrame().switchPlayer();
+                m_pendingAction = PendingAction::None;
+                refreshDisplay();
+                showRepositioningGuide(/*silentIfUnavailable=*/true);
+            });
+        QPushButton* continueButton = new QPushButton("Prendre la table", m_missChoicePanel);
+        continueButton->setStyleSheet(missChoiceButtonStyle);
+        connect(continueButton, &QPushButton::clicked, this, [this]()
+            {
+                m_pendingAction = PendingAction::None;
+                refreshDisplay();
+            });
+        missChoiceLayout->addWidget(replayButton);
+        missChoiceLayout->addWidget(continueButton);
+    }
+    m_missChoicePanel->setVisible(false);
+    remoteLayout->addWidget(m_missChoicePanel);
+
     const int ballButtonWidth = 88;
     const int ballButtonHeight = 56;
     const int ballButtonSpacing = 8;
@@ -2079,6 +2117,57 @@ MainWindow::MainWindow(QWidget* parent)
     QVBoxLayout* simpleLayout = new QVBoxLayout(remotePanelSimple);
     simpleLayout->setContentsMargins(14, 14, 14, 14);
     simpleLayout->setSpacing(10);
+
+    // Bandeau d'instruction (meme role que m_pendingActionLabel sur la
+    // 1.0, absent jusqu'ici sur cette telecommande) + choix suivant un
+    // Miss (voir PendingAction::MissChoice) : la faute est deja appliquee
+    // et la main deja passee, ce panneau ne fait que demander confirmation
+    // du parti pris par l'adversaire.
+    m_simplePendingActionLabel = new QLabel(remotePanelSimple);
+    m_simplePendingActionLabel->setAlignment(Qt::AlignHCenter);
+    m_simplePendingActionLabel->setWordWrap(true);
+    m_simplePendingActionLabel->setStyleSheet(
+        "color: " + kBg + "; background-color: " + kWhite + ";"
+        "border-radius: 4px; font-size: 11px; font-weight: bold; padding: 4px;"
+    );
+    m_simplePendingActionLabel->setVisible(false);
+    simpleLayout->addWidget(m_simplePendingActionLabel);
+
+    m_simpleMissChoicePanel = new QWidget(remotePanelSimple);
+    {
+        QString missChoiceButtonStyle =
+            "QPushButton {"
+            "  background-color: " + kPanel + ";"
+            "  color: " + kWhite + ";"
+            "  border: 1px solid " + kBorder + ";"
+            "  border-radius: 5px;"
+            "  padding: 8px 10px;"
+            "}"
+            "QPushButton:hover { border-color: " + kGreen + "; }";
+        QVBoxLayout* simpleMissChoiceLayout = new QVBoxLayout(m_simpleMissChoicePanel);
+        simpleMissChoiceLayout->setContentsMargins(0, 0, 0, 0);
+        simpleMissChoiceLayout->setSpacing(6);
+        QPushButton* replayButton = new QPushButton("Remettre en place", m_simpleMissChoicePanel);
+        replayButton->setStyleSheet(missChoiceButtonStyle);
+        connect(replayButton, &QPushButton::clicked, this, [this]()
+            {
+                m_gameManager.getMatch().getCurrentFrame().switchPlayer();
+                m_pendingAction = PendingAction::None;
+                refreshDisplay();
+                showRepositioningGuide(/*silentIfUnavailable=*/true);
+            });
+        QPushButton* continueButton = new QPushButton("Prendre la table", m_simpleMissChoicePanel);
+        continueButton->setStyleSheet(missChoiceButtonStyle);
+        connect(continueButton, &QPushButton::clicked, this, [this]()
+            {
+                m_pendingAction = PendingAction::None;
+                refreshDisplay();
+            });
+        simpleMissChoiceLayout->addWidget(replayButton);
+        simpleMissChoiceLayout->addWidget(continueButton);
+    }
+    m_simpleMissChoicePanel->setVisible(false);
+    simpleLayout->addWidget(m_simpleMissChoicePanel);
 
     auto makeSimpleBallButton = [&](const QString& ballName, int width) -> QPushButton*
     {
@@ -3036,21 +3125,33 @@ void MainWindow::refreshDisplay()
     case PendingAction::Miss:
         pendingText = "MISS : cliquez la bille fautee";
         break;
+    case PendingAction::MissChoice:
+        pendingText = "MISS : remettre en place, ou l'adversaire prend la table ?";
+        break;
     case PendingAction::None:
     default:
         break;
     }
+    bool isMissChoicePending = (m_pendingAction == PendingAction::MissChoice);
     if (!pendingText.isEmpty())
     {
         m_pendingActionLabel->setText(pendingText);
         m_pendingActionLabel->setVisible(true);
-        m_cancelPendingButton->setVisible(true);
+        m_simplePendingActionLabel->setText(pendingText);
+        m_simplePendingActionLabel->setVisible(true);
+        // Le bouton "Annuler" ne veut rien dire une fois la faute deja
+        // appliquee (voir MissChoice) : seuls les 2 boutons du panneau de
+        // choix ci-dessous permettent de sortir de cet etat.
+        m_cancelPendingButton->setVisible(!isMissChoicePending);
     }
     else
     {
         m_pendingActionLabel->setVisible(false);
+        m_simplePendingActionLabel->setVisible(false);
         m_cancelPendingButton->setVisible(false);
     }
+    m_missChoicePanel->setVisible(isMissChoicePending);
+    m_simpleMissChoicePanel->setVisible(isMissChoicePending);
 
     // Publie l'etat courant au serveur web local (voir MatchWebServer),
     // si le partage Wi-Fi est actif : c'est ce qu'un telephone connecte
@@ -3072,6 +3173,7 @@ void MainWindow::refreshDisplay()
         shareState["totalFrames"] = totalFrames;
         shareState["pendingActionText"] = pendingText;
         shareState["isFreeBall"] = frame.isFreeBall();
+        shareState["isMissChoicePending"] = isMissChoicePending;
         m_webServer->updateState(shareState);
     }
 
@@ -3513,14 +3615,13 @@ void MainWindow::handleBallAction(const QString& ballName, int ballValue)
         int penalty = foulReferee.calculateFoul(required, clickedBall);
         frame.foul(required, clickedBall, penalty, "Absence de veritable tentative (Miss)");
         m_gameManager.afterShot();
-        m_pendingAction = PendingAction::None;
+        // La main passe deja naturellement a l'adversaire (comme une faute
+        // normale, equivalent a "il joue la position telle quelle"), mais
+        // on ne cloture pas encore l'action en attente : MissChoice
+        // demande explicitement a l'adversaire s'il prend la table ainsi
+        // ou s'il prefere faire rejouer le fautif (voir m_missChoicePanel).
+        m_pendingAction = PendingAction::MissChoice;
         refreshDisplay();
-        // La main passe naturellement a l'adversaire (comme une faute
-        // normale, equivalent a "il joue la position telle quelle"). Si
-        // l'adversaire prefere faire rejouer le fautif, il clique
-        // ensuite sur le bouton separe "Remettre en place" (voir
-        // missReplayButton), qui repasse la main et ouvre le guide de
-        // repositionnement -- pas ici.
         return;
     }
     case PendingAction::None:
@@ -3607,11 +3708,23 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
     }
     if (action == "missReplay")
     {
-        // Action immediate (pas d'attente de bille), voir
-        // missReplayButton sur la telecommande 1.0 pour le detail.
+        // Action immediate (pas d'attente de bille) : utilisee a la fois
+        // par le menu du bouton "Free ball" et par le panneau de choix
+        // suivant un Miss (voir PendingAction::MissChoice) -- remise a
+        // None systematique, sans effet si deja None (cas Free ball).
         frame.switchPlayer();
+        m_pendingAction = PendingAction::None;
         refreshDisplay();
         showRepositioningGuide(/*silentIfUnavailable=*/true);
+        return;
+    }
+    if (action == "missChoiceContinue")
+    {
+        // "Prendre la table" suivant un Miss : la main est deja sur
+        // l'adversaire (voir PendingAction::Miss dans handleBallAction()),
+        // il ne reste qu'a clore le choix en attente.
+        m_pendingAction = PendingAction::None;
+        refreshDisplay();
         return;
     }
     if (action == "cancel")

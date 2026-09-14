@@ -42,12 +42,18 @@ enum class PendingAction
     // "Jouer moi-meme" AVANT de cliquer la bille fautee), l'arbitre
     // clique d'abord la bille pour fixer la valeur de la faute -- cela
     // fait automatiquement passer la main a l'adversaire (comme une
-    // faute normale, equivalent a "il joue lui-meme la position"). Si
-    // l'adversaire prefere faire rejouer le fautif, l'arbitre clique
-    // ensuite sur le bouton separe "Remettre en place" (action immediate,
-    // voir son connect()), qui repasse la main et ouvre le guide de
-    // repositionnement.
+    // faute normale, equivalent a "il joue lui-meme la position"). Une fois
+    // la bille cliquee et la faute appliquee, passe a MissChoice ci-dessous
+    // pour demander explicitement la decision de l'adversaire.
     Miss,
+    // Etape suivant un Miss resolu (voir Miss ci-dessus) : la faute est deja
+    // appliquee et la main deja passee a l'adversaire (comme une faute
+    // normale) ; on attend maintenant sa decision -- "Remettre en place"
+    // (repasse la main au fautif + ouvre le guide de repositionnement) ou
+    // "Prendre la table" (ne fait rien, la main reste sur l'adversaire).
+    // Specifique au Miss (pas aux autres fautes) : seul un Miss authentifie
+    // une "tentative non valable", justifiant de faire rejouer le fautif.
+    MissChoice,
     // Meme mecanique que Foul (meme calcul de penalite), mais motif distinct
     // dans le journal des coups : une bille forcee hors de la table est
     // toujours une faute, avec la meme formule de penalite (voir Referee).
@@ -303,6 +309,16 @@ private:
     QLabel* m_freeBallStatusLabel = nullptr;
     QLabel* m_pendingActionLabel = nullptr;
     QPushButton* m_cancelPendingButton = nullptr;
+    // Meme role que m_pendingActionLabel, mais pour la telecommande 2.0
+    // (m_remotePanelSimple), qui n'avait jusqu'ici aucune indication
+    // visuelle d'action en attente.
+    QLabel* m_simplePendingActionLabel = nullptr;
+    // Panneaux "Remettre en place" / "Prendre la table" affiches
+    // uniquement quand m_pendingAction == PendingAction::MissChoice (un
+    // par telecommande de bureau ; le telephone a son equivalent HTML/JS
+    // dans MatchWebServer, voir isMissChoicePending dans shareState).
+    QWidget* m_missChoicePanel = nullptr;
+    QWidget* m_simpleMissChoicePanel = nullptr;
     PendingAction m_pendingAction = PendingAction::None;
     QPushButton* m_toggleLogButton = nullptr;
 

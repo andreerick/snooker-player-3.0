@@ -46,11 +46,12 @@ namespace
   .breakbox { margin: 12px 0 20px; color:#7a7f87; font-size: 13px; }
   .breakvalue { font-size: 22px; color:#f5f5f5; font-weight:bold; }
   .offline { color:#e74c3c; margin-top: 12px; font-size: 13px; }
-  .pending { display:none; background: rgba(245,166,35,0.15); border:1px solid #f5a623;
+  .pendingwrap { position: sticky; top: 0; z-index: 5; }
+  .pending { display:none; background: #1c1400; border:1px solid #f5a623;
              color:#f5a623; border-radius: 6px; padding: 10px; margin-bottom: 14px;
              font-weight:bold; font-size: 13px; }
   .pending.show { display:block; }
-  .freeball { display:none; background: rgba(245,166,35,0.15); border:1px solid #f5a623;
+  .freeball { display:none; background: #1c1400; border:1px solid #f5a623;
               color:#f5a623; border-radius: 6px; padding: 6px; margin-bottom: 14px;
               font-size: 12px; }
   .freeball.show { display:block; }
@@ -114,8 +115,14 @@ namespace
   </div>
   <div class="offline" id="offline" style="display:none">Connexion perdue - nouvelle tentative...</div>
 
-  <div class="pending" id="pending"></div>
-  <div class="freeball" id="freeball">FREE BALL ARME</div>
+  <div class="pendingwrap">
+    <div class="pending" id="pending"></div>
+    <div class="freeball" id="freeball">FREE BALL ARME</div>
+    <div class="missmenu" id="misschoicemenu">
+      <button class="actionbtn" onclick="sendAction('missReplay')">Remettre en place</button>
+      <button class="actionbtn" onclick="sendAction('missChoiceContinue')">Prendre la table</button>
+    </div>
+  </div>
 
   <h2>BILLES</h2>
   <div class="ballgrid" id="ballgrid"></div>
@@ -270,6 +277,7 @@ namespace
         document.getElementById('breakvalue').textContent = '-';
         document.getElementById('pending').className = 'pending';
         document.getElementById('freeball').className = 'freeball';
+        document.getElementById('misschoicemenu').className = 'missmenu';
         return;
       }
       document.getElementById('frames').textContent =
@@ -289,6 +297,7 @@ namespace
         pendingEl.className = 'pending';
       }
       document.getElementById('freeball').className = 'freeball' + (d.isFreeBall ? ' show' : '');
+      document.getElementById('misschoicemenu').className = 'missmenu' + (d.isMissChoicePending ? ' show' : '');
     } catch (e) {
       document.getElementById('offline').style.display = 'block';
     }
