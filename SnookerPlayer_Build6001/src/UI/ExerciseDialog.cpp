@@ -116,7 +116,12 @@ namespace
             painter.setBrush(Qt::NoBrush);
             qreal dRadius = clothRect.width() * 0.085;
             QRectF dRect(brownPt.x() - dRadius, brownPt.y() - dRadius, dRadius * 2, dRadius * 2);
-            painter.drawArc(dRect, 90 * 16, 180 * 16);
+            // Balaie vers la DROITE (span negatif) : le "D" doit se creuser
+            // vers la bande la plus proche (cote mouche marron), pas vers
+            // le paquet de rouges -- un span positif ici le faisait bomber
+            // du mauvais cote (repere sur capture d'ecran, voir discussion
+            // avec l'utilisateur du 2026-09-14).
+            painter.drawArc(dRect, 90 * 16, -180 * 16);
             painter.drawLine(QPointF(brownPt.x(), clothRect.top()), QPointF(brownPt.x(), clothRect.bottom()));
 
             ball(brownPt, kColorBrown);
@@ -191,7 +196,10 @@ namespace
         painter.setBrush(Qt::NoBrush);
         qreal dRadius = clothRect.width() * 0.085;
         QRectF dRect(brownPt.x() - dRadius, brownPt.y() - dRadius, dRadius * 2, dRadius * 2);
-        painter.drawArc(dRect, 90 * 16, 180 * 16);
+        // Span negatif : le "D" doit se creuser vers la bande la plus
+        // proche, pas vers le paquet de rouges (voir meme correction dans
+        // BallPainter::dZone() ci-dessus).
+        painter.drawArc(dRect, 90 * 16, -180 * 16);
         painter.drawLine(QPointF(brownPt.x(), clothRect.top()), QPointF(brownPt.x(), clothRect.bottom()));
 
         QPointF bluePt = toPt(0.52, 0.5);
@@ -290,7 +298,10 @@ namespace
         painter.setBrush(Qt::NoBrush);
         qreal dRadius = clothRect.width() * 0.085;
         QRectF dRect(brownPt.x() - dRadius, brownPt.y() - dRadius, dRadius * 2, dRadius * 2);
-        painter.drawArc(dRect, 90 * 16, 180 * 16);
+        // Span negatif : le "D" doit se creuser vers la bande la plus
+        // proche, pas vers le paquet de rouges (voir meme correction dans
+        // BallPainter::dZone() ci-dessus).
+        painter.drawArc(dRect, 90 * 16, -180 * 16);
         painter.drawLine(QPointF(brownPt.x(), clothRect.top()), QPointF(brownPt.x(), clothRect.bottom()));
 
         QPointF bluePt = toPt(0.56, 0.5);
