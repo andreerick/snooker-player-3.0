@@ -8,6 +8,8 @@
 #include "TournamentManager.h"
 #include "SettingsDialog.h"
 #include "TutorialDialog.h"
+#include "TrainingChoiceDialog.h"
+#include "ExerciseDialog.h"
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -2496,11 +2498,21 @@ MainWindow::MainWindow(QWidget* parent)
         });
     connect(m_homeScreen, &HomeScreen::trainingRequested, this, [this]()
         {
-            if (!m_cueSenseLauncher.launch())
-            {
-                showStyledMessage(this, QMessageBox::Warning, "Entrainement",
-                    "Impossible de lancer CueSense (dossier introuvable ou aucun port disponible).");
-            }
+            TrainingChoiceDialog dialog(this);
+            connect(&dialog, &TrainingChoiceDialog::cueSenseRequested, this, [this]()
+                {
+                    if (!m_cueSenseLauncher.launch())
+                    {
+                        showStyledMessage(this, QMessageBox::Warning, "Entrainement",
+                            "Impossible de lancer CueSense (dossier introuvable ou aucun port disponible).");
+                    }
+                });
+            connect(&dialog, &TrainingChoiceDialog::exerciseRequested, this, [this]()
+                {
+                    ExerciseDialog exerciseDialog(this);
+                    exerciseDialog.exec();
+                });
+            dialog.exec();
         });
     connect(m_homeScreen, &HomeScreen::smartphoneRequested, this, [this]()
         {

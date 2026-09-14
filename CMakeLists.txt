@@ -140,6 +140,10 @@ qt_add_executable(SnookerPlayer
     SnookerPlayer_Build6001/src/UI/SettingsDialog.h
     SnookerPlayer_Build6001/src/UI/TutorialDialog.cpp
     SnookerPlayer_Build6001/src/UI/TutorialDialog.h
+    SnookerPlayer_Build6001/src/UI/TrainingChoiceDialog.cpp
+    SnookerPlayer_Build6001/src/UI/TrainingChoiceDialog.h
+    SnookerPlayer_Build6001/src/UI/ExerciseDialog.cpp
+    SnookerPlayer_Build6001/src/UI/ExerciseDialog.h
 
     # Bibliotheques tierces vendorees (voir third_party/) : serveur web
     # (cpp-httplib, header-only) et generateur de QR code (qrcodegen).
