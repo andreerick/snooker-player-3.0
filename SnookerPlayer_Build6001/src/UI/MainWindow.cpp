@@ -1457,6 +1457,16 @@ MainWindow::MainWindow(QWidget* parent)
     m_blackReplayStatusLabel->setVisible(false);
     remoteLayout->addWidget(m_blackReplayStatusLabel);
 
+    m_touchingBallStatusLabel = new QLabel(remotePanel);
+    m_touchingBallStatusLabel->setAlignment(Qt::AlignHCenter);
+    m_touchingBallStatusLabel->setWordWrap(true);
+    m_touchingBallStatusLabel->setStyleSheet(
+        "color: " + kBg + "; background-color: " + kOrange + ";"
+        "border-radius: 4px; font-size: 11px; font-weight: bold; padding: 4px;"
+    );
+    m_touchingBallStatusLabel->setVisible(false);
+    remoteLayout->addWidget(m_touchingBallStatusLabel);
+
     // Bandeau d'instruction : affiche quelle action est en attente d'une
     // bille cliquee sur la telecommande (voir enum PendingAction), avec un
     // bouton pour annuler si l'utilisateur change d'avis.
@@ -1702,7 +1712,7 @@ MainWindow::MainWindow(QWidget* parent)
             promptPlayerNames(player1Name, player2Name, framesToWin);
             restartMatch(player1Name, player2Name, framesToWin);
         });
-    actionsGrid->addWidget(newMatchButton, 3, 0);
+    actionsGrid->addWidget(newMatchButton, 4, 0);
 
     QPushButton* foulButton = new QPushButton("Faute", remotePanel);
     foulButton->setStyleSheet(secondaryButtonStyle);
@@ -1725,6 +1735,21 @@ MainWindow::MainWindow(QWidget* parent)
             refreshDisplay();
         });
     remoteLayout->addWidget(ballOffTableButton);
+
+    // ---------------------------------------------------
+    // Blanche sortie de table : meme mecanique que "Bille sortie de table"
+    // ci-dessus, mais pour la bille de choc elle-meme -- non couverte par
+    // ce bouton (qui ne propose que les 7 billes objet), ni par "Faute"
+    // (meme limitation). Action immediate (la bille concernee est deja
+    // connue), voir triggerBlancheOffTableFoul().
+    // ---------------------------------------------------
+    QPushButton* whiteOffTableButton = new QPushButton("Blanche sortie de table", remotePanel);
+    whiteOffTableButton->setStyleSheet(secondaryButtonStyle);
+    connect(whiteOffTableButton, &QPushButton::clicked, this, [this]()
+        {
+            triggerBlancheOffTableFoul();
+        });
+    remoteLayout->addWidget(whiteOffTableButton);
 
     // ---------------------------------------------------
     // Free ball : menu a 2 choix pour le joueur qui vient de recevoir la
@@ -1813,7 +1838,24 @@ MainWindow::MainWindow(QWidget* parent)
         {
             m_rootStack->setCurrentIndex(1);
         });
-    actionsGrid->addWidget(exitButton, 3, 1);
+    actionsGrid->addWidget(exitButton, 4, 1);
+
+    // ---------------------------------------------------
+    // Bille touchante : l'arbitre l'annonce quand la blanche est deja au
+    // repos en contact avec une bille jouable, AVANT que le coup suivant
+    // ne soit joue (voir Frame::setTouchingBall()). Contrairement a
+    // "Faute"/"Free ball", c'est une action immediate (pas de bille a
+    // choisir ensuite) : elle arme juste l'etat pour le prochain coup.
+    // Placee juste sous Miss/Free ball (rangee 3, sous la rangee 2).
+    // ---------------------------------------------------
+    QPushButton* touchingBallButton = new QPushButton("Bille touchante", remotePanel);
+    touchingBallButton->setStyleSheet(secondaryButtonStyle);
+    connect(touchingBallButton, &QPushButton::clicked, this, [this]()
+        {
+            m_gameManager.getMatch().getCurrentFrame().setTouchingBall(true);
+            refreshDisplay();
+        });
+    actionsGrid->addWidget(touchingBallButton, 3, 0, 1, 2);
 
     // ---------------------------------------------------
     // Reglement : recherche rapide dans le texte officiel (voir
@@ -2097,7 +2139,7 @@ MainWindow::MainWindow(QWidget* parent)
         {
             showRepositioningGuide(/*silentIfUnavailable=*/false);
         });
-    actionsGrid->addWidget(repositionButton, 4, 0, 1, 2);
+    actionsGrid->addWidget(repositionButton, 5, 0, 1, 2);
 
     // Fermer le guide : ferme le guide de repositionnement s'il est
     // actuellement affiche (non modal -- voir closeRepositioningGuide()
@@ -2108,7 +2150,7 @@ MainWindow::MainWindow(QWidget* parent)
         {
             closeRepositioningGuide();
         });
-    actionsGrid->addWidget(closeGuideButton, 5, 0, 1, 2);
+    actionsGrid->addWidget(closeGuideButton, 6, 0, 1, 2);
 
     remoteLayout->addStretch();
 
@@ -2143,6 +2185,18 @@ MainWindow::MainWindow(QWidget* parent)
     );
     m_simpleBlackReplayStatusLabel->setVisible(false);
     simpleLayout->addWidget(m_simpleBlackReplayStatusLabel);
+
+    // Bandeau "Bille touchante" (meme role que m_touchingBallStatusLabel
+    // sur la 1.0).
+    m_simpleTouchingBallStatusLabel = new QLabel(remotePanelSimple);
+    m_simpleTouchingBallStatusLabel->setAlignment(Qt::AlignHCenter);
+    m_simpleTouchingBallStatusLabel->setWordWrap(true);
+    m_simpleTouchingBallStatusLabel->setStyleSheet(
+        "color: " + kBg + "; background-color: " + kOrange + ";"
+        "border-radius: 4px; font-size: 11px; font-weight: bold; padding: 4px;"
+    );
+    m_simpleTouchingBallStatusLabel->setVisible(false);
+    simpleLayout->addWidget(m_simpleTouchingBallStatusLabel);
 
     // Bandeau d'instruction (meme role que m_pendingActionLabel sur la
     // 1.0, absent jusqu'ici sur cette telecommande) + choix suivant un
@@ -2372,7 +2426,7 @@ MainWindow::MainWindow(QWidget* parent)
             promptPlayerNames(player1Name, player2Name, framesToWin);
             restartMatch(player1Name, player2Name, framesToWin);
         });
-    simpleActionsGrid->addWidget(simpleNewMatchButton, 3, 0);
+    simpleActionsGrid->addWidget(simpleNewMatchButton, 4, 0);
 
     // Esc : quitte l'ecran de match et revient a l'accueil (voir
     // m_rootStack, index 1). Le match reste construit et en l'etat en
@@ -2384,7 +2438,20 @@ MainWindow::MainWindow(QWidget* parent)
         {
             m_rootStack->setCurrentIndex(1);
         });
-    simpleActionsGrid->addWidget(simpleExitButton, 3, 1);
+    simpleActionsGrid->addWidget(simpleExitButton, 4, 1);
+
+    // Bille touchante : meme fonction que sur la telecommande 1.0 (voir
+    // touchingBallButton plus haut) et le telephone. Placee juste sous
+    // Miss/Free ball (rangee 3, sous la rangee 2), meme position que sur
+    // la 1.0.
+    QPushButton* simpleTouchingBallButton = new QPushButton("Bille touchante", remotePanelSimple);
+    simpleTouchingBallButton->setStyleSheet(secondaryButtonStyle);
+    connect(simpleTouchingBallButton, &QPushButton::clicked, this, [this]()
+        {
+            m_gameManager.getMatch().getCurrentFrame().setTouchingBall(true);
+            refreshDisplay();
+        });
+    simpleActionsGrid->addWidget(simpleTouchingBallButton, 3, 0, 1, 2);
 
     // Guide de repositionnement : meme fonction que sur la telecommande
     // 1.0 (voir showRepositioningGuide()), affiche en plein ecran.
@@ -2394,7 +2461,7 @@ MainWindow::MainWindow(QWidget* parent)
         {
             showRepositioningGuide(/*silentIfUnavailable=*/false);
         });
-    simpleActionsGrid->addWidget(simpleRepositionButton, 4, 0, 1, 2);
+    simpleActionsGrid->addWidget(simpleRepositionButton, 5, 0, 1, 2);
 
     // Fermer le guide : meme fonction que sur la telecommande 1.0 (voir
     // closeGuideButton plus haut) et le telephone.
@@ -2404,7 +2471,7 @@ MainWindow::MainWindow(QWidget* parent)
         {
             closeRepositioningGuide();
         });
-    simpleActionsGrid->addWidget(simpleCloseGuideButton, 5, 0, 1, 2);
+    simpleActionsGrid->addWidget(simpleCloseGuideButton, 6, 0, 1, 2);
 
     simpleLayout->addStretch();
 
@@ -3168,6 +3235,15 @@ void MainWindow::refreshDisplay()
     m_simpleBlackReplayStatusLabel->setText(blackReplayText);
     m_simpleBlackReplayStatusLabel->setVisible(isBlackReplay);
 
+    // Bille touchante (voir Frame::setTouchingBall()) : signale que le
+    // premier contact du prochain coup est deja repute valide.
+    bool isTouchingBall = frame.isTouchingBall();
+    QString touchingBallText = "BILLE TOUCHANTE : premier contact deja valide pour le prochain coup";
+    m_touchingBallStatusLabel->setText(touchingBallText);
+    m_touchingBallStatusLabel->setVisible(isTouchingBall);
+    m_simpleTouchingBallStatusLabel->setText(touchingBallText);
+    m_simpleTouchingBallStatusLabel->setVisible(isTouchingBall);
+
     QString pendingText;
     switch (m_pendingAction)
     {
@@ -3239,6 +3315,7 @@ void MainWindow::refreshDisplay()
         shareState["isFreeBall"] = frame.isFreeBall();
         shareState["isMissChoicePending"] = isMissChoicePending;
         shareState["isBlackReplay"] = isBlackReplay;
+        shareState["isTouchingBall"] = isTouchingBall;
         // Meme regle que m_ballButtons/m_simpleBallButtons cote bureau :
         // le telephone grise un bouton de bille des qu'elle n'est plus
         // physiquement sur la table (voir BallSet::isOnTable()).
@@ -3599,6 +3676,34 @@ void MainWindow::closeRepositioningGuide()
     }
 }
 
+void MainWindow::triggerBlancheOffTableFoul()
+{
+    snapshotFrameForUndo();
+
+    Frame& frame = m_gameManager.getMatch().getCurrentFrame();
+    Ball blanche("Blanche", 0);
+    Referee foulReferee;
+
+    // Meme ambiguite que Foul/BallOffTable (voir handleBallAction) : si
+    // n'importe quelle couleur etait legale, il faut que l'arbitre precise
+    // laquelle avant de pouvoir calculer/appliquer la penalite.
+    Ball required = frame.getRequiredBall();
+    if (required.getName() == "Couleur")
+    {
+        m_pendingFoulTouchedBall = blanche;
+        m_pendingFoulReason = "Blanche sortie de la table";
+        m_pendingAction = PendingAction::AnnounceFoulTarget;
+        refreshDisplay();
+        return;
+    }
+
+    int penalty = foulReferee.calculateFoul(required, blanche);
+    frame.foul(required, blanche, penalty, "Blanche sortie de la table");
+    m_gameManager.afterShot();
+    m_pendingAction = PendingAction::None;
+    refreshDisplay();
+}
+
 void MainWindow::handleBallAction(const QString& ballName, int ballValue)
 {
     snapshotFrameForUndo();
@@ -3794,6 +3899,14 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
     if (action == "armMiss")
     {
         m_pendingAction = PendingAction::Miss;
+        refreshDisplay();
+        return;
+    }
+    if (action == "touchingBall")
+    {
+        // Action immediate (pas d'attente de bille), voir touchingBallButton
+        // dans le constructeur : arme juste l'etat pour le prochain coup.
+        frame.setTouchingBall(true);
         refreshDisplay();
         return;
     }

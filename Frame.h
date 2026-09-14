@@ -125,6 +125,21 @@ public:
     void setFreeBallValue(const Ball& ball);
 
 
+    // Touching Ball (Bille en contact, voir Sect. 3 §8 du reglement) :
+    // arme par l'arbitre juste avant un coup ou la blanche est deja au
+    // repos en contact avec une bille jouable. Dans ce cas le premier
+    // contact requis est considere comme deja rempli (§8(c)(i)) : le
+    // prochain coup ne peut plus etre sanctionne pour "mauvaise bille en
+    // premier contact", quelle que soit la bille reellement touchee ou
+    // empochee ensuite (voir playShot()). Se desarme automatiquement
+    // apres ce seul coup, comme le Free Ball. Ne couvre PAS le poussé de
+    // bille si la bille touchante bouge anormalement : ca reste a
+    // l'appreciation de l'arbitre humain via le bouton "Faute" classique.
+    void setTouchingBall(bool value);
+
+    bool isTouchingBall() const;
+
+
     // Couleurs finales
     bool isCorrectFinalColor(const Ball& ball) const;
 
@@ -190,6 +205,9 @@ private:
     // sa valeur reelle), OU annoncee explicitement via setFreeBallValue()
     // quand getRequiredBall() est ambigu ("n'importe quelle couleur").
     Ball m_freeBallValueBall = Ball("Rouge", 1);
+
+    // Voir setTouchingBall()/isTouchingBall().
+    bool m_touchingBall = false;
 
     int m_nextColor;
 

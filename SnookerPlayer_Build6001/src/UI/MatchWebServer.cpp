@@ -120,6 +120,7 @@ namespace
     <div class="pending" id="pending"></div>
     <div class="freeball" id="freeball">FREE BALL ARME</div>
     <div class="freeball" id="blackreplay">EGALITE : noire respotee -- la moindre faute perd la frame</div>
+    <div class="freeball" id="touchingball">BILLE TOUCHANTE : premier contact deja valide pour le prochain coup</div>
     <div class="missmenu" id="misschoicemenu">
       <button class="actionbtn" onclick="sendAction('missReplay')">Remettre en place</button>
       <button class="actionbtn" onclick="sendAction('missChoiceContinue')">Prendre la table</button>
@@ -137,6 +138,7 @@ namespace
     <button class="actionbtn" onclick="sendAction('finishFrame')">Game</button>
     <button class="actionbtn" onclick="sendAction('armMiss')">Miss</button>
     <button class="actionbtn" onclick="showFreeBallMenu()">Free ball</button>
+    <button class="actionbtn wide" onclick="sendAction('touchingBall')">Bille touchante</button>
     <button class="actionbtn" onclick="showNewMatchForm()">Nouveau match</button>
     <button class="actionbtn" onclick="sendAction('goHome')">Esc</button>
     <button class="actionbtn wide" onclick="sendAction('openRepositionGuide')">Guide de repositionnement</button>
@@ -281,6 +283,7 @@ namespace
         document.getElementById('pending').className = 'pending';
         document.getElementById('freeball').className = 'freeball';
         document.getElementById('blackreplay').className = 'freeball';
+        document.getElementById('touchingball').className = 'freeball';
         document.getElementById('misschoicemenu').className = 'missmenu';
         return;
       }
@@ -310,6 +313,7 @@ namespace
       }
       document.getElementById('freeball').className = 'freeball' + (d.isFreeBall ? ' show' : '');
       document.getElementById('blackreplay').className = 'freeball' + (d.isBlackReplay ? ' show' : '');
+      document.getElementById('touchingball').className = 'freeball' + (d.isTouchingBall ? ' show' : '');
       document.getElementById('misschoicemenu').className = 'missmenu' + (d.isMissChoicePending ? ' show' : '');
     } catch (e) {
       document.getElementById('offline').style.display = 'block';

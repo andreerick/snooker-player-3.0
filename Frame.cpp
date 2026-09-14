@@ -39,6 +39,7 @@ Frame& Frame::operator=(const Frame& other)
         m_freeBall = other.m_freeBall;
         m_freeBallColor = other.m_freeBallColor;
         m_freeBallForRed = other.m_freeBallForRed;
+        m_touchingBall = other.m_touchingBall;
         m_nextColor = other.m_nextColor;
         m_phase = other.m_phase;
         m_history = other.m_history;
@@ -289,9 +290,21 @@ bool Frame::playShot(const Ball& ball)
         return false;
     }
 
+    // Touching Ball (voir setTouchingBall()) : consomme immediatement,
+    // que ce coup reussisse ou echoue -- ne vaut que pour CE coup precis.
+    // Tant que la bille touchante n'est pas la noire rejouee (Cas 0,
+    // volontairement non concerne, voir plus bas), plus aucune des
+    // verifications "mauvaise bille en premier contact" ci-dessous ne
+    // doit s'appliquer : le premier contact est deja repute valide.
+    bool touchingBallBypass = m_touchingBall;
+    m_touchingBall = false;
+
     // ---------------------------------------------------
     // Cas 0 : rejeu de la noire (egalite en fin de frame)
     // -> Seule la noire est legale ; toute autre bille est une faute.
+    //    (La bille touchante ne s'applique pas ici : a ce stade il ne
+    //    reste que la blanche et la noire sur la table, la situation ne
+    //    se presente pas en pratique.)
     // ---------------------------------------------------
     if (m_phase == FramePhase::BlackReplay)
     {
@@ -332,7 +345,7 @@ bool Frame::playShot(const Ball& ball)
     // ---------------------------------------------------
     if (ball.getName() == "Rouge" && m_phase != FramePhase::FinalColors)
     {
-        if (m_needColor && m_currentPlayer != m_lastRedPotter)
+        if (m_needColor && m_currentPlayer != m_lastRedPotter && !touchingBallBypass)
         {
             Ball required = getRequiredBall();
             int penalty = m_referee.calculateFoul(required, ball);
@@ -340,7 +353,7 @@ bool Frame::playShot(const Ball& ball)
             return false;
         }
 
-        if (m_redsRemaining <= 0)
+        if (m_redsRemaining <= 0 && !touchingBallBypass)
         {
             // Il n'y a plus de rouge sur la table : faute.
             Ball required = getRequiredBall();
@@ -361,7 +374,7 @@ bool Frame::playShot(const Ball& ball)
     // -> Légale UNIQUEMENT si la bille juste avant était une rouge
     //    (m_needColor == true). Sinon : faute (deux couleurs de suite).
     // ---------------------------------------------------
-    if (m_phase != FramePhase::FinalColors && !m_needColor)
+    if (m_phase != FramePhase::FinalColors && !m_needColor && !touchingBallBypass)
     {
         Ball required = Ball("Rouge", 1);
         int penalty = m_referee.calculateFoul(required, ball);
@@ -374,7 +387,7 @@ bool Frame::playShot(const Ball& ball)
     // -> La couleur doit respecter l'ordre (Jaune, Verte, Marron,
     //    Bleue, Rose, Noire). Sinon : faute (bille respotée).
     // ---------------------------------------------------
-    if (m_phase == FramePhase::FinalColors && !isCorrectFinalColor(ball))
+    if (m_phase == FramePhase::FinalColors && !isCorrectFinalColor(ball) && !touchingBallBypass)
     {
         Ball required = getRequiredBall();
         int penalty = m_referee.calculateFoul(required, ball);
@@ -426,6 +439,10 @@ bool Frame::playFreeBall(const Ball& ball)
     {
         return false;
     }
+
+    // Meme raisonnement que dans missShot() : ne doit pas survivre a ce
+    // coup, meme si ce n'est pas playShot() qui le traite.
+    m_touchingBall = false;
 
     if (!m_freeBall)
     {
@@ -560,6 +577,11 @@ void Frame::missShot()
         return;
     }
 
+    // Une "bille touchante" armee ne vaut que pour le tout prochain coup
+    // (voir setTouchingBall()) : un Miss consomme ce coup comme n'importe
+    // quel autre, elle ne doit pas survivre au joueur suivant.
+    m_touchingBall = false;
+
     std::cout
         << "Coup rate : changement de joueur"
         << std::endl;
@@ -600,6 +622,11 @@ void Frame::foul(
     {
         return;
     }
+
+    // Une faute declaree manuellement par l'arbitre (poussé de bille sur
+    // la bille touchante, par exemple) consomme aussi ce coup : voir
+    // missShot() pour le meme raisonnement.
+    m_touchingBall = false;
 
     int penalty = points;
     if (penalty < 4)
@@ -823,6 +850,19 @@ void Frame::setFreeBallValue(const Ball& ball)
 bool Frame::isFreeBall() const
 {
     return m_freeBall;
+}
+
+// =====================================
+// Touching Ball
+// =====================================
+void Frame::setTouchingBall(bool value)
+{
+    m_touchingBall = value;
+}
+
+bool Frame::isTouchingBall() const
+{
+    return m_touchingBall;
 }
 
 // =====================================

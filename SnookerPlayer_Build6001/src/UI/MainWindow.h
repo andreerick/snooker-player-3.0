@@ -111,6 +111,16 @@ private:
     // clic des boutons de bille pour eviter la duplication.
     void handleBallAction(const QString& ballName, int ballValue);
 
+    // Faute "Blanche sortie de la table" (voir bouton dedie) : ni "Faute"
+    // ni "Bille sortie de table" ne peuvent cibler la blanche elle-meme
+    // (leur etape suivante ne propose que les 7 billes objet), alors que
+    // la detection camera automatique (VisionGameBridge) gere deja ce cas
+    // pour la blanche -- ce bouton comble ce trou cote arbitrage manuel.
+    // Action immediate : la bille concernee (Blanche) est deja connue, pas
+    // besoin d'attendre un clic supplementaire (sauf bille due ambigue,
+    // meme cas que Foul/BallOffTable, voir PendingAction::AnnounceFoulTarget).
+    void triggerBlancheOffTableFoul();
+
     // Sauvegarde une copie du Frame courant juste AVANT d'appliquer un
     // coup, pour permettre au bouton "Esc" de la telecommande 2.0
     // d'annuler ce dernier coup (un seul niveau d'annulation -- pas de
@@ -323,6 +333,12 @@ private:
     QLabel* m_blackReplayStatusLabel = nullptr;
     QLabel* m_simpleBlackReplayStatusLabel = nullptr;
     bool m_blackReplayAnnounced = false;
+    // Bandeau affiche quand Frame::isTouchingBall() est vrai (voir bouton
+    // "Bille touchante") : signale que le premier contact du prochain
+    // coup est deja repute valide, quelle que soit la bille reellement
+    // touchee ou empochee ensuite (Sect. 3 §8(c)(i) du reglement).
+    QLabel* m_touchingBallStatusLabel = nullptr;
+    QLabel* m_simpleTouchingBallStatusLabel = nullptr;
     QLabel* m_pendingActionLabel = nullptr;
     QPushButton* m_cancelPendingButton = nullptr;
     // Meme role que m_pendingActionLabel, mais pour la telecommande 2.0
