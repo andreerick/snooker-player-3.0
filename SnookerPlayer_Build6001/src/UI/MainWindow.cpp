@@ -531,12 +531,9 @@ namespace
     {
         out << "=== Export du journal des coups ===\n";
         out << QDateTime::currentDateTime().toString(Qt::ISODate) << "\n\n";
-        out << "Joueur 1 : " << QString::fromStdString(frame.getPlayer1().getName())
-            << " | Score : " << frame.getPlayer1().getScore() << "\n";
-        out << "Joueur 2 : " << QString::fromStdString(frame.getPlayer2().getName())
-            << " | Score : " << frame.getPlayer2().getScore() << "\n";
-        out << "Joueur au tir : " << QString::fromStdString(frame.currentPlayer().getName())
-            << " | Break en cours : " << frame.currentPlayer().getBreak() << "\n\n";
+        out << "Joueur 1 : " << QString::fromStdString(frame.getPlayer1().getName()) << "\n";
+        out << "Joueur 2 : " << QString::fromStdString(frame.getPlayer2().getName()) << "\n";
+        out << "Joueur au tir : " << QString::fromStdString(frame.currentPlayer().getName()) << "\n\n";
 
         const std::vector<LogEntry>& log = frame.getHistory().getLog();
         for (size_t i = 0; i < log.size(); ++i)
@@ -577,6 +574,7 @@ namespace
         // deja a jour ici, y compris pour le tout dernier fichier de la
         // frame qui vient de se terminer -- pas besoin de l'anticiper.
         out << "\n";
+        out << "Break en cours : " << frame.currentPlayer().getBreak() << "\n";
         out << "Score de la frame : " << QString::fromStdString(frame.getPlayer1().getName())
             << " " << frame.getPlayer1().getScore() << " - "
             << QString::fromStdString(frame.getPlayer2().getName())
@@ -609,124 +607,126 @@ namespace
         showStyledMessage(parent, QMessageBox::Information, "Export du journal", "Journal exporte :\n" + path);
     }
 
-    // Nettoie les fichiers intermediaires d'UNE frame donnee (meme
-    // prefixe "auto_frameNNN_"), ne gardant que le plus recent.
-    void cleanupFrameAutoSaves(const QString& folder, int frameNumber)
+    // Rendu du contenu d'UNE frame (numero + journal complet + score),
+    // prefixe d'un separateur, pour etre concatene dans le fichier unique
+    // du match par autoSaveMoveLog() ci-dessous.
+    QString renderFrameSection(int frameNumber, Match& match, Frame& frame)
     {
-        QString prefix = QString("auto_frame%1_").arg(frameNumber, 3, 10, QChar('0'));
-        QDir dir(folder);
-        QStringList files = dir.entryList(QStringList() << prefix + "*.txt", QDir::Files, QDir::Name);
-        for (int i = 0; i < files.size() - 1; ++i)
-        {
-            QFile::remove(folder + "/" + files[i]);
-        }
+        QString section;
+        QTextStream out(&section);
+        out << "\n\n========== FRAME " << frameNumber << " ==========\n";
+        writeMoveLog(out, match, frame);
+        return section;
     }
 
-    // Compteur de frame utilise par autoSaveMoveLog() ci-dessous, et son
-    // etat associe -- regroupes ici pour pouvoir les reinitialiser
-    // proprement au debut d'un nouveau match (voir resetAutoSaveTracking(),
-    // appelee depuis beginMatch()/restartMatch()) : sans cette remise a
-    // zero, un second match dans la meme session continuerait a numeroter
-    // ses fichiers a partir de la frame du match precedent.
+    // Etat de la sauvegarde automatique du match en cours, regroupe ici
+    // pour pouvoir tout reinitialiser proprement au debut d'un nouveau
+    // match (voir resetAutoSaveTracking(), appelee depuis
+    // beginMatch()/restartMatch()) : sans cette remise a zero, un second
+    // match dans la meme session continuerait a ecrire dans le fichier
+    // (et a numeroter les frames) du match precedent.
+    QString s_autoSaveMatchFilePath;
+    QString s_autoSaveMatchLog;              // Sections des frames definitivement closes.
     int s_autoSaveFrameNumber = 0;
     bool s_autoSaveWasAwaitingNextFrame = false;
     int s_autoSaveLastTallySum = 0;
+    bool s_autoSaveFrameSectionClosed = false; // La frame en cours a-t-elle deja ete ajoutee a s_autoSaveMatchLog ?
+    int s_autoSaveLastClosedSectionLength = 0; // Longueur de la derniere section ajoutee (pour annulation via "Retour").
 
     void resetAutoSaveTracking()
     {
+        s_autoSaveMatchFilePath.clear();
+        s_autoSaveMatchLog.clear();
         s_autoSaveFrameNumber = 0;
         s_autoSaveWasAwaitingNextFrame = false;
         s_autoSaveLastTallySum = 0;
+        s_autoSaveFrameSectionClosed = false;
+        s_autoSaveLastClosedSectionLength = 0;
     }
 
-    // Sauvegarde automatique et silencieuse du journal de la frame en
-    // cours, appelee apres chaque coup (voir refreshDisplay()) : un
-    // NOUVEAU fichier horodate a chaque coup (pas d'ecrasement), pour
-    // garder une trace intermediaire exploitable meme si le tout dernier
-    // fichier est corrompu par un plantage pile pendant l'ecriture. Le nom
-    // inclut le numero de frame (voir frameNumber ci-dessous) : le
-    // nettoyage en fin de frame ne doit affecter QUE les fichiers
-    // intermediaires de CETTE frame, jamais ceux, deja definitifs, des
-    // frames precedentes -- une sauvegarde gardee par frame jouee dans le
-    // match, pas une seule pour tout le match. Aucune boite de dialogue :
-    // un echec d'ecriture ne doit jamais interrompre la partie.
+    // Sauvegarde automatique et silencieuse du journal du MATCH en cours,
+    // appelee apres chaque coup (voir refreshDisplay()) : un seul fichier
+    // par match, cree au premier coup et reecrit en entier a chaque appel
+    // (pas de fichiers intermediaires a nettoyer). Il accumule la section
+    // de chaque frame terminee, plus la section (encore provisoire) de la
+    // frame en cours. Aucune boite de dialogue : un echec d'ecriture ne
+    // doit jamais interrompre la partie.
     void autoSaveMoveLog(Match& match, Frame& frame)
     {
         QString folder = QCoreApplication::applicationDirPath() + "/scenarios_test";
         QDir().mkpath(folder);
 
-        // Le numero de frame NE DOIT PAS etre deduit du tally
-        // (match.getFramesPlayer1()+2()) : Match::checkFrameEnd()
-        // incremente ce tally DES que Frame::isFinished() devient vrai,
-        // donc avant meme que Match bascule reellement sur la frame
-        // suivante (qui n'arrive que plus tard, via proceedToNextFrame()).
-        // Deduire le numero du tally ferait donc basculer le fichier de
-        // toute derniere sauvegarde d'une frame qui vient de se terminer
-        // sur le prefixe de la frame SUIVANTE, alors que getCurrentFrame()
-        // pointe toujours sur la frame qui vient de finir -- observe en
-        // test (fichier "frame002" contenant encore les coups de la frame
-        // 1, avec un score du match double-compte).
-        //
-        // L'IDENTITE de l'objet Frame (&frame) ne marche pas non plus :
-        // Match::m_currentFrame est un membre par valeur reaffecte en
-        // place (m_currentFrame = Frame();), donc son adresse reste
-        // identique d'une frame a l'autre -- egalement observe en test
-        // (aucun changement detecte apres la frame 1).
-        //
-        // Signal fiable retenu : Match::isFrameJustFinished() (booleen
-        // m_awaitingNextFrame) passe a vrai des que la frame est gagnee,
-        // puis repasse a faux exactement au moment ou proceedToNextFrame()
-        // s'execute -- que ce soit pour reaffecter m_currentFrame (frame
-        // suivante reelle) ou parce que le match est termine (plus de
-        // frame suivante). On detecte donc le passage vrai -> faux.
-        //
-        // MAIS ce meme passage vrai -> faux se produit aussi quand
-        // "Retour" annule le coup qui venait de terminer la frame (voir
-        // Match::undoFrameConclusion(), appelee par les 3 telecommandes) :
-        // dans ce cas il ne s'agit PAS d'une nouvelle frame, juste d'une
-        // correction. On distingue les deux cas via le tally (nombre
-        // total de frames gagnees) : une vraie avancee le laisse identique
-        // (deja incremente par checkFrameEnd() pendant que le drapeau
-        // etait vrai ; proceedToNextFrame() n'y touche pas), alors qu'une
-        // annulation le fait REDESCENDRE (undoFrameConclusion() retire le
-        // point qu'elle vient d'annuler).
-        bool isAwaitingNextFrame = match.isFrameJustFinished();
-        int tallySum = match.getFramesPlayer1() + match.getFramesPlayer2();
+        if (s_autoSaveMatchFilePath.isEmpty())
+        {
+            QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss");
+            s_autoSaveMatchFilePath = folder + "/auto_match_" + timestamp + ".txt";
+        }
         if (s_autoSaveFrameNumber == 0)
         {
             s_autoSaveFrameNumber = 1;
         }
-        else if (s_autoSaveWasAwaitingNextFrame && !isAwaitingNextFrame
-            && !match.isMatchFinished() && tallySum >= s_autoSaveLastTallySum)
+
+        // Signal utilise pour detecter qu'une frame vient de se terminer
+        // (ou qu'une telle fin vient d'etre annulee via "Retour") : voir
+        // [[project_frame_lifecycle_timing]] en memoire pour le detail --
+        // en resume, Match::isFrameJustFinished() passe a vrai des que la
+        // frame est gagnee (avant meme que Match bascule sur la frame
+        // suivante), et repasse a faux soit lors d'une vraie avancee, soit
+        // lors d'une annulation via Match::undoFrameConclusion() -- les
+        // deux se distinguent par le tally, qui redescend uniquement dans
+        // le second cas.
+        bool isAwaitingNextFrame = match.isFrameJustFinished();
+        int tallySum = match.getFramesPlayer1() + match.getFramesPlayer2();
+
+        if (isAwaitingNextFrame && !s_autoSaveWasAwaitingNextFrame)
         {
-            cleanupFrameAutoSaves(folder, s_autoSaveFrameNumber);
-            ++s_autoSaveFrameNumber;
+            // La frame en cours vient de se terminer : sa section devient
+            // definitive et rejoint le journal du match.
+            QString section = renderFrameSection(s_autoSaveFrameNumber, match, frame);
+            s_autoSaveMatchLog += section;
+            s_autoSaveLastClosedSectionLength = section.length();
+            s_autoSaveFrameSectionClosed = true;
+        }
+        else if (!isAwaitingNextFrame && s_autoSaveWasAwaitingNextFrame)
+        {
+            if (tallySum < s_autoSaveLastTallySum)
+            {
+                // "Retour" vient d'annuler le coup qui terminait la frame :
+                // on retire la section qu'on venait d'ajouter, la frame
+                // reprend sous le meme numero.
+                s_autoSaveMatchLog.chop(s_autoSaveLastClosedSectionLength);
+                s_autoSaveFrameSectionClosed = false;
+            }
+            else if (!match.isMatchFinished())
+            {
+                // Avancee reelle sur la frame suivante.
+                s_autoSaveFrameSectionClosed = false;
+                ++s_autoSaveFrameNumber;
+            }
+            // Sinon (match termine) : m_awaitingNextFrame repasse aussi a
+            // faux quand proceedToNextFrame() s'execute (elle le fait
+            // inconditionnellement), mais sans demarrer de nouvelle frame
+            // puisque le match est fini -- getCurrentFrame() continue de
+            // pointer sur la MEME frame, deja close ci-dessus. Ne rien
+            // faire ici : re-ouvrir sa section dupliquerait son contenu
+            // (observe en test : une "FRAME 4" identique a la "FRAME 3").
         }
         s_autoSaveWasAwaitingNextFrame = isAwaitingNextFrame;
         s_autoSaveLastTallySum = tallySum;
-        int frameNumber = s_autoSaveFrameNumber;
 
-        QString prefix = QString("auto_frame%1_").arg(frameNumber, 3, 10, QChar('0'));
-        QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmsszzz");
-        QFile file(folder + "/" + prefix + timestamp + ".txt");
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        QString fullText = s_autoSaveMatchLog;
+        if (!s_autoSaveFrameSectionClosed)
+        {
+            fullText += renderFrameSection(s_autoSaveFrameNumber, match, frame);
+        }
+
+        QFile file(s_autoSaveMatchFilePath);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
         {
             return;
         }
-
         QTextStream out(&file);
-        writeMoveLog(out, match, frame);
-
-        // Cas de la DERNIERE frame du match : Match ne bascule jamais sur
-        // une frame suivante (il n'y en a pas), donc le changement de
-        // numero ci-dessus ne se produira jamais. On nettoie alors ici,
-        // directement sur Frame::isFinished() (stable), a chaque appel
-        // suivant la fin de la frame (le minuteur de duree du match
-        // continue d'appeler refreshDisplay() pendant quelques secondes).
-        if (frame.isFinished())
-        {
-            cleanupFrameAutoSaves(folder, frameNumber);
-        }
+        out << fullText;
     }
 
     // Valeur standard d'une bille par son nom (regles du snooker), utilisee
