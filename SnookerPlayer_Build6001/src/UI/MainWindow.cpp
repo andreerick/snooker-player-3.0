@@ -1445,6 +1445,16 @@ MainWindow::MainWindow(QWidget* parent)
     m_freeBallStatusLabel->setVisible(false);
     remoteLayout->addWidget(m_freeBallStatusLabel);
 
+    m_blackReplayStatusLabel = new QLabel(remotePanel);
+    m_blackReplayStatusLabel->setAlignment(Qt::AlignHCenter);
+    m_blackReplayStatusLabel->setWordWrap(true);
+    m_blackReplayStatusLabel->setStyleSheet(
+        "color: " + kBg + "; background-color: " + kOrange + ";"
+        "border-radius: 4px; font-size: 11px; font-weight: bold; padding: 4px;"
+    );
+    m_blackReplayStatusLabel->setVisible(false);
+    remoteLayout->addWidget(m_blackReplayStatusLabel);
+
     // Bandeau d'instruction : affiche quelle action est en attente d'une
     // bille cliquee sur la telecommande (voir enum PendingAction), avec un
     // bouton pour annuler si l'utilisateur change d'avis.
@@ -1547,6 +1557,7 @@ MainWindow::MainWindow(QWidget* parent)
             "}"
             "QPushButton:hover { border: 2px solid " + kWhite + "; }"
             "QPushButton:pressed { background-color: %4; }"
+            "QPushButton:disabled { background-color: #2a2d31; color: #6a6d71; border-color: #2a2d31; }"
         ).arg(base.name(), textColor.name(), base.darker(150).name(), base.darker(130).name()));
 
         connect(ballButton, &QPushButton::clicked, this, [this, ballName, ballValue]()
@@ -1554,6 +1565,7 @@ MainWindow::MainWindow(QWidget* parent)
                 handleBallAction(ballName, ballValue);
             });
 
+        m_ballButtons[ballName] = ballButton;
         return ballButton;
     };
 
@@ -2118,6 +2130,18 @@ MainWindow::MainWindow(QWidget* parent)
     simpleLayout->setContentsMargins(14, 14, 14, 14);
     simpleLayout->setSpacing(10);
 
+    // Bandeau FramePhase::BlackReplay (meme role que m_blackReplayStatusLabel
+    // sur la 1.0, absent jusqu'ici sur cette telecommande).
+    m_simpleBlackReplayStatusLabel = new QLabel(remotePanelSimple);
+    m_simpleBlackReplayStatusLabel->setAlignment(Qt::AlignHCenter);
+    m_simpleBlackReplayStatusLabel->setWordWrap(true);
+    m_simpleBlackReplayStatusLabel->setStyleSheet(
+        "color: " + kBg + "; background-color: " + kOrange + ";"
+        "border-radius: 4px; font-size: 11px; font-weight: bold; padding: 4px;"
+    );
+    m_simpleBlackReplayStatusLabel->setVisible(false);
+    simpleLayout->addWidget(m_simpleBlackReplayStatusLabel);
+
     // Bandeau d'instruction (meme role que m_pendingActionLabel sur la
     // 1.0, absent jusqu'ici sur cette telecommande) + choix suivant un
     // Miss (voir PendingAction::MissChoice) : la faute est deja appliquee
@@ -2190,6 +2214,7 @@ MainWindow::MainWindow(QWidget* parent)
             "}"
             "QPushButton:hover { border: 2px solid " + kWhite + "; }"
             "QPushButton:pressed { background-color: %4; }"
+            "QPushButton:disabled { background-color: #2a2d31; color: #6a6d71; border-color: #2a2d31; }"
         ).arg(base.name(), textColor.name(), base.darker(150).name(), base.darker(130).name()));
 
         connect(ballButton, &QPushButton::clicked, this, [this, ballName, ballValue]()
@@ -2197,6 +2222,7 @@ MainWindow::MainWindow(QWidget* parent)
                 handleBallAction(ballName, ballValue);
             });
 
+        m_simpleBallButtons[ballName] = ballButton;
         return ballButton;
     };
 
@@ -3092,6 +3118,21 @@ void MainWindow::refreshDisplay()
         ballLabel->setText(ballName == "Rouge" ? QString::number(ballSet.countBalls(ballName)) : QString());
     }
 
+    // Boutons de bille (voir m_ballButtons/m_simpleBallButtons) : grises
+    // (desactives) selon la meme regle que m_remainingBallLabels
+    // ci-dessus, pour rendre impossible de jouer/annoncer une bille qui
+    // n'est plus physiquement sur la table (ex. "Rouge" une fois les 15
+    // rouges epuisees, ou une couleur deja empochee pendant les couleurs
+    // finales).
+    for (auto it = m_ballButtons.begin(); it != m_ballButtons.end(); ++it)
+    {
+        it.value()->setEnabled(ballSet.isOnTable(it.key().toStdString()));
+    }
+    for (auto it = m_simpleBallButtons.begin(); it != m_simpleBallButtons.end(); ++it)
+    {
+        it.value()->setEnabled(ballSet.isOnTable(it.key().toStdString()));
+    }
+
     if (frame.isFreeBall())
     {
         m_freeBallStatusLabel->setText(
@@ -3103,6 +3144,17 @@ void MainWindow::refreshDisplay()
     {
         m_freeBallStatusLabel->setVisible(false);
     }
+
+    // Egalite apres la derniere couleur (voir FramePhase::BlackReplay) :
+    // la noire est respotee et rejouee, et toute faute a ce stade fait
+    // perdre la frame sur-le-champ (regle de "mort subite", voir
+    // Frame::foul()) -- crucial a signaler immediatement a l'arbitre.
+    bool isBlackReplay = (frame.getPhase() == FramePhase::BlackReplay);
+    QString blackReplayText = "EGALITE : noire respotee -- la moindre faute perd la frame";
+    m_blackReplayStatusLabel->setText(blackReplayText);
+    m_blackReplayStatusLabel->setVisible(isBlackReplay);
+    m_simpleBlackReplayStatusLabel->setText(blackReplayText);
+    m_simpleBlackReplayStatusLabel->setVisible(isBlackReplay);
 
     QString pendingText;
     switch (m_pendingAction)
@@ -3174,6 +3226,16 @@ void MainWindow::refreshDisplay()
         shareState["pendingActionText"] = pendingText;
         shareState["isFreeBall"] = frame.isFreeBall();
         shareState["isMissChoicePending"] = isMissChoicePending;
+        shareState["isBlackReplay"] = isBlackReplay;
+        // Meme regle que m_ballButtons/m_simpleBallButtons cote bureau :
+        // le telephone grise un bouton de bille des qu'elle n'est plus
+        // physiquement sur la table (voir BallSet::isOnTable()).
+        QJsonObject ballsOnTable;
+        for (const QString& name : { "Rouge", "Jaune", "Verte", "Marron", "Bleue", "Rose", "Noire" })
+        {
+            ballsOnTable[name] = ballSet.isOnTable(name.toStdString());
+        }
+        shareState["ballsOnTable"] = ballsOnTable;
         m_webServer->updateState(shareState);
     }
 
@@ -3350,11 +3412,11 @@ void MainWindow::announceNewEvents(Frame& frame)
             // au joueur quelle bille il joue et repete sa reponse (voir
             // project_vision_bridge_status, pas encore implemente - la
             // reconnaissance vocale n'existe pas encore).
-            m_speech->announce(QString::number(breakByPlayer[entry.playerName]) + " points");
+            m_speech->announce(QString::number(breakByPlayer[entry.playerName]));
         }
         else if (entry.type == LogEntry::Type::Foul)
         {
-            m_speech->announce("Faute, " + QString::number(entry.foulPoints) + " points");
+            m_speech->announce("Faute, " + QString::number(entry.foulPoints));
         }
         // Type::Miss (fin de tour sans bille jouee) : pas d'annonce
         // dediee, le changement de joueur ci-dessous suffit a signaler
@@ -3368,6 +3430,23 @@ void MainWindow::announceNewEvents(Frame& frame)
         m_speech->announce("Au tour de " + QString::fromStdString(currentPlayer->getName()));
     }
     m_lastAnnouncedPlayer = currentPlayer;
+
+    // Egalite apres la derniere couleur (voir FramePhase::BlackReplay) :
+    // annonce une seule fois par occurrence (peut se reproduire plusieurs
+    // fois dans la meme frame si la noire est repotee a nouveau apres un
+    // nouvel empochage a egalite).
+    if (frame.getPhase() == FramePhase::BlackReplay)
+    {
+        if (!m_blackReplayAnnounced)
+        {
+            m_blackReplayAnnounced = true;
+            m_speech->announce("Egalite. La noire est respotee.");
+        }
+    }
+    else
+    {
+        m_blackReplayAnnounced = false;
+    }
 
     // Annonce de fin de frame / fin de match. m_frameEndAnnounced/
     // m_matchEndAnnounced evitent de repeter l'annonce a chaque

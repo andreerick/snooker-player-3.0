@@ -283,6 +283,14 @@ private:
     // en cours de phase des rouges -- voir refreshDisplay()).
     QMap<QString, QLabel*> m_remainingBallLabels;
 
+    // Boutons de bille cliquables (1.0 et 2.0) : desactives (grises) des
+    // que BallSet::isOnTable() devient faux pour cette bille, pour rendre
+    // impossible de jouer/annoncer une bille qui n'est plus sur la table
+    // (ex. "Rouge" une fois les 15 rouges epuisees). Le telephone applique
+    // la meme regle cote JS via isFreeBall... voir shareState["ballsOnTable"].
+    QMap<QString, QPushButton*> m_ballButtons;
+    QMap<QString, QPushButton*> m_simpleBallButtons;
+
     QFrame* m_player1ScoreBox = nullptr;
     QFrame* m_player2ScoreBox = nullptr;
     QLabel* m_player1ScoreBoxValue = nullptr;
@@ -307,6 +315,14 @@ private:
     QDateTime m_matchStartTime;
 
     QLabel* m_freeBallStatusLabel = nullptr;
+    // Bandeau affiche pendant FramePhase::BlackReplay (score a egalite
+    // apres la derniere couleur : la noire est respotee et rejouee tant
+    // que l'egalite persiste, regle officielle du snooker). Sans lui,
+    // rien ne signale cette situation a l'arbitre pendant le jeu reel --
+    // seule la valeur retournee par Frame::getPhase() en temoignait.
+    QLabel* m_blackReplayStatusLabel = nullptr;
+    QLabel* m_simpleBlackReplayStatusLabel = nullptr;
+    bool m_blackReplayAnnounced = false;
     QLabel* m_pendingActionLabel = nullptr;
     QPushButton* m_cancelPendingButton = nullptr;
     // Meme role que m_pendingActionLabel, mais pour la telecommande 2.0

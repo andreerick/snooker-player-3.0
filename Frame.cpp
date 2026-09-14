@@ -526,9 +526,17 @@ bool Frame::playFreeBall(const Ball& ball)
         << " point(s)"
         << std::endl;
 
+    // Le journal (et donc l'annonce vocale, voir announceNewEvents() qui
+    // additionne Shot::getPoints() pour le break en cours) doit refleter
+    // la valeur REELLEMENT comptee (value, ci-dessus), pas la valeur
+    // propre de la bille physiquement jouee (ball.getValue()) -- sinon
+    // un Free Ball joue avec la Bleue (5) mais compte pour une rouge (1)
+    // ferait annoncer "5 points" au lieu de "1 point". Le NOM affiche
+    // reste celui de la bille reellement jouee.
+    Ball loggedBall(ball.getName(), value);
     Shot shot(
         *m_currentPlayer,
-        ball
+        loggedBall
     );
     m_history.addShot(shot);
 
@@ -631,6 +639,16 @@ void Frame::foul(
     m_needColor = false;
 
     switchPlayer();
+
+    // Regle speciale de "mort subite" pour la noire respotee (egalite
+    // apres la derniere couleur, voir potColor()) : contrairement a une
+    // faute normale (qui donne juste des points et continue), TOUTE
+    // faute a ce stade fait perdre la frame sur-le-champ a son auteur --
+    // la noire n'est pas rejouee une fois de plus dans ce cas.
+    if (m_phase == FramePhase::BlackReplay)
+    {
+        m_phase = FramePhase::Finished;
+    }
 }
 
 // =====================================

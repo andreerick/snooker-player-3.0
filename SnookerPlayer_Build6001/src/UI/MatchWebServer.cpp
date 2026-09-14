@@ -60,6 +60,7 @@ namespace
   .ballgrid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .ballbtn { border: 1px solid #fff; border-radius: 8px; padding: 13px 4px; font-weight:bold;
              font-size: 14px; }
+  .ballbtn:disabled { background:#2a2d31 !important; color:#6a6d71 !important; border-color:#2a2d31; }
   .ballbtn.wide { grid-column: 1 / span 2; }
   .actiongrid { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .actionbtn { background:#111316; color:#f5f5f5; border:1px solid #2a2d31;
@@ -118,6 +119,7 @@ namespace
   <div class="pendingwrap">
     <div class="pending" id="pending"></div>
     <div class="freeball" id="freeball">FREE BALL ARME</div>
+    <div class="freeball" id="blackreplay">EGALITE : noire respotee -- la moindre faute perd la frame</div>
     <div class="missmenu" id="misschoicemenu">
       <button class="actionbtn" onclick="sendAction('missReplay')">Remettre en place</button>
       <button class="actionbtn" onclick="sendAction('missChoiceContinue')">Prendre la table</button>
@@ -172,6 +174,7 @@ namespace
     const btn = document.createElement('button');
     // La rouge occupe seule toute la largeur (une seule bille rouge peut
     // etre jouee a la fois), comme sur la telecommande de bureau 2.0.
+    btn.id = 'ball-' + name;
     btn.className = name === 'Rouge' ? 'ballbtn wide' : 'ballbtn';
     btn.style.background = ballColors[name][0];
     btn.style.color = ballColors[name][1];
@@ -277,6 +280,7 @@ namespace
         document.getElementById('breakvalue').textContent = '-';
         document.getElementById('pending').className = 'pending';
         document.getElementById('freeball').className = 'freeball';
+        document.getElementById('blackreplay').className = 'freeball';
         document.getElementById('misschoicemenu').className = 'missmenu';
         return;
       }
@@ -289,6 +293,14 @@ namespace
       document.getElementById('row1').className = 'row' + (d.p1Active ? ' active' : '');
       document.getElementById('row2').className = 'row' + (!d.p1Active ? ' active' : '');
       document.getElementById('breakvalue').textContent = d.breakValue;
+      if (d.ballsOnTable) {
+        for (const name in d.ballsOnTable) {
+          const ballBtn = document.getElementById('ball-' + name);
+          if (ballBtn) {
+            ballBtn.disabled = !d.ballsOnTable[name];
+          }
+        }
+      }
       const pendingEl = document.getElementById('pending');
       if (d.pendingActionText) {
         pendingEl.textContent = d.pendingActionText;
@@ -297,6 +309,7 @@ namespace
         pendingEl.className = 'pending';
       }
       document.getElementById('freeball').className = 'freeball' + (d.isFreeBall ? ' show' : '');
+      document.getElementById('blackreplay').className = 'freeball' + (d.isBlackReplay ? ' show' : '');
       document.getElementById('misschoicemenu').className = 'missmenu' + (d.isMissChoicePending ? ' show' : '');
     } catch (e) {
       document.getElementById('offline').style.display = 'block';
