@@ -905,6 +905,15 @@ bool Frame::isTouchingBall() const
 }
 
 // =====================================
+// Faire rejouer
+// =====================================
+void Frame::requestReplay()
+{
+    switchPlayer();
+    m_history.addReplay(m_currentPlayer->getName());
+}
+
+// =====================================
 // Free Ball couleur
 // =====================================
 void Frame::setFreeBallColor(const Ball& ball)

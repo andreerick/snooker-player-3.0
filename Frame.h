@@ -140,6 +140,17 @@ public:
     bool isTouchingBall() const;
 
 
+    // "Faire rejouer" (reglement Sect. 3 §13) : le non-fautif choisit de
+    // faire rejouer le fautif (bouton "Remettre en place", present a la
+    // fois dans le panneau de choix apres un Miss et dans le menu du
+    // bouton "Free ball") plutot que de prendre la position telle quelle.
+    // Remplace un appel direct a switchPlayer() pour que ce choix soit
+    // enregistre dans le journal (voir ShotHistory::addReplay()) --
+    // indispensable pour qu'un scenario rejoue attribue les coups
+    // suivants au bon joueur.
+    void requestReplay();
+
+
     // Couleurs finales
     bool isCorrectFinalColor(const Ball& ball) const;
 

@@ -89,6 +89,14 @@ void MoveLogWidget::refresh(const ShotHistory& history)
                 + " — BILLE TOUCHANTE (premier contact deja valide pour le prochain coup)";
             color = kGray;
         }
+        else if (entry.type == LogEntry::Type::Replay)
+        {
+            text =
+                QString::number(i + 1) + ". "
+                + QString::fromStdString(entry.playerName)
+                + " — REMETTRE EN PLACE (rejoue depuis la position)";
+            color = kGray;
+        }
         else
         {
             text =

@@ -562,6 +562,14 @@ namespace
                 out << (i + 1) << ". " << QString::fromStdString(entry.playerName)
                     << " -- BILLE TOUCHANTE (premier contact deja valide pour le prochain coup)\n";
             }
+            else if (entry.type == LogEntry::Type::Replay)
+            {
+                // Meme principe : mot-cle repere sans ambiguite par
+                // parseScenarioFile(). playerName est deja celui qui
+                // REJOUE (voir Frame::requestReplay()/ShotHistory::addReplay()).
+                out << (i + 1) << ". " << QString::fromStdString(entry.playerName)
+                    << " -- REMETTRE EN PLACE (rejoue depuis la position)\n";
+            }
             else
             {
                 out << (i + 1) << ". FAUTE -- " << QString::fromStdString(entry.playerName)
@@ -759,10 +767,23 @@ namespace
         // coup (voir bouton "Bille touchante"). BlancheOffTable = faute
         // directe sur la blanche (voir triggerBlancheOffTableFoul()) --
         // distinct de Shot car Frame::playShot() ne sait pas traiter la
-        // blanche comme une bille jouable normale.
-        enum class Kind { Shot, Miss, TouchingBall, BlancheOffTable };
+        // blanche comme une bille jouable normale. DirectFoul = faute
+        // "Miss" pure ou la bille jouee EST la bille demandee (aucune
+        // bille distincte touchee, ex. raté complet) : rejouer via
+        // Frame::playShot() la compterait a tort comme un coup legal,
+        // puisque la bille jouee est justement celle qui est due a cet
+        // instant -- voir Frame::foul() appele directement au lieu de
+        // playShot() dans l'executeur de rejeu. FreeBallShot = bille
+        // empochee pendant un Free Ball (voir Frame::playFreeBall()) : la
+        // valeur enregistree au journal ("BallName (+X)") ne correspond
+        // PAS a la valeur standard de cette bille (ex. "Marron (+1)" au
+        // lieu de "+4") quand elle remplace une rouge -- rejouer via
+        // playShot() compterait la mauvaise valeur ET jugerait ce coup
+        // fautif a tort (playShot() ignore totalement le Free Ball).
+        // Replay = "Faire rejouer" (voir Frame::requestReplay()).
+        enum class Kind { Shot, Miss, TouchingBall, BlancheOffTable, DirectFoul, FreeBallShot, Replay };
         Kind kind;
-        QString ballName; // vide sauf Kind::Shot
+        QString ballName; // vide sauf Kind::Shot/DirectFoul/FreeBallShot
     };
 
     // Recharge la liste des scenarios enregistres dans le menu deroulant
@@ -861,6 +882,12 @@ namespace
                 continue;
             }
 
+            if (rest.contains(" -- REMETTRE EN PLACE"))
+            {
+                actions.push_back({ ReplayAction::Kind::Replay, QString() });
+                continue;
+            }
+
             if (rest.startsWith("FAUTE -- "))
             {
                 QString marker = "bille jouee : ";
@@ -873,6 +900,20 @@ namespace
                 int endIdx = remainder.indexOf(')');
                 QString ballName = (endIdx >= 0) ? remainder.left(endIdx) : remainder;
                 ballName = ballName.trimmed();
+
+                // Bille demandee (voir writeMoveLog()), pour reperer le cas
+                // "Miss" pur ci-dessous : la comparaison ne sert qu'a ca,
+                // pas a rejouer la bille demandee elle-meme.
+                QString requiredMarker = "bille demandee : ";
+                QString requiredName;
+                int reqIdx = rest.indexOf(requiredMarker);
+                if (reqIdx >= 0)
+                {
+                    QString reqRemainder = rest.mid(reqIdx + requiredMarker.length());
+                    int reqEndIdx = reqRemainder.indexOf(',');
+                    requiredName = ((reqEndIdx >= 0) ? reqRemainder.left(reqEndIdx) : reqRemainder).trimmed();
+                }
+
                 // Une faute "bille jouee : Blanche" n'est pas un coup
                 // normal rejouable via Frame::playShot() (voir
                 // triggerBlancheOffTableFoul(), la blanche n'est pas une
@@ -880,6 +921,15 @@ namespace
                 if (ballName == "Blanche")
                 {
                     actions.push_back({ ReplayAction::Kind::BlancheOffTable, QString() });
+                }
+                // Bille jouee == bille demandee : aucune bille distincte
+                // n'a ete touchee (ex. Miss pur, "il ne touche aucune
+                // rouge"). Rejouer via playShot() la compterait a tort
+                // comme un coup legal, puisque cette bille EST justement
+                // celle qui est due a cet instant -- voir Kind::DirectFoul.
+                else if (!requiredName.isEmpty() && requiredName == ballName)
+                {
+                    actions.push_back({ ReplayAction::Kind::DirectFoul, ballName });
                 }
                 else
                 {
@@ -897,7 +947,33 @@ namespace
             QString afterSep = rest.mid(sep + 4);
             int parenIdx = afterSep.indexOf(" (+");
             QString ballName = (parenIdx >= 0) ? afterSep.left(parenIdx) : afterSep;
-            actions.push_back({ ReplayAction::Kind::Shot, ballName.trimmed() });
+            ballName = ballName.trimmed();
+
+            // Valeur reellement comptee pour ce coup (voir writeMoveLog()) :
+            // si elle ne correspond pas a la valeur standard de la bille,
+            // c'est qu'elle a ete jouee en Free Ball (voir Kind::FreeBallShot)
+            // -- la valeur standard EST le cas normal (aucun Free Ball).
+            int loggedPoints = -1;
+            if (parenIdx >= 0)
+            {
+                int closeParen = afterSep.indexOf(')', parenIdx);
+                QString pointsStr = afterSep.mid(parenIdx + 3, (closeParen >= 0 ? closeParen : afterSep.length()) - (parenIdx + 3));
+                bool ok = false;
+                int parsed = pointsStr.trimmed().toInt(&ok);
+                if (ok)
+                {
+                    loggedPoints = parsed;
+                }
+            }
+
+            if (loggedPoints >= 0 && loggedPoints != standardBallValue(ballName))
+            {
+                actions.push_back({ ReplayAction::Kind::FreeBallShot, ballName });
+            }
+            else
+            {
+                actions.push_back({ ReplayAction::Kind::Shot, ballName });
+            }
         }
 
         return actions;
@@ -1549,7 +1625,7 @@ MainWindow::MainWindow(QWidget* parent)
         replayButton->setStyleSheet(missChoiceButtonStyle);
         connect(replayButton, &QPushButton::clicked, this, [this]()
             {
-                m_gameManager.getMatch().getCurrentFrame().switchPlayer();
+                m_gameManager.getMatch().getCurrentFrame().requestReplay();
                 m_pendingAction = PendingAction::None;
                 refreshDisplay();
                 showRepositioningGuide(/*silentIfUnavailable=*/true);
@@ -1837,7 +1913,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(missReplayAction, &QAction::triggered, this, [this]()
         {
-            m_gameManager.getMatch().getCurrentFrame().switchPlayer();
+            m_gameManager.getMatch().getCurrentFrame().requestReplay();
             refreshDisplay();
             showRepositioningGuide(/*silentIfUnavailable=*/true);
         });
@@ -2070,6 +2146,10 @@ MainWindow::MainWindow(QWidget* parent)
                     {
                         frame.setTouchingBall(true);
                     }
+                    else if (action.kind == ReplayAction::Kind::Replay)
+                    {
+                        frame.requestReplay();
+                    }
                     else if (action.kind == ReplayAction::Kind::BlancheOffTable)
                     {
                         Ball required = frame.getRequiredBall();
@@ -2077,6 +2157,36 @@ MainWindow::MainWindow(QWidget* parent)
                         Referee foulReferee;
                         int penalty = foulReferee.calculateFoul(required, blanche);
                         frame.foul(required, blanche, penalty, "Blanche sortie de la table");
+                    }
+                    else if (action.kind == ReplayAction::Kind::DirectFoul)
+                    {
+                        // Voir Kind::DirectFoul : la bille jouee EST la
+                        // bille demandee (Miss pur), donc appelle
+                        // Frame::foul() directement au lieu de playShot()
+                        // pour ne pas que ce coup soit relu comme legal.
+                        Ball required = frame.getRequiredBall();
+                        int value = standardBallValue(action.ballName);
+                        Ball touched(action.ballName.toStdString(), value);
+                        Referee foulReferee;
+                        int penalty = foulReferee.calculateFoul(required, touched);
+                        frame.foul(required, touched, penalty, "Absence de veritable tentative (Miss)");
+                    }
+                    else if (action.kind == ReplayAction::Kind::FreeBallShot)
+                    {
+                        // Voir Kind::FreeBallShot : arme le Free Ball juste
+                        // avant de le jouer, exactement comme le bouton
+                        // "Choisir la bille de depart" en direct -- capture
+                        // la valeur a compter (frame.setFreeBall) a partir
+                        // de l'etat courant, PUIS joue la bille reellement
+                        // empochee via playFreeBall() (pas playShot()).
+                        // Limite connue : ne gere pas le cas ambigu (voir
+                        // Frame::isFreeBallValueAmbiguous(), "n'importe
+                        // quelle couleur" due) -- pas necessaire pour les
+                        // scenarios ecrits jusqu'ici, a traiter si besoin.
+                        Ball designated(action.ballName.toStdString(), standardBallValue(action.ballName));
+                        frame.setFreeBall(true);
+                        frame.setFreeBallColor(designated);
+                        frame.playFreeBall(designated);
                     }
                     else
                     {
@@ -2305,7 +2415,7 @@ MainWindow::MainWindow(QWidget* parent)
         replayButton->setStyleSheet(missChoiceButtonStyle);
         connect(replayButton, &QPushButton::clicked, this, [this]()
             {
-                m_gameManager.getMatch().getCurrentFrame().switchPlayer();
+                m_gameManager.getMatch().getCurrentFrame().requestReplay();
                 m_pendingAction = PendingAction::None;
                 refreshDisplay();
                 showRepositioningGuide(/*silentIfUnavailable=*/true);
@@ -2417,7 +2527,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(simpleMissReplayAction, &QAction::triggered, this, [this]()
         {
-            m_gameManager.getMatch().getCurrentFrame().switchPlayer();
+            m_gameManager.getMatch().getCurrentFrame().requestReplay();
             refreshDisplay();
             showRepositioningGuide(/*silentIfUnavailable=*/true);
         });
@@ -3990,7 +4100,7 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
         // par le menu du bouton "Free ball" et par le panneau de choix
         // suivant un Miss (voir PendingAction::MissChoice) -- remise a
         // None systematique, sans effet si deja None (cas Free ball).
-        frame.switchPlayer();
+        frame.requestReplay();
         m_pendingAction = PendingAction::None;
         refreshDisplay();
         showRepositioningGuide(/*silentIfUnavailable=*/true);

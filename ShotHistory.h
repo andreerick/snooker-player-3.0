@@ -19,7 +19,14 @@ struct LogEntry
     // TouchingBall = armement de la "bille touchante" (voir Frame::
     // setTouchingBall()) : meme raison d'etre que Miss, sans quoi ce
     // geste d'arbitrage resterait invisible et non rejouable.
-    enum class Type { Shot, Foul, Miss, TouchingBall };
+    // Replay = "Faire rejouer" (reglement Sect. 3 §13) : le non-fautif
+    // choisit de faire rejouer le fautif plutot que de prendre la
+    // position telle quelle (voir Frame::requestReplay()). Sans cette
+    // entree, le journal ne distingue pas ce choix de "prendre la
+    // table", et un scenario rejoue attribuerait les coups suivants au
+    // mauvais joueur (le rejeu ignore les noms de joueurs du fichier et
+    // suit uniquement l'etat reel du moteur).
+    enum class Type { Shot, Foul, Miss, TouchingBall, Replay };
 
     Type type = Type::Shot;
 
@@ -65,6 +72,11 @@ public:
 
     // Ajouter un armement de "bille touchante" (voir Frame::setTouchingBall()).
     void addTouchingBall(const std::string& playerName);
+
+    // Ajouter un "Faire rejouer" (voir Frame::requestReplay()). playerName
+    // est celui qui REJOUE (le fautif, apres le changement de joueur),
+    // pas celui qui a fait ce choix.
+    void addReplay(const std::string& playerName);
 
 
     int getShotCount() const;
