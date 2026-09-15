@@ -79,15 +79,25 @@ TrainingChoiceDialog::TrainingChoiceDialog(QWidget* parent)
         return button;
     };
 
+    // Les deux logos n'ont aucun texte de bouton a cote (voir QString()
+    // plus bas, chacun integre deja le sien) : ils peuvent donc remplir
+    // quasiment toute la tuile (button->setMinimumSize(200, 180) ci-dessus)
+    // plutot que rester petits au centre. KeepAspectRatio + une boite
+    // cible commune gere les deux formats (CueSense en paysage, Exercice
+    // carre) sans deformation ni depassement.
+    const QSize kTileIconBox(184, 160);
+
     QPixmap cueSenseLogo(QFileInfo(HOME_SCREEN_IMAGE_PATH).absolutePath() + "/cuesense_logo_transparent.png");
-    QPushButton* cueSenseTile = makeTile(cueSenseLogo.scaledToWidth(160, Qt::SmoothTransformation), QString());
+    QPushButton* cueSenseTile = makeTile(
+        cueSenseLogo.scaled(kTileIconBox, Qt::KeepAspectRatio, Qt::SmoothTransformation), QString());
 
     // Icone "Exercice guides" fournie par l'utilisateur (deja son propre
     // texte "Exercices guides" integre a l'image, comme le logo CueSense
     // ci-dessus) -- remplace l'icone vectorielle provisoire (queues
     // croisees, "on verra apres" a l'epoque).
     QPixmap exerciseIcon(QFileInfo(HOME_SCREEN_IMAGE_PATH).absolutePath() + "/exercice_guides_icon.png");
-    QPushButton* exerciseTile = makeTile(exerciseIcon.scaledToWidth(160, Qt::SmoothTransformation), QString());
+    QPushButton* exerciseTile = makeTile(
+        exerciseIcon.scaled(kTileIconBox, Qt::KeepAspectRatio, Qt::SmoothTransformation), QString());
 
     tilesRow->addWidget(cueSenseTile);
     tilesRow->addWidget(exerciseTile);
