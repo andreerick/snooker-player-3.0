@@ -4,7 +4,6 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QPushButton>
-#include <QPainter>
 #include <QFileInfo>
 
 #ifndef HOME_SCREEN_IMAGE_PATH
@@ -18,34 +17,6 @@ namespace
     const QString kBorder = "#2a2d31";
     const QString kGreen = "#1a9000";
     const QString kWhite = "#f5f5f5";
-
-    // Icone "Exercice" dessinee en vectoriel (queues croisees) : aucun
-    // fichier logo n'existe pour ce nouveau catalogue d'exercices (a
-    // l'inverse de CueSense, voir cuesense_logo_transparent.png dans
-    // assets/), et l'utilisateur a demande de proposer une icone plutot
-    // que d'attendre un asset ("propose moi on verra apres").
-    QPixmap drawExerciseIcon(int size)
-    {
-        QPixmap pixmap(size, size);
-        pixmap.fill(Qt::transparent);
-
-        QPainter painter(&pixmap);
-        painter.setRenderHint(QPainter::Antialiasing);
-
-        qreal margin = size * 0.18;
-        QPen cuePen(QColor(kWhite), size * 0.07, Qt::SolidLine, Qt::RoundCap);
-        painter.setPen(cuePen);
-        painter.drawLine(QPointF(margin, margin), QPointF(size - margin, size - margin));
-        painter.drawLine(QPointF(size - margin, margin), QPointF(margin, size - margin));
-
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor(kGreen));
-        qreal tipRadius = size * 0.055;
-        painter.drawEllipse(QPointF(margin, margin), tipRadius, tipRadius);
-        painter.drawEllipse(QPointF(size - margin, size - margin), tipRadius, tipRadius);
-
-        return pixmap;
-    }
 }
 
 TrainingChoiceDialog::TrainingChoiceDialog(QWidget* parent)
@@ -110,7 +81,13 @@ TrainingChoiceDialog::TrainingChoiceDialog(QWidget* parent)
 
     QPixmap cueSenseLogo(QFileInfo(HOME_SCREEN_IMAGE_PATH).absolutePath() + "/cuesense_logo_transparent.png");
     QPushButton* cueSenseTile = makeTile(cueSenseLogo.scaledToWidth(160, Qt::SmoothTransformation), QString());
-    QPushButton* exerciseTile = makeTile(drawExerciseIcon(64), "Exercice");
+
+    // Icone "Exercice guides" fournie par l'utilisateur (deja son propre
+    // texte "Exercices guides" integre a l'image, comme le logo CueSense
+    // ci-dessus) -- remplace l'icone vectorielle provisoire (queues
+    // croisees, "on verra apres" a l'epoque).
+    QPixmap exerciseIcon(QFileInfo(HOME_SCREEN_IMAGE_PATH).absolutePath() + "/exercice_guides_icon.png");
+    QPushButton* exerciseTile = makeTile(exerciseIcon.scaledToWidth(160, Qt::SmoothTransformation), QString());
 
     tilesRow->addWidget(cueSenseTile);
     tilesRow->addWidget(exerciseTile);
