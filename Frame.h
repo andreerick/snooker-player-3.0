@@ -166,6 +166,18 @@ public:
 
 private:
 
+    // Sect. 2 §1(b)/(c) du reglement : des que la noire devient la SEULE
+    // bille objet restant sur la table et que l'ecart de points depasse
+    // deja 7 (valeur max d'une seule bille), la frame est gagnee sur-le-
+    // champ -- meme si la noire n'a pas encore ete jouee. Pur calcul (pas
+    // de jugement d'arbitre a faire, contrairement a "bille touchante" ou
+    // au Pat), donc verifie automatiquement a chaque endroit ou la phase
+    // peut entrer dans cet etat ou le score peut changer pendant celui-ci
+    // (potColor(), foul(), playFreeBall()). Ne fait rien si la frame est
+    // deja terminee ou si la noire n'est pas (encore) la seule bille
+    // restante.
+    void checkInsurmountableLead();
+
     Player m_player1;
 
     Player m_player2;

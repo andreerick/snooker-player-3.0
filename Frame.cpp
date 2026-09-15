@@ -158,6 +158,11 @@ void Frame::potColor(Ball ball)
     else if (m_phase == FramePhase::FinalColors)
     {
         m_nextColor++;
+        checkInsurmountableLead();
+        if (m_phase == FramePhase::Finished)
+        {
+            return;
+        }
         if (m_nextColor >= 6)
         {
             // Toutes les couleurs finales sont jouees, y compris la
@@ -178,6 +183,23 @@ void Frame::potColor(Ball ball)
         {
             m_phase = FramePhase::Finished;
         }
+    }
+}
+
+// =====================================
+// Ecart de points insurmontable (noire seule restante)
+// =====================================
+void Frame::checkInsurmountableLead()
+{
+    if (m_phase != FramePhase::FinalColors || m_nextColor != 5)
+    {
+        return;
+    }
+
+    int diff = m_player1.getScore() - m_player2.getScore();
+    if (diff > 7 || -diff > 7)
+    {
+        m_phase = FramePhase::Finished;
     }
 }
 
@@ -562,6 +584,10 @@ bool Frame::playFreeBall(const Ball& ball)
     m_freeBallColor =
         Ball("Aucune", 0);
 
+    // Cas exotique (Free Ball pendant les couleurs finales, voir plus
+    // haut) : verifie apres coup, une fois les points reellement ajoutes.
+    checkInsurmountableLead();
+
     return true;
 }
 
@@ -676,6 +702,10 @@ void Frame::foul(
     {
         m_phase = FramePhase::Finished;
     }
+
+    // Une faute pendant que la noire est deja la seule bille restante
+    // peut, elle aussi, creuser un ecart insurmontable (voir potColor()).
+    checkInsurmountableLead();
 }
 
 // =====================================
