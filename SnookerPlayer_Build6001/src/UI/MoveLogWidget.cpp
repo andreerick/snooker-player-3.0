@@ -81,6 +81,14 @@ void MoveLogWidget::refresh(const ShotHistory& history)
                 + " — Fin de break (aucune bille jouee)";
             color = kGray;
         }
+        else if (entry.type == LogEntry::Type::TouchingBall)
+        {
+            text =
+                QString::number(i + 1) + ". "
+                + QString::fromStdString(entry.playerName)
+                + " — BILLE TOUCHANTE (premier contact deja valide pour le prochain coup)";
+            color = kGray;
+        }
         else
         {
             text =

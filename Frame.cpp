@@ -858,6 +858,15 @@ bool Frame::isFreeBall() const
 void Frame::setTouchingBall(bool value)
 {
     m_touchingBall = value;
+
+    // Enregistre uniquement l'armement (pas la desactivation silencieuse
+    // en debut de coup, voir playShot()/missShot()/playFreeBall()/foul()) :
+    // sinon le journal serait rempli d'entrees "desarmee" a chaque coup,
+    // qu'il soit ou non concerne par une bille touchante.
+    if (value)
+    {
+        m_history.addTouchingBall(m_currentPlayer->getName());
+    }
 }
 
 bool Frame::isTouchingBall() const

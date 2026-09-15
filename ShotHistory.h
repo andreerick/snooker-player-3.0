@@ -16,7 +16,10 @@ struct LogEntry
     // Miss = fin de tour sans bille jouee ("Fin de break") : n'existait
     // pas dans le journal avant (silencieux), ajoute pour que le journal
     // soit un enregistrement fidele et rejouable de la partie.
-    enum class Type { Shot, Foul, Miss };
+    // TouchingBall = armement de la "bille touchante" (voir Frame::
+    // setTouchingBall()) : meme raison d'etre que Miss, sans quoi ce
+    // geste d'arbitrage resterait invisible et non rejouable.
+    enum class Type { Shot, Foul, Miss, TouchingBall };
 
     Type type = Type::Shot;
 
@@ -59,6 +62,9 @@ public:
 
     // Ajouter une fin de tour sans bille jouee ("Fin de break").
     void addMiss(const std::string& playerName);
+
+    // Ajouter un armement de "bille touchante" (voir Frame::setTouchingBall()).
+    void addTouchingBall(const std::string& playerName);
 
 
     int getShotCount() const;

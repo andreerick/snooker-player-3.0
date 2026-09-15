@@ -555,6 +555,13 @@ namespace
                 out << (i + 1) << ". " << QString::fromStdString(entry.playerName)
                     << " -- MISS (fin de tour, aucune bille jouee)\n";
             }
+            else if (entry.type == LogEntry::Type::TouchingBall)
+            {
+                // Meme principe que MISS ci-dessus : mot-cle repere sans
+                // ambiguite par parseScenarioFile().
+                out << (i + 1) << ". " << QString::fromStdString(entry.playerName)
+                    << " -- BILLE TOUCHANTE (premier contact deja valide pour le prochain coup)\n";
+            }
             else
             {
                 out << (i + 1) << ". FAUTE -- " << QString::fromStdString(entry.playerName)
@@ -748,9 +755,14 @@ namespace
     // Une action extraite d'un fichier scenario_*.txt, dans l'ordre.
     struct ReplayAction
     {
-        enum class Kind { Shot, Miss };
+        // TouchingBall = arme Frame::setTouchingBall(true) sans jouer de
+        // coup (voir bouton "Bille touchante"). BlancheOffTable = faute
+        // directe sur la blanche (voir triggerBlancheOffTableFoul()) --
+        // distinct de Shot car Frame::playShot() ne sait pas traiter la
+        // blanche comme une bille jouable normale.
+        enum class Kind { Shot, Miss, TouchingBall, BlancheOffTable };
         Kind kind;
-        QString ballName; // vide si Kind::Miss
+        QString ballName; // vide sauf Kind::Shot
     };
 
     // Recharge la liste des scenarios enregistres dans le menu deroulant
@@ -843,6 +855,12 @@ namespace
                 continue;
             }
 
+            if (rest.contains(" -- BILLE TOUCHANTE"))
+            {
+                actions.push_back({ ReplayAction::Kind::TouchingBall, QString() });
+                continue;
+            }
+
             if (rest.startsWith("FAUTE -- "))
             {
                 QString marker = "bille jouee : ";
@@ -854,7 +872,19 @@ namespace
                 QString remainder = rest.mid(idx + marker.length());
                 int endIdx = remainder.indexOf(')');
                 QString ballName = (endIdx >= 0) ? remainder.left(endIdx) : remainder;
-                actions.push_back({ ReplayAction::Kind::Shot, ballName.trimmed() });
+                ballName = ballName.trimmed();
+                // Une faute "bille jouee : Blanche" n'est pas un coup
+                // normal rejouable via Frame::playShot() (voir
+                // triggerBlancheOffTableFoul(), la blanche n'est pas une
+                // bille jouable comme les 7 autres) : traitement distinct.
+                if (ballName == "Blanche")
+                {
+                    actions.push_back({ ReplayAction::Kind::BlancheOffTable, QString() });
+                }
+                else
+                {
+                    actions.push_back({ ReplayAction::Kind::Shot, ballName });
+                }
                 continue;
             }
 
@@ -2003,6 +2033,18 @@ MainWindow::MainWindow(QWidget* parent)
                     if (action.kind == ReplayAction::Kind::Miss)
                     {
                         frame.missShot();
+                    }
+                    else if (action.kind == ReplayAction::Kind::TouchingBall)
+                    {
+                        frame.setTouchingBall(true);
+                    }
+                    else if (action.kind == ReplayAction::Kind::BlancheOffTable)
+                    {
+                        Ball required = frame.getRequiredBall();
+                        Ball blanche("Blanche", 0);
+                        Referee foulReferee;
+                        int penalty = foulReferee.calculateFoul(required, blanche);
+                        frame.foul(required, blanche, penalty, "Blanche sortie de la table");
                     }
                     else
                     {
