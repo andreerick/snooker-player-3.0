@@ -75,6 +75,13 @@ public:
     // reste bloque (getWinnerName() renvoie "Egalite", cas qu'il ignore).
     bool forceFinishFrame();
 
+    // Concession de frame (Sect. 3 du reglement) : un joueur abandonne la
+    // frame en cours sur decision de l'arbitre -- l'ADVERSAIRE gagne
+    // immediatement, quel que soit le score actuel (contrairement a
+    // forceFinishFrame() qui se contente de regarder qui est devant).
+    // Renvoie false (et ne fait rien) si la frame est deja terminee.
+    bool concedeFrame(Player& conceder);
+
 
 
     // Jeu normal
@@ -204,6 +211,12 @@ private:
     // tout en continuant a sanctionner un AUTRE joueur qui tenterait une
     // rouge alors qu'une couleur est due (cas reellement fautif).
     Player* m_lastRedPotter = nullptr;
+
+    // Non nul si la frame s'est terminee par une concession (voir
+    // concedeFrame()) : getWinnerName() doit alors declarer l'AUTRE joueur
+    // vainqueur sans regarder le score, qui peut tres bien favoriser le
+    // joueur qui concede (concession volontaire, pas une simple avance).
+    Player* m_concededBy = nullptr;
 
     int m_redsRemaining;
 

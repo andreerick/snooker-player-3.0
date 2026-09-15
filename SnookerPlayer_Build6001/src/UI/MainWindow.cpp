@@ -1909,6 +1909,60 @@ MainWindow::MainWindow(QWidget* parent)
     remoteLayout->addWidget(restartFrameButton);
 
     // ---------------------------------------------------
+    // Conceder la frame : un joueur abandonne la frame en cours sur
+    // decision de l'arbitre -- l'ADVERSAIRE gagne immediatement, quel
+    // que soit le score actuel (voir Frame::concedeFrame(), different de
+    // "Game" ci-dessus qui se contente de regarder qui est devant). Le
+    // choix du joueur qui concede se fait via les boutons nommes de la
+    // boite de dialogue plutot qu'en devinant a partir du joueur au tir.
+    // ---------------------------------------------------
+    QPushButton* concedeFrameButton = new QPushButton("Conceder la frame", remotePanel);
+    concedeFrameButton->setStyleSheet(secondaryButtonStyle);
+    connect(concedeFrameButton, &QPushButton::clicked, this, [this]()
+        {
+            Frame& frame = m_gameManager.getMatch().getCurrentFrame();
+            QString name1 = QString::fromStdString(frame.getPlayer1().getName());
+            QString name2 = QString::fromStdString(frame.getPlayer2().getName());
+
+            QMessageBox box(QMessageBox::Warning, "Conceder la frame",
+                "Quel joueur concede la frame en cours ?\n"
+                "L'adversaire gagne la frame immediatement, quel que soit le score actuel.",
+                QMessageBox::NoButton, this);
+            QPushButton* p1Button = box.addButton(name1 + " concede", QMessageBox::AcceptRole);
+            QPushButton* p2Button = box.addButton(name2 + " concede", QMessageBox::AcceptRole);
+            box.addButton("Annuler", QMessageBox::RejectRole);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            box.exec();
+
+            Player* conceder = nullptr;
+            if (box.clickedButton() == p1Button)
+            {
+                conceder = &frame.getPlayer1();
+            }
+            else if (box.clickedButton() == p2Button)
+            {
+                conceder = &frame.getPlayer2();
+            }
+            if (conceder == nullptr)
+            {
+                return;
+            }
+
+            if (!frame.concedeFrame(*conceder))
+            {
+                return;
+            }
+            m_gameManager.afterShot();
+            refreshDisplay();
+        });
+    remoteLayout->addWidget(concedeFrameButton);
+
+    // ---------------------------------------------------
     // Free ball : menu a 2 choix pour le joueur qui vient de recevoir la
     // main apres une faute adverse (Miss ou Faute) et se retrouve snooke :
     //  - Remettre en place : plutot que de jouer la position, il prefere

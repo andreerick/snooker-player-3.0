@@ -69,6 +69,20 @@ Frame& Frame::operator=(const Frame& other)
         {
             m_lastRedPotter = nullptr;
         }
+
+        // Meme piege que m_currentPlayer/m_lastRedPotter ci-dessus.
+        if (other.m_concededBy == &other.m_player2)
+        {
+            m_concededBy = &m_player2;
+        }
+        else if (other.m_concededBy == &other.m_player1)
+        {
+            m_concededBy = &m_player1;
+        }
+        else
+        {
+            m_concededBy = nullptr;
+        }
     }
     return *this;
 }
@@ -267,6 +281,11 @@ std::string Frame::getWinnerName() const
         return "";
     }
 
+    if (m_concededBy != nullptr)
+    {
+        return (m_concededBy == &m_player1) ? m_player2.getName() : m_player1.getName();
+    }
+
     if (m_player1.getScore() > m_player2.getScore())
     {
         return m_player1.getName();
@@ -293,6 +312,18 @@ bool Frame::forceFinishFrame()
         return false;
     }
 
+    m_phase = FramePhase::Finished;
+    return true;
+}
+
+bool Frame::concedeFrame(Player& conceder)
+{
+    if (m_phase == FramePhase::Finished)
+    {
+        return false;
+    }
+
+    m_concededBy = &conceder;
     m_phase = FramePhase::Finished;
     return true;
 }
