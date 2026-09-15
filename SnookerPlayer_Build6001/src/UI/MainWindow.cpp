@@ -170,6 +170,91 @@ namespace
         return "MEILLEUR DES " + QString::number(2 * framesToWin - 1) + " FRAMES";
     }
 
+    // Calcule, dans l'ordre chronologique, la succession des breaks de ce
+    // joueur (le total de chaque serie de coups d'affilee sans
+    // interruption) et la succession des points de chaque faute adverse
+    // dont il a beneficie -- pour l'affichage "detail des points" (voir
+    // buildDetailBox()/refreshDisplay()), qui montre desormais le detail
+    // coup par coup plutot qu'une simple somme. Un Miss ou une Faute
+    // termine le break en cours (celui-ci est ajoute a breaksOut si non
+    // vide) ; Bille touchante/Remettre en place n'interrompent pas le
+    // break (le meme joueur continue son tour).
+    void computePointsBreakdown(
+        const ShotHistory& history,
+        const std::string& playerName,
+        std::vector<int>& breaksOut,
+        std::vector<int>& foulsReceivedOut
+    )
+    {
+        breaksOut.clear();
+        foulsReceivedOut.clear();
+
+        std::string currentBreakPlayer;
+        int currentBreakTotal = 0;
+
+        for (const LogEntry& entry : history.getLog())
+        {
+            if (entry.type == LogEntry::Type::Shot)
+            {
+                if (entry.playerName == currentBreakPlayer)
+                {
+                    currentBreakTotal += entry.points;
+                }
+                else
+                {
+                    if (currentBreakTotal > 0 && currentBreakPlayer == playerName)
+                    {
+                        breaksOut.push_back(currentBreakTotal);
+                    }
+                    currentBreakPlayer = entry.playerName;
+                    currentBreakTotal = entry.points;
+                }
+            }
+            else if (entry.type == LogEntry::Type::Foul || entry.type == LogEntry::Type::Miss)
+            {
+                if (currentBreakTotal > 0 && currentBreakPlayer == playerName)
+                {
+                    breaksOut.push_back(currentBreakTotal);
+                }
+                currentBreakPlayer.clear();
+                currentBreakTotal = 0;
+
+                if (entry.type == LogEntry::Type::Foul && entry.playerName != playerName)
+                {
+                    foulsReceivedOut.push_back(entry.foulPoints);
+                }
+            }
+            // TouchingBall/Replay : ignores ici, ils n'interrompent pas le
+            // tour du meme joueur et ne comptent aucun point en propre.
+        }
+
+        if (currentBreakTotal > 0 && currentBreakPlayer == playerName)
+        {
+            breaksOut.push_back(currentBreakTotal);
+        }
+    }
+
+    // Joint une liste d'entiers avec "." comme separateur (ex. "15.25.36"),
+    // ou "0" si la liste est vide -- voir computePointsBreakdown().
+    QString joinPointsList(const std::vector<int>& values)
+    {
+        if (values.empty())
+        {
+            return "0";
+        }
+        QStringList parts;
+        for (int v : values)
+        {
+            parts << QString::number(v);
+        }
+        // Separateur ". " (avec espace) plutot que "." seul : QLabel ne
+        // peut retourner a la ligne qu'aux espaces (voir setWordWrap() sur
+        // valueLabelOut dans buildDetailRow()), indispensable des que la
+        // liste s'allonge au fil de la frame et deborde de la largeur fixe
+        // du panneau (280px, voir buildDetailBox()).
+        return parts.join(". ");
+    }
+
     // Une ligne du panneau "detail des points" : libelle a gauche, valeur
     // a droite. Retourne le widget de ligne ; ecrit le label de valeur
     // (a mettre a jour dans refreshDisplay) dans valueLabelOut.
@@ -184,6 +269,11 @@ namespace
 
         valueLabelOut = new QLabel("0", row);
         valueLabelOut->setAlignment(Qt::AlignRight);
+        // La succession des breaks/fautes (voir computePointsBreakdown())
+        // peut s'allonger bien au-dela de la largeur fixe du panneau au
+        // fil d'une longue frame : sans le retour a la ligne, le texte
+        // deborderait silencieusement hors du cadre.
+        valueLabelOut->setWordWrap(true);
         valueLabelOut->setStyleSheet("color: " + kWhite + "; font-size: 11px; font-weight: bold;");
 
         rowLayout->addWidget(labelWidget);
@@ -3417,11 +3507,20 @@ void MainWindow::refreshDisplay()
     m_player1ScoreBoxValue->setText(QString::number(frame.getPlayer1().getScore()));
     m_player2ScoreBoxValue->setText(QString::number(frame.getPlayer2().getScore()));
 
-    m_player1DetailPotted->setText(QString::number(frame.getPlayer1().getPottedPoints()));
-    m_player1DetailFouls->setText(QString::number(frame.getPlayer1().getFoulPoints()));
+    // Succession des breaks / fautes adverses (voir computePointsBreakdown())
+    // plutot qu'une simple somme, pour repondre a la demande de l'utilisateur
+    // de voir le detail coup par coup ("15.25.36.3.21" plutot que "79").
+    {
+        std::vector<int> breaks1, fouls1, breaks2, fouls2;
+        computePointsBreakdown(frame.getHistory(), frame.getPlayer1().getName(), breaks1, fouls1);
+        computePointsBreakdown(frame.getHistory(), frame.getPlayer2().getName(), breaks2, fouls2);
 
-    m_player2DetailPotted->setText(QString::number(frame.getPlayer2().getPottedPoints()));
-    m_player2DetailFouls->setText(QString::number(frame.getPlayer2().getFoulPoints()));
+        m_player1DetailPotted->setText(joinPointsList(breaks1));
+        m_player1DetailFouls->setText(joinPointsList(fouls1));
+
+        m_player2DetailPotted->setText(joinPointsList(breaks2));
+        m_player2DetailFouls->setText(joinPointsList(fouls2));
+    }
 
     m_pointsRemainingLabel->setText(
         QString::number(frame.pointsRemaining())
