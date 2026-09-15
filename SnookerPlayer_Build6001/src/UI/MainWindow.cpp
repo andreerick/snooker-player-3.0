@@ -1782,6 +1782,38 @@ MainWindow::MainWindow(QWidget* parent)
     remoteLayout->addWidget(whiteOffTableButton);
 
     // ---------------------------------------------------
+    // Recommencer la frame : regle du "Pat" (Sect. 3 §17 du reglement) --
+    // sur jugement de l'arbitre (blocage ou risque de blocage persistant),
+    // annule tous les points de la frame en cours et remet les billes en
+    // position de depart, SANS toucher au score du match (frames gagnees).
+    // Match::startNewFrame() fait deja exactement ca : elle determine qui
+    // ouvre a partir des frames deja TERMINEES (pas de la frame abandonnee),
+    // donc le meme joueur rouvre automatiquement, comme l'exige la regle.
+    // Confirmation demandee (action destructive pour la frame en cours).
+    // ---------------------------------------------------
+    QPushButton* restartFrameButton = new QPushButton("Recommencer la frame", remotePanel);
+    restartFrameButton->setStyleSheet(secondaryButtonStyle);
+    connect(restartFrameButton, &QPushButton::clicked, this, [this]()
+        {
+            QMessageBox box(QMessageBox::Warning, "Recommencer la frame",
+                "Annuler tous les points de cette frame et remettre les billes en place\n"
+                "(regle du Pat, meme joueur rouvre) ?",
+                QMessageBox::Yes | QMessageBox::No, this);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            if (box.exec() == QMessageBox::Yes)
+            {
+                m_gameManager.getMatch().startNewFrame();
+                refreshDisplay();
+            }
+        });
+    remoteLayout->addWidget(restartFrameButton);
+
+    // ---------------------------------------------------
     // Free ball : menu a 2 choix pour le joueur qui vient de recevoir la
     // main apres une faute adverse (Miss ou Faute) et se retrouve snooke :
     //  - Remettre en place : plutot que de jouer la position, il prefere
