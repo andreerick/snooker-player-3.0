@@ -157,6 +157,14 @@ public:
     // suivants au bon joueur.
     void requestReplay();
 
+    // Correction d'arbitre (voir MainWindow, bouton "Correction arbitre") :
+    // enregistre une trace explicite "avant -> apres" dans le journal.
+    // N'agit PAS sur le score/l'etat du jeu -- l'appelant a deja annule le
+    // mauvais coup (via le meme mecanisme que "Retour") et rejoue le bon
+    // avant d'appeler ceci, pour que ce soit le VRAI coup (playShot/foul)
+    // qui recalcule le score, pas une simple correction de chiffre.
+    void logCorrection(const std::string& before, const std::string& after);
+
 
     // Couleurs finales
     bool isCorrectFinalColor(const Ball& ball) const;

@@ -234,6 +234,26 @@ namespace
         }
     }
 
+    // Description courte et lisible d'une entree du journal (Shot ou Foul
+    // uniquement -- les seuls types qu'on peut raisonnablement "corriger"),
+    // utilisee par le bouton "Correction arbitre" pour batir le texte
+    // "avant -> apres" (voir Frame::logCorrection()).
+    QString describeLogEntry(const LogEntry& entry)
+    {
+        if (entry.type == LogEntry::Type::Shot)
+        {
+            return QString::fromStdString(entry.ballName)
+                + " (+" + QString::number(entry.points) + ")";
+        }
+        if (entry.type == LogEntry::Type::Foul)
+        {
+            return "FAUTE (bille jouee : "
+                + QString::fromStdString(entry.touchedBall)
+                + ") -- adverse +" + QString::number(entry.foulPoints);
+        }
+        return "?";
+    }
+
     // Joint une liste d'entiers avec "." comme separateur (ex. "15.25.36"),
     // ou "0" si la liste est vide -- voir computePointsBreakdown().
     QString joinPointsList(const std::vector<int>& values)
@@ -659,6 +679,19 @@ namespace
                 // REJOUE (voir Frame::requestReplay()/ShotHistory::addReplay()).
                 out << (i + 1) << ". " << QString::fromStdString(entry.playerName)
                     << " -- REMETTRE EN PLACE (rejoue depuis la position)\n";
+            }
+            else if (entry.type == LogEntry::Type::Correction)
+            {
+                // Trace d'une correction d'arbitre (voir Frame::logCorrection()).
+                // Non rejouable via "Rejouer le scenario" (parseScenarioFile()
+                // l'ignore volontairement) : reproduire fidelement une
+                // correction demanderait de rejouer l'annulation ET le bon
+                // coup, ce qui n'apporte rien de plus qu'exporter directement
+                // le bon coup -- seule la trace visuelle "avant -> apres"
+                // compte ici, pour l'arbitre humain qui relit le journal.
+                out << (i + 1) << ". CORRECTION ARBITRE : "
+                    << QString::fromStdString(entry.correctionBefore)
+                    << " -> " << QString::fromStdString(entry.correctionAfter) << "\n";
             }
             else
             {
@@ -2051,6 +2084,65 @@ MainWindow::MainWindow(QWidget* parent)
             refreshDisplay();
         });
     remoteLayout->addWidget(concedeFrameButton);
+
+    // ---------------------------------------------------
+    // Correction arbitre : annule le dernier coup enregistre (meme
+    // mecanisme que "Retour") puis attend que l'arbitre clique la bille
+    // REELLEMENT concernee, pour la rejouer et garder une trace explicite
+    // "avant -> apres" dans le journal (voir Frame::logCorrection()) au
+    // lieu de faire disparaitre l'erreur silencieusement comme le ferait
+    // un simple "Retour". Utile typiquement quand la detection automatique
+    // par camera s'est trompee de bille. Meme limite que "Retour" : un
+    // seul niveau d'annulation, donc uniquement le TOUT dernier coup.
+    // ---------------------------------------------------
+    QPushButton* correctionButton = new QPushButton("Correction arbitre", remotePanel);
+    correctionButton->setStyleSheet(secondaryButtonStyle);
+    connect(correctionButton, &QPushButton::clicked, this, [this]()
+        {
+            if (!m_hasUndoSnapshot)
+            {
+                showStyledMessage(this, QMessageBox::Information, "Correction arbitre",
+                    "Aucun coup a corriger (un seul niveau d'annulation disponible, "
+                    "meme limite que \"Retour\").");
+                return;
+            }
+
+            Frame& frame = m_gameManager.getMatch().getCurrentFrame();
+            const std::vector<LogEntry>& log = frame.getHistory().getLog();
+            if (log.empty()
+                || (log.back().type != LogEntry::Type::Shot && log.back().type != LogEntry::Type::Foul))
+            {
+                showStyledMessage(this, QMessageBox::Information, "Correction arbitre",
+                    "Le dernier evenement du journal n'est pas un coup ou une faute "
+                    "(rien a corriger de cette maniere).");
+                return;
+            }
+
+            QString before = describeLogEntry(log.back());
+
+            QMessageBox box(QMessageBox::Warning, "Correction arbitre",
+                "Dernier coup enregistre : " + before + "\n\n"
+                "Annuler ce coup et cliquer ensuite la bille reellement concernee ?",
+                QMessageBox::Yes | QMessageBox::No, this);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            if (box.exec() != QMessageBox::Yes)
+            {
+                return;
+            }
+
+            m_pendingCorrectionBefore = before.toStdString();
+            m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+            m_gameManager.getMatch().undoFrameConclusion();
+            m_hasUndoSnapshot = false;
+            m_pendingAction = PendingAction::CorrectionBall;
+            refreshDisplay();
+        });
+    remoteLayout->addWidget(correctionButton);
 
     // ---------------------------------------------------
     // Free ball : menu a 2 choix pour le joueur qui vient de recevoir la
@@ -4140,6 +4232,22 @@ void MainWindow::handleBallAction(const QString& ballName, int ballValue)
         // au clic precedent, voir Foul/BallOffTable ci-dessus).
         int penalty = foulReferee.calculateFoul(clickedBall, m_pendingFoulTouchedBall);
         frame.foul(clickedBall, m_pendingFoulTouchedBall, penalty, m_pendingFoulReason);
+        m_gameManager.afterShot();
+        m_pendingAction = PendingAction::None;
+        refreshDisplay();
+        return;
+    }
+    case PendingAction::CorrectionBall:
+    {
+        // Voir le bouton "Correction arbitre" : le mauvais coup vient
+        // d'etre annule, clickedBall est la bille REELLEMENT concernee --
+        // on la rejoue normalement (playShot() redetermine lui-meme si
+        // c'est legal ou fautif a partir de l'etat reel), puis on garde une
+        // trace explicite "avant -> apres" dans le journal.
+        frame.playShot(clickedBall);
+        QString after = describeLogEntry(frame.getHistory().getLog().back());
+        frame.logCorrection(m_pendingCorrectionBefore, after.toStdString());
+        m_pendingCorrectionBefore.clear();
         m_gameManager.afterShot();
         m_pendingAction = PendingAction::None;
         refreshDisplay();

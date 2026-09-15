@@ -26,7 +26,12 @@ struct LogEntry
     // table", et un scenario rejoue attribuerait les coups suivants au
     // mauvais joueur (le rejeu ignore les noms de joueurs du fichier et
     // suit uniquement l'etat reel du moteur).
-    enum class Type { Shot, Foul, Miss, TouchingBall, Replay };
+    // Correction = l'arbitre corrige le DERNIER coup enregistre (ex. la
+    // camera avait detecte la mauvaise bille) : voir Frame::logCorrection(),
+    // qui suit un "Retour" (annulation) puis le vrai coup rejoue. Garde une
+    // trace explicite ("avant -> apres") au lieu de laisser l'erreur
+    // disparaitre silencieusement du journal.
+    enum class Type { Shot, Foul, Miss, TouchingBall, Replay, Correction };
 
     Type type = Type::Shot;
 
@@ -41,6 +46,11 @@ struct LogEntry
     std::string touchedBall;
     std::string reason;
     int foulPoints = 0;
+
+    // Rempli si type == Correction (voir Frame::logCorrection()) : description
+    // courte du coup erronement enregistre puis de celui qui le remplace.
+    std::string correctionBefore;
+    std::string correctionAfter;
 };
 
 
@@ -77,6 +87,9 @@ public:
     // est celui qui REJOUE (le fautif, apres le changement de joueur),
     // pas celui qui a fait ce choix.
     void addReplay(const std::string& playerName);
+
+    // Ajouter une correction d'arbitre (voir Frame::logCorrection()).
+    void addCorrection(const std::string& before, const std::string& after);
 
 
     int getShotCount() const;

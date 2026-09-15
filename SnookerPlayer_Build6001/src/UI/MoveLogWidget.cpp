@@ -97,6 +97,15 @@ void MoveLogWidget::refresh(const ShotHistory& history)
                 + " — REMETTRE EN PLACE (rejoue depuis la position)";
             color = kGray;
         }
+        else if (entry.type == LogEntry::Type::Correction)
+        {
+            text =
+                QString::number(i + 1) + ". CORRECTION ARBITRE : "
+                + QString::fromStdString(entry.correctionBefore)
+                + " -> "
+                + QString::fromStdString(entry.correctionAfter);
+            color = kOrange;
+        }
         else
         {
             text =

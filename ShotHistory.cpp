@@ -110,6 +110,21 @@ void ShotHistory::addReplay(const std::string& playerName)
 
 
 // =====================================
+// Ajouter une correction d'arbitre
+// =====================================
+
+void ShotHistory::addCorrection(const std::string& before, const std::string& after)
+{
+    LogEntry entry;
+    entry.type = LogEntry::Type::Correction;
+    entry.playerName = "Arbitre";
+    entry.correctionBefore = before;
+    entry.correctionAfter = after;
+    m_log.push_back(entry);
+}
+
+
+// =====================================
 // Nombre de coups
 // =====================================
 

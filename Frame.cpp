@@ -949,6 +949,11 @@ void Frame::requestReplay()
     m_history.addReplay(m_currentPlayer->getName());
 }
 
+void Frame::logCorrection(const std::string& before, const std::string& after)
+{
+    m_history.addCorrection(before, after);
+}
+
 // =====================================
 // Free Ball couleur
 // =====================================

@@ -74,7 +74,13 @@ enum class PendingAction
     // visee et bille touchee), donc on demande explicitement au arbitre
     // de l'annoncer. La bille touchee (deja cliquee) est memorisee dans
     // m_pendingFoulTouchedBall/m_pendingFoulReason en attendant.
-    AnnounceFoulTarget
+    AnnounceFoulTarget,
+    // Correction arbitre (voir bouton "Correction arbitre") : le dernier
+    // coup enregistre vient d'etre annule (comme "Retour"), on attend que
+    // l'arbitre clique la bille REELLEMENT concernee pour la rejouer et
+    // enregistrer la correction dans le journal (voir Frame::logCorrection(),
+    // m_pendingCorrectionBefore).
+    CorrectionBall
 };
 
 class MainWindow : public QMainWindow
@@ -381,6 +387,12 @@ private:
     // (n'importe quelle couleur legale) resolue par l'arbitre.
     Ball m_pendingFoulTouchedBall = Ball("Aucune", 0);
     std::string m_pendingFoulReason = "Mauvaise bille touchee";
+
+    // Description courte ("BallName (+X)" ou "FAUTE ... (+X)") du dernier
+    // coup enregistre, capturee juste avant de l'annuler, en attendant que
+    // l'arbitre clique la bille correcte (PendingAction::CorrectionBall) --
+    // voir le bouton "Correction arbitre" et Frame::logCorrection().
+    std::string m_pendingCorrectionBefore;
 
     // Preference manuelle (bouton m_toggleRemoteButton, persistee dans
     // settings.ini "ui/remoteVisible") : independante du masquage
