@@ -479,10 +479,15 @@ bool Frame::playFreeBall(const Ball& ball)
                 m_freeBallColor,
                 ball
             );
+        // Motif explicite (au lieu du defaut "Mauvaise bille touchee") :
+        // permet a parseScenarioFile() de distinguer sans ambiguite une
+        // faute survenue PENDANT un Free Ball d'une faute ordinaire portant
+        // sur les memes billes (voir Kind::FreeBallFoul dans MainWindow.cpp).
         foul(
             m_freeBallColor,
             ball,
-            penalty
+            penalty,
+            "Faute pendant un Free Ball"
         );
 
         // Le Free Ball ne concernait que ce coup precis : qu'il soit reussi

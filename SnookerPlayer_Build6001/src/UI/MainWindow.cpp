@@ -780,10 +780,18 @@ namespace
         // lieu de "+4") quand elle remplace une rouge -- rejouer via
         // playShot() compterait la mauvaise valeur ET jugerait ce coup
         // fautif a tort (playShot() ignore totalement le Free Ball).
+        // FreeBallFoul = faute survenue PENDANT un Free Ball (bille
+        // designee jouee fautivement, ex. touche une autre bille en
+        // premier) -- reperee via le motif "Faute pendant un Free Ball"
+        // (voir Frame::playFreeBall()) : rejouer via Frame::foul() seul
+        // laisserait a tort m_freeBall arme pour le joueur suivant,
+        // puisque playShot()/foul() ignorent l'etat Free Ball -- seul
+        // Frame::playFreeBall() sait le desarmer correctement.
         // Replay = "Faire rejouer" (voir Frame::requestReplay()).
-        enum class Kind { Shot, Miss, TouchingBall, BlancheOffTable, DirectFoul, FreeBallShot, Replay };
+        enum class Kind { Shot, Miss, TouchingBall, BlancheOffTable, DirectFoul, FreeBallShot, FreeBallFoul, Replay };
         Kind kind;
-        QString ballName; // vide sauf Kind::Shot/DirectFoul/FreeBallShot
+        QString ballName; // vide sauf Kind::Shot/DirectFoul/FreeBallShot ; bille DESIGNEE pour FreeBallFoul
+        QString touchedBallName; // uniquement Kind::FreeBallFoul : bille reellement touchee/jouee
     };
 
     // Recharge la liste des scenarios enregistres dans le menu deroulant
@@ -914,11 +922,22 @@ namespace
                     requiredName = ((reqEndIdx >= 0) ? reqRemainder.left(reqEndIdx) : reqRemainder).trimmed();
                 }
 
+                // Motif explicite pose par Frame::playFreeBall() (voir
+                // Kind::FreeBallFoul) : une faute survenue PENDANT un Free
+                // Ball, ou "bille demandee" est en realite la bille
+                // DESIGNEE (pas forcement une Rouge/Couleur ordinaire) et
+                // "bille jouee" la bille reellement touchee a la place.
+                bool isFreeBallFoul = rest.contains(": Faute pendant un Free Ball (");
+
                 // Une faute "bille jouee : Blanche" n'est pas un coup
                 // normal rejouable via Frame::playShot() (voir
                 // triggerBlancheOffTableFoul(), la blanche n'est pas une
                 // bille jouable comme les 7 autres) : traitement distinct.
-                if (ballName == "Blanche")
+                if (isFreeBallFoul && !requiredName.isEmpty())
+                {
+                    actions.push_back({ ReplayAction::Kind::FreeBallFoul, requiredName, ballName });
+                }
+                else if (ballName == "Blanche")
                 {
                     actions.push_back({ ReplayAction::Kind::BlancheOffTable, QString() });
                 }
@@ -2187,6 +2206,22 @@ MainWindow::MainWindow(QWidget* parent)
                         frame.setFreeBall(true);
                         frame.setFreeBallColor(designated);
                         frame.playFreeBall(designated);
+                    }
+                    else if (action.kind == ReplayAction::Kind::FreeBallFoul)
+                    {
+                        // Voir Kind::FreeBallFoul : arme le Free Ball avec la
+                        // bille DESIGNEE (action.ballName), puis "joue" la
+                        // bille reellement touchee (action.touchedBallName,
+                        // differente) via Frame::playFreeBall() -- c'est ce
+                        // meme appel qui reconnait le mismatch et declenche
+                        // la faute en interne (voir Frame::playFreeBall()),
+                        // avec le meme calcul de penalite et le meme
+                        // desarmement propre du Free Ball qu'en jeu reel.
+                        Ball designated(action.ballName.toStdString(), standardBallValue(action.ballName));
+                        Ball touched(action.touchedBallName.toStdString(), standardBallValue(action.touchedBallName));
+                        frame.setFreeBall(true);
+                        frame.setFreeBallColor(designated);
+                        frame.playFreeBall(touched);
                     }
                     else
                     {
