@@ -457,6 +457,13 @@ private:
     // sauter directement au resultat final.
     QTimer* m_replayTimer = nullptr;
 
+    // Bandeau tout en haut de l'ecran de match, visible pendant qu'un
+    // scenario se rejoue tout seul (voir m_replayTimer) : sans lui, rien
+    // ne distingue a l'ecran une partie testee automatiquement d'une
+    // vraie partie -- l'utilisateur risque de fermer/toucher l'appli en
+    // pensant qu'elle est bloquee. Cache le reste du temps.
+    QLabel* m_replayInProgressLabel = nullptr;
+
     // Choix du delai entre deux coups du rejeu (voir m_replayTimer),
     // lu au demarrage de chaque rejeu.
     QComboBox* m_replaySpeedCombo = nullptr;

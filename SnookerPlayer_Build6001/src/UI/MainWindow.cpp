@@ -1630,6 +1630,20 @@ MainWindow::MainWindow(QWidget* parent)
     topRowLayout->addWidget(framesPanel, 0);
     topRowLayout->addWidget(m_player2Frame, 1);
 
+    // Bandeau "test en cours" (voir m_replayInProgressLabel) : tout en
+    // haut, au-dessus meme des noms/scores, pour etre impossible a
+    // manquer. Cache par defaut, affiche uniquement pendant le rejeu
+    // automatique d'un scenario (voir le bouton "Rejouer le scenario").
+    m_replayInProgressLabel = new QLabel("TEST EN COURS — NE PAS FERMER NI CLIQUER", central);
+    m_replayInProgressLabel->setAlignment(Qt::AlignHCenter);
+    m_replayInProgressLabel->setStyleSheet(
+        "background-color: #dc2626; color: " + kWhite + ";"
+        "font-size: 13px; font-weight: bold; letter-spacing: 1px;"
+        "border-radius: 5px; padding: 8px;"
+    );
+    m_replayInProgressLabel->setVisible(false);
+
+    layout->addWidget(m_replayInProgressLabel);
     layout->addWidget(topRow);
     layout->addWidget(scoreRow);
     layout->addWidget(detailRow);
@@ -2388,6 +2402,7 @@ MainWindow::MainWindow(QWidget* parent)
                     if (*indexPtr >= actionsPtr->size())
                     {
                         m_replayTimer->stop();
+                        m_replayInProgressLabel->setVisible(false);
                         return;
                     }
 
@@ -2469,6 +2484,7 @@ MainWindow::MainWindow(QWidget* parent)
                     refreshDisplay();
                 });
 
+            m_replayInProgressLabel->setVisible(true);
             m_replayTimer->start();
         });
     remoteLayout->addWidget(replayScenarioButton);
