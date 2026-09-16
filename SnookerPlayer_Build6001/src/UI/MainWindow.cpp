@@ -2505,41 +2505,10 @@ MainWindow::MainWindow(QWidget* parent)
     // m_speechToggleButton est deja protege par un test null (voir plus
     // bas) -- rien ne deref un pointeur nul.
 
-    // ---------------------------------------------------
-    // Effacer l'historique des matchs (voir MatchStorage) : reste ici
-    // (panneau de match, "partie") plutot que dans Parametres, sur
-    // demande de l'utilisateur -- ne touche ni les joueurs enregistres
-    // ni le tournoi en cours (voir PlayersDialog/TournamentDialog pour
-    // leurs propres actions d'effacement).
-    // ---------------------------------------------------
-    QPushButton* clearHistoryButton = new QPushButton("Effacer l'historique des matchs", remotePanel);
-    // Libelle le plus long du panneau (32 caracteres) : padding horizontal
-    // reduit par rapport aux autres boutons, sinon le texte deborde du
-    // panneau (220px de large) et se retrouve rogne a l'affichage.
-    clearHistoryButton->setStyleSheet(
-        "QPushButton {"
-        "  background-color: " + kPanel + "; color: #e74c3c;"
-        "  border: 1px solid " + kBorder + "; border-radius: 5px; padding: 8px 2px; font-size: 12px;"
-        "}"
-        "QPushButton:hover { border-color: #e74c3c; }"
-    );
-    connect(clearHistoryButton, &QPushButton::clicked, this, [this]()
-        {
-            QMessageBox box(QMessageBox::Warning, "Effacer l'historique",
-                "Effacer definitivement l'historique de tous les matchs joues ?",
-                QMessageBox::Yes | QMessageBox::No, this);
-            box.setStyleSheet(
-                "QMessageBox { background-color: " + kBg + "; }"
-                "QLabel { color: " + kWhite + "; background: transparent; }"
-                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
-                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
-            );
-            if (box.exec() == QMessageBox::Yes)
-            {
-                QFile::remove(QCoreApplication::applicationDirPath() + "/matchs.json");
-            }
-        });
-    remoteLayout->addWidget(clearHistoryButton);
+    // "Effacer l'historique des matchs" retire de cette telecommande sur
+    // demande de l'utilisateur (2026-09-16). Pas d'autre acces a cette
+    // action pour l'instant (voir PlayersDialog/TournamentDialog pour
+    // leurs propres actions d'effacement, distinctes de celle-ci).
 
     // ---------------------------------------------------
     // Guide de repositionnement : compare l'etat actuel des billes
