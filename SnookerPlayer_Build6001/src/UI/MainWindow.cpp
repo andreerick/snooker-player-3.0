@@ -2346,25 +2346,11 @@ MainWindow::MainWindow(QWidget* parent)
     // ---------------------------------------------------
     // Rejouer le scenario : relit le scenario_*.txt choisi ci-dessus et
     // reproduit exactement la meme sequence sur une frame fraiche, pour
-    // retester un scenario suspect apres une correction du moteur.
+    // retester un scenario suspect apres une correction du moteur. Le
+    // choix de vitesse (menu deroulant a part) a ete retire de la
+    // telecommande principale a la demande de l'utilisateur (outil de
+    // test, jamais utilise en vraie partie) -- vitesse normale fixe.
     // ---------------------------------------------------
-    m_replaySpeedCombo = new QComboBox(remotePanel);
-    m_replaySpeedCombo->setStyleSheet(
-        "QComboBox {"
-        "  background-color: " + kPanel + ";"
-        "  color: " + kWhite + ";"
-        "  border: 1px solid " + kBorder + ";"
-        "  border-radius: 4px;"
-        "  padding: 4px;"
-        "}"
-    );
-    m_replaySpeedCombo->addItem("Vitesse : lente (1,5 s/coup)", 1500);
-    m_replaySpeedCombo->addItem("Vitesse : normale (0,7 s/coup)", 700);
-    m_replaySpeedCombo->addItem("Vitesse : rapide (0,3 s/coup)", 300);
-    m_replaySpeedCombo->addItem("Vitesse : tres rapide (0,1 s/coup)", 100);
-    m_replaySpeedCombo->setCurrentIndex(1); // normale par defaut
-    remoteLayout->addWidget(m_replaySpeedCombo);
-
     QPushButton* replayScenarioButton = new QPushButton("Rejouer le scenario", remotePanel);
     replayScenarioButton->setStyleSheet(secondaryButtonStyle);
     connect(replayScenarioButton, &QPushButton::clicked, this, [this]()
@@ -2392,7 +2378,7 @@ MainWindow::MainWindow(QWidget* parent)
 
             m_replayTimer->stop();
             m_replayTimer->disconnect();
-            m_replayTimer->setInterval(m_replaySpeedCombo->currentData().toInt());
+            m_replayTimer->setInterval(700); // vitesse normale fixe (voir plus haut)
 
             auto actionsPtr = std::make_shared<std::vector<ReplayAction>>(std::move(actions));
             auto indexPtr = std::make_shared<size_t>(0);
@@ -2490,18 +2476,6 @@ MainWindow::MainWindow(QWidget* parent)
     remoteLayout->addWidget(replayScenarioButton);
 
     // ---------------------------------------------------
-    // Historique des matchs : ouvre la liste des matchs deja sauvegardes
-    // (matchs.json), le plus recent en premier.
-    // ---------------------------------------------------
-    QPushButton* historyButton = new QPushButton("Historique des matchs", remotePanel);
-    historyButton->setStyleSheet(secondaryButtonStyle);
-    connect(historyButton, &QPushButton::clicked, this, [this]()
-        {
-            showMatchHistoryDialog(this);
-        });
-    remoteLayout->addWidget(historyButton);
-
-    // ---------------------------------------------------
     // Statistiques : agrege les matchs sauvegardes (matchs.json) par
     // nom de joueur (matchs joues/gagnes, frames gagnees, meilleur score).
     // ---------------------------------------------------
@@ -2538,29 +2512,15 @@ MainWindow::MainWindow(QWidget* parent)
     remoteLayout->addWidget(m_scenarioButton);
 
     // ---------------------------------------------------
-    // Suivi camera en direct : demarre/arrete le pont vision -> moteur
-    // de jeu (VisionGameBridge). Chaque image capturee peut declencher
-    // un vrai coup (Frame::playShot()/foul()), exactement comme un clic
-    // sur la telecommande.
-    // ---------------------------------------------------
-    m_visionButton = new QPushButton("Demarrer suivi camera", remotePanel);
-    m_visionButton->setStyleSheet(secondaryButtonStyle);
-    connect(m_visionButton, &QPushButton::clicked, this, &MainWindow::toggleVisionTracking);
-    remoteLayout->addWidget(m_visionButton);
-
-    // ---------------------------------------------------
-    // Annonces vocales (voir SpeechAnnouncer) : bascule pour couper le
-    // son a tout moment sans fermer l'appli. Actif par defaut.
-    // ---------------------------------------------------
-    m_speechToggleButton = new QPushButton("Son : Actif", remotePanel);
-    m_speechToggleButton->setStyleSheet(secondaryButtonStyle);
-    connect(m_speechToggleButton, &QPushButton::clicked, this, [this]()
-        {
-            bool nowEnabled = !m_speech->isEnabled();
-            m_speech->setEnabled(nowEnabled);
-            m_speechToggleButton->setText(nowEnabled ? "Son : Actif" : "Son : Coupe");
-        });
-    remoteLayout->addWidget(m_speechToggleButton);
+    // Suivi camera en direct et bascule "Son" : retires de cette
+    // telecommande sur demande de l'utilisateur (2026-09-16) -- la camera
+    // n'a pas encore de vraie calibration utilisable, et le son se regle
+    // deja depuis Parametres (voir SettingsDialog). m_visionButton et
+    // m_speechToggleButton restent nullptr : toggleVisionTracking() ne
+    // peut plus etre appelee (plus aucun bouton connecte a son clicked),
+    // et le rappel SettingsDialog::speechEnabledChanged qui met a jour
+    // m_speechToggleButton est deja protege par un test null (voir plus
+    // bas) -- rien ne deref un pointeur nul.
 
     // ---------------------------------------------------
     // Effacer l'historique des matchs (voir MatchStorage) : reste ici

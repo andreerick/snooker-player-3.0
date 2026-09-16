@@ -464,10 +464,6 @@ private:
     // pensant qu'elle est bloquee. Cache le reste du temps.
     QLabel* m_replayInProgressLabel = nullptr;
 
-    // Choix du delai entre deux coups du rejeu (voir m_replayTimer),
-    // lu au demarrage de chaque rejeu.
-    QComboBox* m_replaySpeedCombo = nullptr;
-
     // Choix du scenario_*.txt a rejouer (le plus recent est en tete),
     // rafraichi a chaque nouvel enregistrement ("Enregistrer le scenario").
     QComboBox* m_scenarioFileCombo = nullptr;
