@@ -138,15 +138,26 @@ namespace
     <button class="actionbtn" onclick="sendAction('finishFrame')">Game</button>
     <button class="actionbtn" onclick="sendAction('armMiss')">Miss</button>
     <button class="actionbtn" onclick="showFreeBallMenu()">Free ball</button>
-    <button class="actionbtn wide" onclick="sendAction('touchingBall')">Bille touchante</button>
+    <button class="actionbtn wide" onclick="showOtherMenu()">Autre</button>
     <button class="actionbtn" onclick="showNewMatchForm()">Nouveau match</button>
     <button class="actionbtn" onclick="sendAction('goHome')">Esc</button>
-    <button class="actionbtn wide" onclick="sendAction('openRepositionGuide')">Guide de repositionnement</button>
-    <button class="actionbtn wide" onclick="sendAction('closeRepositionGuide')">Fermer le guide</button>
   </div>
   <div class="missmenu" id="freeballmenu">
     <button class="actionbtn" onclick="chooseFreeBall('missReplay')">Remettre en place</button>
     <button class="actionbtn" onclick="chooseFreeBall('armFreeBall')">Choisir la bille de depart</button>
+  </div>
+  <div class="missmenu" id="othermenu">
+    <button class="actionbtn" onclick="chooseOther('touchingBall')">Bille touchante</button>
+    <button class="actionbtn" onclick="chooseOther('armBallOffTable')">Bille sortie de table</button>
+    <button class="actionbtn" onclick="chooseOther('whiteOffTable')">Blanche sortie de table</button>
+    <button class="actionbtn" onclick="confirmRestartFrame()">Recommencer la frame</button>
+    <button class="actionbtn" onclick="showConcedeMenu()">Conceder la frame</button>
+    <button class="actionbtn" onclick="chooseOther('armCorrection')">Correction arbitre</button>
+  </div>
+  <div class="missmenu" id="concedemenu">
+    <button class="actionbtn" id="concedebtn1" onclick="chooseConcede(1)">-</button>
+    <button class="actionbtn" id="concedebtn2" onclick="chooseConcede(2)">-</button>
+    <button class="actionbtn" onclick="document.getElementById('concedemenu').classList.remove('show')">Annuler</button>
   </div>
   </div>
 
@@ -205,6 +216,37 @@ namespace
   function chooseFreeBall(action) {
     document.getElementById('freeballmenu').classList.remove('show');
     sendAction(action);
+  }
+
+  // Menu "Autre" : regroupe 6 actions d'arbitrage peu frequentes, meme
+  // liste et memes noms que sur les telecommandes de bureau 1.0/2.0
+  // (voir otherActionsMenu/simpleOtherActionsMenu dans MainWindow.cpp).
+  function showOtherMenu() {
+    document.getElementById('othermenu').classList.add('show');
+  }
+  function chooseOther(action) {
+    document.getElementById('othermenu').classList.remove('show');
+    sendAction(action);
+  }
+  // "Recommencer la frame" : confirmation cote telephone (aucune boite
+  // de dialogue PC n'est possible depuis cette page), meme texte que la
+  // QMessageBox du bureau.
+  function confirmRestartFrame() {
+    document.getElementById('othermenu').classList.remove('show');
+    if (confirm('Annuler tous les points de cette frame et remettre les billes en place (regle du Pat, meme joueur rouvre) ?')) {
+      sendAction('restartFrame');
+    }
+  }
+  // "Conceder la frame" : sous-menu a 2 boutons nommes d'apres les
+  // joueurs actuels (mis a jour par refresh(), voir plus bas), au lieu
+  // de la QMessageBox du bureau.
+  function showConcedeMenu() {
+    document.getElementById('othermenu').classList.remove('show');
+    document.getElementById('concedemenu').classList.add('show');
+  }
+  function chooseConcede(player) {
+    document.getElementById('concedemenu').classList.remove('show');
+    sendAction('concedeFrame', { player });
   }
 
   let startingNewMatch = false;
@@ -293,6 +335,8 @@ namespace
       document.getElementById('score1').textContent = d.player1Score;
       document.getElementById('name2').textContent = d.player2Name;
       document.getElementById('score2').textContent = d.player2Score;
+      document.getElementById('concedebtn1').textContent = d.player1Name + ' concede';
+      document.getElementById('concedebtn2').textContent = d.player2Name + ' concede';
       document.getElementById('row1').className = 'row' + (d.p1Active ? ' active' : '');
       document.getElementById('row2').className = 'row' + (!d.p1Active ? ' active' : '');
       document.getElementById('breakvalue').textContent = d.breakValue;

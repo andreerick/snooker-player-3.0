@@ -3735,6 +3735,9 @@ void MainWindow::refreshDisplay()
     case PendingAction::MissChoice:
         pendingText = "MISS : remettre en place, ou l'adversaire prend la table ?";
         break;
+    case PendingAction::CorrectionBall:
+        pendingText = "CORRECTION : cliquez la bille reellement concernee";
+        break;
     case PendingAction::None:
     default:
         break;
@@ -4376,6 +4379,71 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
     if (action == "armFreeBall")
     {
         m_pendingAction = PendingAction::ArmFreeBall;
+        refreshDisplay();
+        return;
+    }
+    if (action == "whiteOffTable")
+    {
+        // Meme fonction que le bouton "Blanche sortie de table" des
+        // telecommandes de bureau : action immediate (la bille concernee
+        // est deja connue), pas d'attente de clic sur une bille.
+        triggerBlancheOffTableFoul();
+        return;
+    }
+    if (action == "restartFrame")
+    {
+        // Meme fonction que "Recommencer la frame" sur PC, mais la
+        // confirmation se fait cote telephone (JS confirm(), voir
+        // kPageHtml) plutot qu'une QMessageBox -- aucune boite de
+        // dialogue PC n'est possible depuis cette page.
+        m_gameManager.getMatch().startNewFrame();
+        refreshDisplay();
+        return;
+    }
+    if (action == "concedeFrame")
+    {
+        // Meme fonction que "Conceder la frame" sur PC ; le choix du
+        // joueur qui concede se fait sur la page telephone (2 boutons
+        // nommes d'apres l'etat courant, voir kPageHtml) plutot que dans
+        // une QMessageBox -- envoye ici comme un simple numero 1 ou 2.
+        int playerNumber = params.value("player").toInt();
+        if (playerNumber != 1 && playerNumber != 2)
+        {
+            return;
+        }
+        Player& conceder = (playerNumber == 1) ? frame.getPlayer1() : frame.getPlayer2();
+        if (!frame.concedeFrame(conceder))
+        {
+            return;
+        }
+        m_gameManager.afterShot();
+        refreshDisplay();
+        return;
+    }
+    if (action == "armCorrection")
+    {
+        // Meme fonction que "Correction arbitre" sur PC, mais sans
+        // l'apercu "avant -> " dans une boite de dialogue (impossible
+        // depuis cette page) : annule directement le dernier coup (comme
+        // "Retour") si les memes conditions sont reunies, puis arme
+        // PendingAction::CorrectionBall -- le bandeau "pending" (voir
+        // pendingText plus haut) guide alors vers la bille a cliquer,
+        // exactement comme pour "armFoul"/"armBallOffTable".
+        if (!m_hasUndoSnapshot)
+        {
+            return;
+        }
+        const std::vector<LogEntry>& log = frame.getHistory().getLog();
+        if (log.empty()
+            || (log.back().type != LogEntry::Type::Shot && log.back().type != LogEntry::Type::Foul))
+        {
+            return;
+        }
+        m_pendingCorrectionBefore = describeLogEntry(log.back()).toStdString();
+        m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+        m_gameManager.getMatch().undoFrameConclusion();
+        m_hasUndoSnapshot = false;
+        m_pendingAction = PendingAction::CorrectionBall;
         refreshDisplay();
         return;
     }
