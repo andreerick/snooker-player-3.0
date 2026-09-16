@@ -420,6 +420,17 @@ private:
     // est appele en continu, y compris apres la fin du match).
     bool m_matchSaved = false;
 
+    // Index de CE match dans l'historique (matchs.json), une fois
+    // enregistre au moins une fois -- -1 tant qu'aucune sauvegarde n'a
+    // encore eu lieu. Permet a MatchStorage::saveMatch() de METTRE A
+    // JOUR la meme entree au fil des frames terminees (voir
+    // refreshDisplay()) plutot que d'attendre la toute fin du match :
+    // sans ca, un plantage en cours de match ferait disparaitre son
+    // resultat de l'historique/Statistiques, meme si plusieurs frames
+    // avaient deja ete jouees (voir aussi autoSaveMoveLog() pour le
+    // journal coup par coup, qui lui n'a jamais ce probleme).
+    int m_matchHistoryIndex = -1;
+
     // Suivi camera en direct : transforme les images de la camera en
     // coups reels sur le moteur de jeu (voir VisionGameBridge). Demarre/
     // arrete via le bouton "Demarrer suivi camera" de la telecommande.

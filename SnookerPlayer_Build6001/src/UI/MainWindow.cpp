@@ -3293,6 +3293,7 @@ void MainWindow::restartMatch(const QString& player1Name, const QString& player2
 
     m_matchStartTime = QDateTime::currentDateTime();
     m_matchSaved = false;
+    m_matchHistoryIndex = -1;
     m_frameEndAnnounced = false;
     m_matchEndAnnounced = false;
     m_lastAnnouncedLogSize = 0;
@@ -3933,9 +3934,18 @@ void MainWindow::refreshDisplay()
         m_recordingStatusLabel->setStyleSheet("color: " + kRecordingRed + "; font-size: 12px; font-weight: bold;");
     }
 
+    // Sauvegarde incrementale (voir m_matchHistoryIndex) : des qu'une
+    // frame vient de se terminer, pas seulement a la toute fin du match,
+    // pour qu'un plantage en cours de route ne perde pas les frames deja
+    // jouees dans l'historique/Statistiques.
+    if (match.isFrameJustFinished() && !match.isMatchFinished())
+    {
+        MatchStorage::saveMatch(match, m_matchHistoryIndex);
+    }
+
     if (match.isMatchFinished() && !m_matchSaved)
     {
-        MatchStorage::saveMatch(match);
+        MatchStorage::saveMatch(match, m_matchHistoryIndex);
         m_matchSaved = true;
 
         if (m_tournamentMatchActive)
