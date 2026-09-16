@@ -1679,6 +1679,19 @@ MainWindow::MainWindow(QWidget* parent)
     remoteScrollArea->setStyleSheet("background: transparent; border: none;");
     remotePanelOuterLayout->addWidget(remoteScrollArea);
 
+    // Section fixe, SOUS la zone qui defile : ne bouge jamais, meme si on
+    // fait defiler le reste de la telecommande, et reste au niveau du
+    // bas de l'ecran (pres de "Masquer telecommande" dans le pied de
+    // page) -- demande par l'utilisateur (2026-09-16) pour les 4 outils
+    // de test scenario (voir plus bas : m_toggleLogButton, exportLogButton,
+    // m_scenarioFileCombo, replayScenarioButton), pour qu'ils restent
+    // toujours visibles sans avoir a faire defiler la liste.
+    QWidget* remoteFixedBottom = new QWidget(remotePanel);
+    QVBoxLayout* remoteFixedBottomLayout = new QVBoxLayout(remoteFixedBottom);
+    remoteFixedBottomLayout->setContentsMargins(14, 8, 14, 14);
+    remoteFixedBottomLayout->setSpacing(10);
+    remotePanelOuterLayout->addWidget(remoteFixedBottom);
+
     QWidget* remoteContent = new QWidget(remoteScrollArea);
     remoteContent->setStyleSheet("background: transparent;");
     QVBoxLayout* remoteLayout = new QVBoxLayout(remoteContent);
@@ -1985,178 +1998,12 @@ MainWindow::MainWindow(QWidget* parent)
         });
     actionsGrid->addWidget(foulButton, 0, 1);
 
-    // ---------------------------------------------------
-    // Bille sortie de table : meme mecanique que "Faute" (meme calcul de
-    // penalite), mais motif distinct enregistre dans le journal des coups.
-    // ---------------------------------------------------
-    QPushButton* ballOffTableButton = new QPushButton("Bille sortie de table", remotePanel);
-    ballOffTableButton->setStyleSheet(secondaryButtonStyle);
-    connect(ballOffTableButton, &QPushButton::clicked, this, [this]()
-        {
-            m_pendingAction = PendingAction::BallOffTable;
-            refreshDisplay();
-        });
-    remoteLayout->addWidget(ballOffTableButton);
-
-    // ---------------------------------------------------
-    // Blanche sortie de table : meme mecanique que "Bille sortie de table"
-    // ci-dessus, mais pour la bille de choc elle-meme -- non couverte par
-    // ce bouton (qui ne propose que les 7 billes objet), ni par "Faute"
-    // (meme limitation). Action immediate (la bille concernee est deja
-    // connue), voir triggerBlancheOffTableFoul().
-    // ---------------------------------------------------
-    QPushButton* whiteOffTableButton = new QPushButton("Blanche sortie de table", remotePanel);
-    whiteOffTableButton->setStyleSheet(secondaryButtonStyle);
-    connect(whiteOffTableButton, &QPushButton::clicked, this, [this]()
-        {
-            triggerBlancheOffTableFoul();
-        });
-    remoteLayout->addWidget(whiteOffTableButton);
-
-    // ---------------------------------------------------
-    // Recommencer la frame : regle du "Pat" (Sect. 3 §17 du reglement) --
-    // sur jugement de l'arbitre (blocage ou risque de blocage persistant),
-    // annule tous les points de la frame en cours et remet les billes en
-    // position de depart, SANS toucher au score du match (frames gagnees).
-    // Match::startNewFrame() fait deja exactement ca : elle determine qui
-    // ouvre a partir des frames deja TERMINEES (pas de la frame abandonnee),
-    // donc le meme joueur rouvre automatiquement, comme l'exige la regle.
-    // Confirmation demandee (action destructive pour la frame en cours).
-    // ---------------------------------------------------
-    QPushButton* restartFrameButton = new QPushButton("Recommencer la frame", remotePanel);
-    restartFrameButton->setStyleSheet(secondaryButtonStyle);
-    connect(restartFrameButton, &QPushButton::clicked, this, [this]()
-        {
-            QMessageBox box(QMessageBox::Warning, "Recommencer la frame",
-                "Annuler tous les points de cette frame et remettre les billes en place\n"
-                "(regle du Pat, meme joueur rouvre) ?",
-                QMessageBox::Yes | QMessageBox::No, this);
-            box.setStyleSheet(
-                "QMessageBox { background-color: " + kBg + "; }"
-                "QLabel { color: " + kWhite + "; background: transparent; }"
-                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
-                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
-            );
-            if (box.exec() == QMessageBox::Yes)
-            {
-                m_gameManager.getMatch().startNewFrame();
-                refreshDisplay();
-            }
-        });
-    remoteLayout->addWidget(restartFrameButton);
-
-    // ---------------------------------------------------
-    // Conceder la frame : un joueur abandonne la frame en cours sur
-    // decision de l'arbitre -- l'ADVERSAIRE gagne immediatement, quel
-    // que soit le score actuel (voir Frame::concedeFrame(), different de
-    // "Game" ci-dessus qui se contente de regarder qui est devant). Le
-    // choix du joueur qui concede se fait via les boutons nommes de la
-    // boite de dialogue plutot qu'en devinant a partir du joueur au tir.
-    // ---------------------------------------------------
-    QPushButton* concedeFrameButton = new QPushButton("Conceder la frame", remotePanel);
-    concedeFrameButton->setStyleSheet(secondaryButtonStyle);
-    connect(concedeFrameButton, &QPushButton::clicked, this, [this]()
-        {
-            Frame& frame = m_gameManager.getMatch().getCurrentFrame();
-            QString name1 = QString::fromStdString(frame.getPlayer1().getName());
-            QString name2 = QString::fromStdString(frame.getPlayer2().getName());
-
-            QMessageBox box(QMessageBox::Warning, "Conceder la frame",
-                "Quel joueur concede la frame en cours ?\n"
-                "L'adversaire gagne la frame immediatement, quel que soit le score actuel.",
-                QMessageBox::NoButton, this);
-            QPushButton* p1Button = box.addButton(name1 + " concede", QMessageBox::AcceptRole);
-            QPushButton* p2Button = box.addButton(name2 + " concede", QMessageBox::AcceptRole);
-            box.addButton("Annuler", QMessageBox::RejectRole);
-            box.setStyleSheet(
-                "QMessageBox { background-color: " + kBg + "; }"
-                "QLabel { color: " + kWhite + "; background: transparent; }"
-                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
-                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
-            );
-            box.exec();
-
-            Player* conceder = nullptr;
-            if (box.clickedButton() == p1Button)
-            {
-                conceder = &frame.getPlayer1();
-            }
-            else if (box.clickedButton() == p2Button)
-            {
-                conceder = &frame.getPlayer2();
-            }
-            if (conceder == nullptr)
-            {
-                return;
-            }
-
-            if (!frame.concedeFrame(*conceder))
-            {
-                return;
-            }
-            m_gameManager.afterShot();
-            refreshDisplay();
-        });
-    remoteLayout->addWidget(concedeFrameButton);
-
-    // ---------------------------------------------------
-    // Correction arbitre : annule le dernier coup enregistre (meme
-    // mecanisme que "Retour") puis attend que l'arbitre clique la bille
-    // REELLEMENT concernee, pour la rejouer et garder une trace explicite
-    // "avant -> apres" dans le journal (voir Frame::logCorrection()) au
-    // lieu de faire disparaitre l'erreur silencieusement comme le ferait
-    // un simple "Retour". Utile typiquement quand la detection automatique
-    // par camera s'est trompee de bille. Meme limite que "Retour" : un
-    // seul niveau d'annulation, donc uniquement le TOUT dernier coup.
-    // ---------------------------------------------------
-    QPushButton* correctionButton = new QPushButton("Correction arbitre", remotePanel);
-    correctionButton->setStyleSheet(secondaryButtonStyle);
-    connect(correctionButton, &QPushButton::clicked, this, [this]()
-        {
-            if (!m_hasUndoSnapshot)
-            {
-                showStyledMessage(this, QMessageBox::Information, "Correction arbitre",
-                    "Aucun coup a corriger (un seul niveau d'annulation disponible, "
-                    "meme limite que \"Retour\").");
-                return;
-            }
-
-            Frame& frame = m_gameManager.getMatch().getCurrentFrame();
-            const std::vector<LogEntry>& log = frame.getHistory().getLog();
-            if (log.empty()
-                || (log.back().type != LogEntry::Type::Shot && log.back().type != LogEntry::Type::Foul))
-            {
-                showStyledMessage(this, QMessageBox::Information, "Correction arbitre",
-                    "Le dernier evenement du journal n'est pas un coup ou une faute "
-                    "(rien a corriger de cette maniere).");
-                return;
-            }
-
-            QString before = describeLogEntry(log.back());
-
-            QMessageBox box(QMessageBox::Warning, "Correction arbitre",
-                "Dernier coup enregistre : " + before + "\n\n"
-                "Annuler ce coup et cliquer ensuite la bille reellement concernee ?",
-                QMessageBox::Yes | QMessageBox::No, this);
-            box.setStyleSheet(
-                "QMessageBox { background-color: " + kBg + "; }"
-                "QLabel { color: " + kWhite + "; background: transparent; }"
-                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
-                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
-            );
-            if (box.exec() != QMessageBox::Yes)
-            {
-                return;
-            }
-
-            m_pendingCorrectionBefore = before.toStdString();
-            m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
-            m_gameManager.getMatch().undoFrameConclusion();
-            m_hasUndoSnapshot = false;
-            m_pendingAction = PendingAction::CorrectionBall;
-            refreshDisplay();
-        });
-    remoteLayout->addWidget(correctionButton);
+    // "Bille sortie de table", "Blanche sortie de table", "Recommencer la
+    // frame", "Conceder la frame" et "Correction arbitre" regroupees avec
+    // "Bille touchante" sous un seul bouton menu "Autre" (voir plus bas,
+    // meme emplacement que "Bille touchante" avant ce regroupement,
+    // demande par l'utilisateur le 2026-09-16 pour alleger la liste) --
+    // le contenu de chaque action est inchange, seul l'acces change.
 
     // ---------------------------------------------------
     // Free ball : menu a 2 choix pour le joueur qui vient de recevoir la
@@ -2248,21 +2095,188 @@ MainWindow::MainWindow(QWidget* parent)
     actionsGrid->addWidget(exitButton, 4, 1);
 
     // ---------------------------------------------------
+    // "Autre" : regroupe 6 actions d'arbitrage peu frequentes (nom
+    // provisoire, demande par l'utilisateur le 2026-09-16) sous un seul
+    // bouton-menu plutot que 6 boutons separes -- meme technique que
+    // "Free ball" ci-dessus (QMenu attache). Chaque action garde
+    // exactement le meme comportement qu'avant ce regroupement.
+    // ---------------------------------------------------
+    QPushButton* otherActionsButton = new QPushButton("Autre", remotePanel);
+    otherActionsButton->setStyleSheet(secondaryButtonStyle);
+
+    QMenu* otherActionsMenu = new QMenu(otherActionsButton);
+    otherActionsMenu->setStyleSheet(
+        "QMenu { background-color: " + kPanel + "; color: " + kWhite + "; border: 1px solid " + kBorder + "; }"
+        "QMenu::item:selected { background-color: " + kBorder + "; }"
+    );
+
     // Bille touchante : l'arbitre l'annonce quand la blanche est deja au
     // repos en contact avec une bille jouable, AVANT que le coup suivant
-    // ne soit joue (voir Frame::setTouchingBall()). Contrairement a
-    // "Faute"/"Free ball", c'est une action immediate (pas de bille a
-    // choisir ensuite) : elle arme juste l'etat pour le prochain coup.
-    // Placee juste sous Miss/Free ball (rangee 3, sous la rangee 2).
-    // ---------------------------------------------------
-    QPushButton* touchingBallButton = new QPushButton("Bille touchante", remotePanel);
-    touchingBallButton->setStyleSheet(secondaryButtonStyle);
-    connect(touchingBallButton, &QPushButton::clicked, this, [this]()
+    // ne soit joue (voir Frame::setTouchingBall()). Action immediate (pas
+    // de bille a choisir ensuite) : elle arme juste l'etat pour le
+    // prochain coup.
+    QAction* touchingBallAction = otherActionsMenu->addAction("Bille touchante");
+    connect(touchingBallAction, &QAction::triggered, this, [this]()
         {
             m_gameManager.getMatch().getCurrentFrame().setTouchingBall(true);
             refreshDisplay();
         });
-    actionsGrid->addWidget(touchingBallButton, 3, 0, 1, 2);
+
+    // Bille sortie de table : meme mecanique que "Faute" (meme calcul de
+    // penalite), mais motif distinct enregistre dans le journal des coups.
+    QAction* ballOffTableAction = otherActionsMenu->addAction("Bille sortie de table");
+    connect(ballOffTableAction, &QAction::triggered, this, [this]()
+        {
+            m_pendingAction = PendingAction::BallOffTable;
+            refreshDisplay();
+        });
+
+    // Blanche sortie de table : meme mecanique que "Bille sortie de table"
+    // ci-dessus, mais pour la bille de choc elle-meme -- non couverte par
+    // cette action (qui ne propose que les 7 billes objet), ni par
+    // "Faute" (meme limitation). Action immediate (la bille concernee est
+    // deja connue), voir triggerBlancheOffTableFoul().
+    QAction* whiteOffTableAction = otherActionsMenu->addAction("Blanche sortie de table");
+    connect(whiteOffTableAction, &QAction::triggered, this, [this]()
+        {
+            triggerBlancheOffTableFoul();
+        });
+
+    // Recommencer la frame : regle du "Pat" (Sect. 3 §17 du reglement) --
+    // sur jugement de l'arbitre (blocage ou risque de blocage persistant),
+    // annule tous les points de la frame en cours et remet les billes en
+    // position de depart, SANS toucher au score du match (frames gagnees).
+    // Match::startNewFrame() fait deja exactement ca : elle determine qui
+    // ouvre a partir des frames deja TERMINEES (pas de la frame abandonnee),
+    // donc le meme joueur rouvre automatiquement, comme l'exige la regle.
+    // Confirmation demandee (action destructive pour la frame en cours).
+    QAction* restartFrameAction = otherActionsMenu->addAction("Recommencer la frame");
+    connect(restartFrameAction, &QAction::triggered, this, [this]()
+        {
+            QMessageBox box(QMessageBox::Warning, "Recommencer la frame",
+                "Annuler tous les points de cette frame et remettre les billes en place\n"
+                "(regle du Pat, meme joueur rouvre) ?",
+                QMessageBox::Yes | QMessageBox::No, this);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            if (box.exec() == QMessageBox::Yes)
+            {
+                m_gameManager.getMatch().startNewFrame();
+                refreshDisplay();
+            }
+        });
+
+    // Conceder la frame : un joueur abandonne la frame en cours sur
+    // decision de l'arbitre -- l'ADVERSAIRE gagne immediatement, quel
+    // que soit le score actuel (voir Frame::concedeFrame(), different de
+    // "Game" qui se contente de regarder qui est devant). Le choix du
+    // joueur qui concede se fait via les boutons nommes de la boite de
+    // dialogue plutot qu'en devinant a partir du joueur au tir.
+    QAction* concedeFrameAction = otherActionsMenu->addAction("Conceder la frame");
+    connect(concedeFrameAction, &QAction::triggered, this, [this]()
+        {
+            Frame& frame = m_gameManager.getMatch().getCurrentFrame();
+            QString name1 = QString::fromStdString(frame.getPlayer1().getName());
+            QString name2 = QString::fromStdString(frame.getPlayer2().getName());
+
+            QMessageBox box(QMessageBox::Warning, "Conceder la frame",
+                "Quel joueur concede la frame en cours ?\n"
+                "L'adversaire gagne la frame immediatement, quel que soit le score actuel.",
+                QMessageBox::NoButton, this);
+            QPushButton* p1Button = box.addButton(name1 + " concede", QMessageBox::AcceptRole);
+            QPushButton* p2Button = box.addButton(name2 + " concede", QMessageBox::AcceptRole);
+            box.addButton("Annuler", QMessageBox::RejectRole);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            box.exec();
+
+            Player* conceder = nullptr;
+            if (box.clickedButton() == p1Button)
+            {
+                conceder = &frame.getPlayer1();
+            }
+            else if (box.clickedButton() == p2Button)
+            {
+                conceder = &frame.getPlayer2();
+            }
+            if (conceder == nullptr)
+            {
+                return;
+            }
+
+            if (!frame.concedeFrame(*conceder))
+            {
+                return;
+            }
+            m_gameManager.afterShot();
+            refreshDisplay();
+        });
+
+    // Correction arbitre : annule le dernier coup enregistre (meme
+    // mecanisme que "Retour") puis attend que l'arbitre clique la bille
+    // REELLEMENT concernee, pour la rejouer et garder une trace explicite
+    // "avant -> apres" dans le journal (voir Frame::logCorrection()) au
+    // lieu de faire disparaitre l'erreur silencieusement comme le ferait
+    // un simple "Retour". Utile typiquement quand la detection automatique
+    // par camera s'est trompee de bille. Meme limite que "Retour" : un
+    // seul niveau d'annulation, donc uniquement le TOUT dernier coup.
+    QAction* correctionAction = otherActionsMenu->addAction("Correction arbitre");
+    connect(correctionAction, &QAction::triggered, this, [this]()
+        {
+            if (!m_hasUndoSnapshot)
+            {
+                showStyledMessage(this, QMessageBox::Information, "Correction arbitre",
+                    "Aucun coup a corriger (un seul niveau d'annulation disponible, "
+                    "meme limite que \"Retour\").");
+                return;
+            }
+
+            Frame& frame = m_gameManager.getMatch().getCurrentFrame();
+            const std::vector<LogEntry>& log = frame.getHistory().getLog();
+            if (log.empty()
+                || (log.back().type != LogEntry::Type::Shot && log.back().type != LogEntry::Type::Foul))
+            {
+                showStyledMessage(this, QMessageBox::Information, "Correction arbitre",
+                    "Le dernier evenement du journal n'est pas un coup ou une faute "
+                    "(rien a corriger de cette maniere).");
+                return;
+            }
+
+            QString before = describeLogEntry(log.back());
+
+            QMessageBox box(QMessageBox::Warning, "Correction arbitre",
+                "Dernier coup enregistre : " + before + "\n\n"
+                "Annuler ce coup et cliquer ensuite la bille reellement concernee ?",
+                QMessageBox::Yes | QMessageBox::No, this);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            if (box.exec() != QMessageBox::Yes)
+            {
+                return;
+            }
+
+            m_pendingCorrectionBefore = before.toStdString();
+            m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+            m_gameManager.getMatch().undoFrameConclusion();
+            m_hasUndoSnapshot = false;
+            m_pendingAction = PendingAction::CorrectionBall;
+            refreshDisplay();
+        });
+
+    otherActionsButton->setMenu(otherActionsMenu);
+    actionsGrid->addWidget(otherActionsButton, 3, 0, 1, 2);
 
     // "Reglement" et "Partager en Wi-Fi" retires de cette telecommande
     // (2026-09-16) : doublons exacts de l'accueil ("Regles" et la tuile
@@ -2272,11 +2286,9 @@ MainWindow::MainWindow(QWidget* parent)
     // m_shareButton reste nullptr ; son seul autre usage (tuile
     // "Smartphone") est deja protege par un test null.
 
-    remoteLayout->addSpacing(6);
-
     m_toggleLogButton = new QPushButton("Afficher le journal des coups", remotePanel);
     m_toggleLogButton->setStyleSheet(secondaryButtonStyle);
-    remoteLayout->addWidget(m_toggleLogButton);
+    remoteFixedBottomLayout->addWidget(m_toggleLogButton);
 
     // ---------------------------------------------------
     // Enregistrer le scenario : ecrit l'etat courant + le journal complet
@@ -2291,7 +2303,7 @@ MainWindow::MainWindow(QWidget* parent)
             exportMoveLogToFile(this, m_gameManager.getMatch(), frame);
             refreshScenarioFileList(m_scenarioFileCombo);
         });
-    remoteLayout->addWidget(exportLogButton);
+    remoteFixedBottomLayout->addWidget(exportLogButton);
 
     // ---------------------------------------------------
     // Choix du scenario a rejouer (le plus recent enregistre est en tete).
@@ -2307,7 +2319,7 @@ MainWindow::MainWindow(QWidget* parent)
         "}"
     );
     refreshScenarioFileList(m_scenarioFileCombo);
-    remoteLayout->addWidget(m_scenarioFileCombo);
+    remoteFixedBottomLayout->addWidget(m_scenarioFileCombo);
 
     // ---------------------------------------------------
     // Rejouer le scenario : relit le scenario_*.txt choisi ci-dessus et
@@ -2439,7 +2451,7 @@ MainWindow::MainWindow(QWidget* parent)
             m_replayInProgressLabel->setVisible(true);
             m_replayTimer->start();
         });
-    remoteLayout->addWidget(replayScenarioButton);
+    remoteFixedBottomLayout->addWidget(replayScenarioButton);
 
     // "Statistiques" retiree de cette telecommande (2026-09-16) : pas
     // utilisee pendant une vraie partie, voir showStatsDialog() (reste
