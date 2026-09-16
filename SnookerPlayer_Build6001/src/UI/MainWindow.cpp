@@ -2264,47 +2264,13 @@ MainWindow::MainWindow(QWidget* parent)
         });
     actionsGrid->addWidget(touchingBallButton, 3, 0, 1, 2);
 
-    // ---------------------------------------------------
-    // Reglement : recherche rapide dans le texte officiel (voir
-    // RulesReferenceDialog), pour pouvoir sortir l'extrait exact d'une
-    // regle en cas de litige pendant un match, sans quitter l'appli.
-    // ---------------------------------------------------
-    QPushButton* rulesButton = new QPushButton("Reglement", remotePanel);
-    rulesButton->setStyleSheet(secondaryButtonStyle);
-    connect(rulesButton, &QPushButton::clicked, this, [this]()
-        {
-            RulesReferenceDialog dialog(this);
-            dialog.exec();
-        });
-    remoteLayout->addWidget(rulesButton);
-
-    // ---------------------------------------------------
-    // Partage Wi-Fi : demarre/arrete le petit serveur web local (voir
-    // MatchWebServer) et affiche un QR code (ShareSessionDialog) pour
-    // qu'un joueur suive le score en direct depuis son telephone, sur
-    // le meme Wi-Fi que ce PC (pas besoin d'internet).
-    // ---------------------------------------------------
-    m_shareButton = new QPushButton("Partager en Wi-Fi", remotePanel);
-    m_shareButton->setStyleSheet(secondaryButtonStyle);
-    if (m_webServer->isRunning())
-    {
-        m_shareButton->setText("Partager en Wi-Fi (actif)");
-    }
-    connect(m_shareButton, &QPushButton::clicked, this, [this]()
-        {
-            // Deja demarre au lancement de l'appli (voir le constructeur) ;
-            // repli defensif au cas ou (port indisponible ce jour-la...).
-            if (!m_webServer->isRunning() && !m_webServer->start())
-            {
-                showStyledMessage(this, QMessageBox::Warning, "Partager en Wi-Fi",
-                    "Impossible de demarrer le serveur local (aucun port disponible).");
-                return;
-            }
-            m_shareButton->setText("Partager en Wi-Fi (actif)");
-            ShareSessionDialog dialog(m_webServer, this);
-            dialog.exec();
-        });
-    remoteLayout->addWidget(m_shareButton);
+    // "Reglement" et "Partager en Wi-Fi" retires de cette telecommande
+    // (2026-09-16) : doublons exacts de l'accueil ("Regles" et la tuile
+    // "Smartphone", tous deux deja connectes a RulesReferenceDialog /
+    // ShareSessionDialog via m_homeScreen ci-dessous) -- accessibles
+    // avant meme de lancer un match, pas besoin de les repeter ici.
+    // m_shareButton reste nullptr ; son seul autre usage (tuile
+    // "Smartphone") est deja protege par un test null.
 
     remoteLayout->addSpacing(6);
 
@@ -2475,17 +2441,9 @@ MainWindow::MainWindow(QWidget* parent)
         });
     remoteLayout->addWidget(replayScenarioButton);
 
-    // ---------------------------------------------------
-    // Statistiques : agrege les matchs sauvegardes (matchs.json) par
-    // nom de joueur (matchs joues/gagnes, frames gagnees, meilleur score).
-    // ---------------------------------------------------
-    QPushButton* statsButton = new QPushButton("Statistiques", remotePanel);
-    statsButton->setStyleSheet(secondaryButtonStyle);
-    connect(statsButton, &QPushButton::clicked, this, [this]()
-        {
-            showStatsDialog(this);
-        });
-    remoteLayout->addWidget(statsButton);
+    // "Statistiques" retiree de cette telecommande (2026-09-16) : pas
+    // utilisee pendant une vraie partie, voir showStatsDialog() (reste
+    // appelable si un autre point d'entree en a besoin plus tard).
 
     // "Scenario de test" (demo codee en dur, distincte du systeme de
     // fichiers scenario_*.txt ci-dessus) retiree de cette telecommande
@@ -2510,30 +2468,13 @@ MainWindow::MainWindow(QWidget* parent)
     // action pour l'instant (voir PlayersDialog/TournamentDialog pour
     // leurs propres actions d'effacement, distinctes de celle-ci).
 
-    // ---------------------------------------------------
-    // Guide de repositionnement : compare l'etat actuel des billes
-    // (suivi camera en direct) a la derniere cartographie sauvegardee
-    // (dernier coup confirme), pour aider a remettre les billes en
-    // place apres une contestation ou un miss.
-    // ---------------------------------------------------
-    QPushButton* repositionButton = new QPushButton("Guide de repositionnement", remotePanel);
-    repositionButton->setStyleSheet(secondaryButtonStyle);
-    connect(repositionButton, &QPushButton::clicked, this, [this]()
-        {
-            showRepositioningGuide(/*silentIfUnavailable=*/false);
-        });
-    actionsGrid->addWidget(repositionButton, 5, 0, 1, 2);
-
-    // Fermer le guide : ferme le guide de repositionnement s'il est
-    // actuellement affiche (non modal -- voir closeRepositioningGuide()
-    // et m_repositionGuideDialog). Ne fait rien s'il n'y en a pas.
-    QPushButton* closeGuideButton = new QPushButton("Fermer le guide", remotePanel);
-    closeGuideButton->setStyleSheet(secondaryButtonStyle);
-    connect(closeGuideButton, &QPushButton::clicked, this, [this]()
-        {
-            closeRepositioningGuide();
-        });
-    actionsGrid->addWidget(closeGuideButton, 6, 0, 1, 2);
+    // "Guide de repositionnement" et "Fermer le guide" retires de cette
+    // telecommande (2026-09-16) : devenus inutilisables des que "Demarrer
+    // suivi camera" a ete retire ci-dessus (showRepositioningGuide()
+    // exige m_visionTimer actif, qui ne peut plus jamais demarrer depuis
+    // cette telecommande) -- ne rien laisser qui ne fait plus qu'afficher
+    // "Demarrez d'abord le suivi camera". A remettre en meme temps que le
+    // suivi camera, une fois une vraie calibration disponible.
 
     remoteLayout->addStretch();
 
