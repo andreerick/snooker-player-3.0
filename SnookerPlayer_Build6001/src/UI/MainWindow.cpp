@@ -2487,29 +2487,12 @@ MainWindow::MainWindow(QWidget* parent)
         });
     remoteLayout->addWidget(statsButton);
 
-    // ---------------------------------------------------
-    // Scenario de test : rejoue automatiquement une sequence de coups
-    // de demonstration sur le vrai moteur de jeu (dont une bille hors
-    // sequence volontaire, pour montrer la gestion des fautes), sans
-    // avoir a cliquer coup par coup.
-    // ---------------------------------------------------
-    m_scenarioButton = new QPushButton("Scenario de test", remotePanel);
-    m_scenarioButton->setStyleSheet(secondaryButtonStyle);
-    connect(m_scenarioButton, &QPushButton::clicked, this, [this]()
-        {
-            m_scenarioRunner->setScenario({
-                Ball("Rouge", 1),
-                Ball("Noire", 7),
-                Ball("Rouge", 1),
-                Ball("Rose", 6),
-                Ball("Jaune", 2), // hors sequence (une rouge est attendue) -> faute
-                Ball("Rouge", 1),
-                Ball("Bleue", 5),
-                });
-            m_scenarioRunner->start();
-            refreshDisplay();
-        });
-    remoteLayout->addWidget(m_scenarioButton);
+    // "Scenario de test" (demo codee en dur, distincte du systeme de
+    // fichiers scenario_*.txt ci-dessus) retiree de cette telecommande
+    // sur demande de l'utilisateur (2026-09-16) : jamais utilisee, les
+    // tests passent par "Enregistrer le scenario"/"Rejouer le scenario".
+    // m_scenarioButton reste nullptr, m_scenarioRunner construit mais
+    // jamais demarre (plus aucun bouton connecte a son clicked).
 
     // ---------------------------------------------------
     // Suivi camera en direct et bascule "Son" : retires de cette
