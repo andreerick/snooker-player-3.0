@@ -2776,38 +2776,160 @@ MainWindow::MainWindow(QWidget* parent)
         });
     simpleActionsGrid->addWidget(simpleExitButton, 4, 1);
 
-    // Bille touchante : meme fonction que sur la telecommande 1.0 (voir
-    // touchingBallButton plus haut) et le telephone. Placee juste sous
-    // Miss/Free ball (rangee 3, sous la rangee 2), meme position que sur
-    // la 1.0.
-    QPushButton* simpleTouchingBallButton = new QPushButton("Bille touchante", remotePanelSimple);
-    simpleTouchingBallButton->setStyleSheet(secondaryButtonStyle);
-    connect(simpleTouchingBallButton, &QPushButton::clicked, this, [this]()
+    // "Autre" : meme regroupement que sur la telecommande 1.0
+    // (otherActionsButton/otherActionsMenu plus haut), demande par
+    // l'utilisateur le 2026-09-16 pour que les deux telecommandes aient
+    // la meme disposition. Regroupe 6 actions d'arbitrage peu frequentes
+    // sous un seul bouton-menu : les 5 qui n'existaient pas du tout sur
+    // cette telecommande simplifiee avant ce regroupement (Bille sortie
+    // de table, Blanche sortie de table, Recommencer la frame, Conceder
+    // la frame, Correction arbitre) rejoignent Bille touchante, qui elle
+    // existait deja ici. "Guide de repositionnement"/"Fermer le guide"
+    // retires en meme temps que sur la 1.0 : devenus inutilisables des
+    // que "Demarrer suivi camera" en a ete retire (aucune telecommande
+    // ne peut plus demarrer m_visionTimer).
+    QPushButton* simpleOtherActionsButton = new QPushButton("Autre", remotePanelSimple);
+    simpleOtherActionsButton->setStyleSheet(secondaryButtonStyle);
+
+    QMenu* simpleOtherActionsMenu = new QMenu(simpleOtherActionsButton);
+    simpleOtherActionsMenu->setStyleSheet(
+        "QMenu { background-color: " + kPanel + "; color: " + kWhite + "; border: 1px solid " + kBorder + "; }"
+        "QMenu::item:selected { background-color: " + kBorder + "; }"
+    );
+
+    QAction* simpleTouchingBallAction = simpleOtherActionsMenu->addAction("Bille touchante");
+    connect(simpleTouchingBallAction, &QAction::triggered, this, [this]()
         {
             m_gameManager.getMatch().getCurrentFrame().setTouchingBall(true);
             refreshDisplay();
         });
-    simpleActionsGrid->addWidget(simpleTouchingBallButton, 3, 0, 1, 2);
 
-    // Guide de repositionnement : meme fonction que sur la telecommande
-    // 1.0 (voir showRepositioningGuide()), affiche en plein ecran.
-    QPushButton* simpleRepositionButton = new QPushButton("Guide de repositionnement", remotePanelSimple);
-    simpleRepositionButton->setStyleSheet(secondaryButtonStyle);
-    connect(simpleRepositionButton, &QPushButton::clicked, this, [this]()
+    QAction* simpleBallOffTableAction = simpleOtherActionsMenu->addAction("Bille sortie de table");
+    connect(simpleBallOffTableAction, &QAction::triggered, this, [this]()
         {
-            showRepositioningGuide(/*silentIfUnavailable=*/false);
+            m_pendingAction = PendingAction::BallOffTable;
+            refreshDisplay();
         });
-    simpleActionsGrid->addWidget(simpleRepositionButton, 5, 0, 1, 2);
 
-    // Fermer le guide : meme fonction que sur la telecommande 1.0 (voir
-    // closeGuideButton plus haut) et le telephone.
-    QPushButton* simpleCloseGuideButton = new QPushButton("Fermer le guide", remotePanelSimple);
-    simpleCloseGuideButton->setStyleSheet(secondaryButtonStyle);
-    connect(simpleCloseGuideButton, &QPushButton::clicked, this, [this]()
+    QAction* simpleWhiteOffTableAction = simpleOtherActionsMenu->addAction("Blanche sortie de table");
+    connect(simpleWhiteOffTableAction, &QAction::triggered, this, [this]()
         {
-            closeRepositioningGuide();
+            triggerBlancheOffTableFoul();
         });
-    simpleActionsGrid->addWidget(simpleCloseGuideButton, 6, 0, 1, 2);
+
+    QAction* simpleRestartFrameAction = simpleOtherActionsMenu->addAction("Recommencer la frame");
+    connect(simpleRestartFrameAction, &QAction::triggered, this, [this]()
+        {
+            QMessageBox box(QMessageBox::Warning, "Recommencer la frame",
+                "Annuler tous les points de cette frame et remettre les billes en place\n"
+                "(regle du Pat, meme joueur rouvre) ?",
+                QMessageBox::Yes | QMessageBox::No, this);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            if (box.exec() == QMessageBox::Yes)
+            {
+                m_gameManager.getMatch().startNewFrame();
+                refreshDisplay();
+            }
+        });
+
+    QAction* simpleConcedeFrameAction = simpleOtherActionsMenu->addAction("Conceder la frame");
+    connect(simpleConcedeFrameAction, &QAction::triggered, this, [this]()
+        {
+            Frame& frame = m_gameManager.getMatch().getCurrentFrame();
+            QString name1 = QString::fromStdString(frame.getPlayer1().getName());
+            QString name2 = QString::fromStdString(frame.getPlayer2().getName());
+
+            QMessageBox box(QMessageBox::Warning, "Conceder la frame",
+                "Quel joueur concede la frame en cours ?\n"
+                "L'adversaire gagne la frame immediatement, quel que soit le score actuel.",
+                QMessageBox::NoButton, this);
+            QPushButton* p1Button = box.addButton(name1 + " concede", QMessageBox::AcceptRole);
+            QPushButton* p2Button = box.addButton(name2 + " concede", QMessageBox::AcceptRole);
+            box.addButton("Annuler", QMessageBox::RejectRole);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            box.exec();
+
+            Player* conceder = nullptr;
+            if (box.clickedButton() == p1Button)
+            {
+                conceder = &frame.getPlayer1();
+            }
+            else if (box.clickedButton() == p2Button)
+            {
+                conceder = &frame.getPlayer2();
+            }
+            if (conceder == nullptr)
+            {
+                return;
+            }
+
+            if (!frame.concedeFrame(*conceder))
+            {
+                return;
+            }
+            m_gameManager.afterShot();
+            refreshDisplay();
+        });
+
+    QAction* simpleCorrectionAction = simpleOtherActionsMenu->addAction("Correction arbitre");
+    connect(simpleCorrectionAction, &QAction::triggered, this, [this]()
+        {
+            if (!m_hasUndoSnapshot)
+            {
+                showStyledMessage(this, QMessageBox::Information, "Correction arbitre",
+                    "Aucun coup a corriger (un seul niveau d'annulation disponible, "
+                    "meme limite que \"Retour\").");
+                return;
+            }
+
+            Frame& frame = m_gameManager.getMatch().getCurrentFrame();
+            const std::vector<LogEntry>& log = frame.getHistory().getLog();
+            if (log.empty()
+                || (log.back().type != LogEntry::Type::Shot && log.back().type != LogEntry::Type::Foul))
+            {
+                showStyledMessage(this, QMessageBox::Information, "Correction arbitre",
+                    "Le dernier evenement du journal n'est pas un coup ou une faute "
+                    "(rien a corriger de cette maniere).");
+                return;
+            }
+
+            QString before = describeLogEntry(log.back());
+
+            QMessageBox box(QMessageBox::Warning, "Correction arbitre",
+                "Dernier coup enregistre : " + before + "\n\n"
+                "Annuler ce coup et cliquer ensuite la bille reellement concernee ?",
+                QMessageBox::Yes | QMessageBox::No, this);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            if (box.exec() != QMessageBox::Yes)
+            {
+                return;
+            }
+
+            m_pendingCorrectionBefore = before.toStdString();
+            m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+            m_gameManager.getMatch().undoFrameConclusion();
+            m_hasUndoSnapshot = false;
+            m_pendingAction = PendingAction::CorrectionBall;
+            refreshDisplay();
+        });
+
+    simpleOtherActionsButton->setMenu(simpleOtherActionsMenu);
+    simpleActionsGrid->addWidget(simpleOtherActionsButton, 3, 0, 1, 2);
 
     simpleLayout->addStretch();
 
