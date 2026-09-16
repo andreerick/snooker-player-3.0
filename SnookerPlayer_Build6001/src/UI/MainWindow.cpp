@@ -3090,6 +3090,25 @@ MainWindow::MainWindow(QWidget* parent)
                         dialog.accept();
                     }
                 });
+            // Cas signale par l'utilisateur (2026-09-16) : si un match est
+            // deja en cours (ou que les noms ont deja ete saisis cote PC),
+            // le telephone qui se connecte n'envoie JAMAIS "submitNames"
+            // -- il se contente de commencer a suivre l'etat -- donc le
+            // controleActionRequested ci-dessus ne se declenche jamais et
+            // le QR code reste affiche indefiniment. On ferme aussi des
+            // qu'un appareil devient actif (voir MatchWebServer::
+            // hasActiveClient(), meme verification que refreshDisplay()
+            // utilise pour masquer la telecommande de bureau).
+            QTimer clientCheckTimer;
+            clientCheckTimer.setInterval(500);
+            connect(&clientCheckTimer, &QTimer::timeout, &dialog, [this, &dialog]()
+                {
+                    if (m_webServer->hasActiveClient())
+                    {
+                        dialog.accept();
+                    }
+                });
+            clientCheckTimer.start();
             dialog.exec();
         });
 
