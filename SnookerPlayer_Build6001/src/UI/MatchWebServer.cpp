@@ -153,6 +153,7 @@ namespace
     <button class="actionbtn" onclick="confirmRestartFrame()">Recommencer la frame</button>
     <button class="actionbtn" onclick="showConcedeMenu()">Conceder la frame</button>
     <button class="actionbtn" onclick="chooseOther('armCorrection')">Correction arbitre</button>
+    <button class="actionbtn" onclick="chooseOther('closeRepositionGuide')">Fermer le guide</button>
   </div>
   <div class="missmenu" id="concedemenu">
     <button class="actionbtn" id="concedebtn1" onclick="chooseConcede(1)">-</button>

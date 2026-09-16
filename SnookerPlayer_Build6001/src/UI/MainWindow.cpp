@@ -2275,6 +2275,19 @@ MainWindow::MainWindow(QWidget* parent)
             refreshDisplay();
         });
 
+    // Fermer le guide : re-ajoutee ici (2026-09-16) sur demande de
+    // l'utilisateur -- le guide de repositionnement lui-meme a deja son
+    // propre bouton "Fermer" et repond a Echap (voir
+    // showRepositioningGuideDialog()), mais une fermeture depuis la
+    // telecommande reste utile si le guide est affiche sur un autre
+    // ecran (ex. projete cote table). Sans effet si aucun guide n'est
+    // actuellement affiche (voir closeRepositioningGuide()).
+    QAction* closeGuideAction = otherActionsMenu->addAction("Fermer le guide");
+    connect(closeGuideAction, &QAction::triggered, this, [this]()
+        {
+            closeRepositioningGuide();
+        });
+
     otherActionsButton->setMenu(otherActionsMenu);
     actionsGrid->addWidget(otherActionsButton, 3, 0, 1, 2);
 
@@ -2926,6 +2939,14 @@ MainWindow::MainWindow(QWidget* parent)
             m_hasUndoSnapshot = false;
             m_pendingAction = PendingAction::CorrectionBall;
             refreshDisplay();
+        });
+
+    // Fermer le guide : voir closeGuideAction sur la telecommande 1.0
+    // pour le detail -- meme raisonnement, ajoutee ici aussi (2026-09-16).
+    QAction* simpleCloseGuideAction = simpleOtherActionsMenu->addAction("Fermer le guide");
+    connect(simpleCloseGuideAction, &QAction::triggered, this, [this]()
+        {
+            closeRepositioningGuide();
         });
 
     simpleOtherActionsButton->setMenu(simpleOtherActionsMenu);
