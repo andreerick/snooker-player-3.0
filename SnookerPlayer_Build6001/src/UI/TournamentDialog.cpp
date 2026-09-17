@@ -1,5 +1,6 @@
 #include "TournamentDialog.h"
 #include "../Storage/MatchStorage.h"
+#include "UiUtils.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -79,6 +80,7 @@ TournamentDialog::TournamentDialog(QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle("Tournoi");
+    applyDarkTitleBar(this);
     resize(760, 600);
     setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
 
@@ -391,6 +393,7 @@ void TournamentDialog::enterResultManually()
     QDialog dialog(this);
     dialog.setWindowTitle("Saisir un resultat");
     dialog.setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
+    applyDarkTitleBar(&dialog);
     QVBoxLayout* layout = new QVBoxLayout(&dialog);
     layout->setContentsMargins(20, 20, 20, 20);
     layout->setSpacing(12);
@@ -447,6 +450,7 @@ void TournamentDialog::enterResultManually()
                 QMessageBox box(QMessageBox::Warning, "Score invalide",
                     "Les deux scores sont egaux : il faut un vainqueur (pas d'egalite possible en snooker).",
                     QMessageBox::Ok, &dialog);
+                applyDarkTitleBar(&box);
                 box.setStyleSheet(
                     "QMessageBox { background-color: " + kBg + "; }"
                     "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -489,6 +493,7 @@ void TournamentDialog::createTournament()
     if (selected.size() < 2)
     {
         QMessageBox box(QMessageBox::Warning, "Tournoi", "Selectionnez au moins 2 joueurs.", QMessageBox::Ok, this);
+        applyDarkTitleBar(&box);
         box.setStyleSheet(
             "QMessageBox { background-color: " + kBg + "; }"
             "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -514,6 +519,7 @@ void TournamentDialog::confirmNewTournament()
         QMessageBox box(QMessageBox::Question, "Nouveau tournoi",
             "Le tournoi en cours n'est pas termine. Le remplacer par un nouveau tournoi effacera sa progression. Continuer ?",
             QMessageBox::Yes | QMessageBox::No, this);
+        applyDarkTitleBar(&box);
         box.setStyleSheet(
             "QMessageBox { background-color: " + kBg + "; }"
             "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -534,6 +540,7 @@ void TournamentDialog::clearTournament()
     QMessageBox box(QMessageBox::Warning, "Effacer le tournoi",
         "Effacer definitivement le tournoi en cours (progression comprise) ?",
         QMessageBox::Yes | QMessageBox::No, this);
+    applyDarkTitleBar(&box);
     box.setStyleSheet(
         "QMessageBox { background-color: " + kBg + "; }"
         "QLabel { color: " + kWhite + "; background: transparent; }"

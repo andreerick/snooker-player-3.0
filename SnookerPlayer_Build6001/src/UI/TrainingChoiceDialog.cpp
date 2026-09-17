@@ -1,4 +1,5 @@
 #include "TrainingChoiceDialog.h"
+#include "UiUtils.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -62,6 +63,7 @@ TrainingChoiceDialog::TrainingChoiceDialog(QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle("Entrainement");
+    applyDarkTitleBar(this);
     setStyleSheet("background-color: " + kBg + ";");
     resize(520, 300);
 

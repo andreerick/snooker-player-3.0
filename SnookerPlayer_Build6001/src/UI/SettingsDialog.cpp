@@ -1,4 +1,5 @@
 #include "SettingsDialog.h"
+#include "UiUtils.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -33,6 +34,7 @@ namespace
     void showInfo(QWidget* parent, const QString& title, const QString& text)
     {
         QMessageBox box(QMessageBox::Information, title, text, QMessageBox::Ok, parent);
+        applyDarkTitleBar(&box);
         box.setStyleSheet(
             "QMessageBox { background-color: " + kBg + "; }"
             "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -105,6 +107,7 @@ namespace
             QMessageBox box(QMessageBox::Warning, "Utilitaire camera",
                 toolName + " est introuvable a cote de l'executable principal.\n"
                 "Recompilez le projet (cible CalibrationTool).", QMessageBox::Ok, parent);
+            applyDarkTitleBar(&box);
             box.setStyleSheet(
                 "QMessageBox { background-color: " + kBg + "; }"
                 "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -143,6 +146,7 @@ SettingsDialog::SettingsDialog(QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle("Parametres");
+    applyDarkTitleBar(this);
     resize(480, 680);
     setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
 

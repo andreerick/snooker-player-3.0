@@ -13,6 +13,7 @@
 #include <QDateTime>
 #include <QPointer>
 #include <QDialog>
+#include <vector>
 #include "GameManager.h"
 #include "MoveLogWidget.h"
 #include "TestScenarioRunner.h"
@@ -133,10 +134,10 @@ private:
     // meme cas que Foul/BallOffTable, voir PendingAction::AnnounceFoulTarget).
     void triggerBlancheOffTableFoul();
 
-    // Sauvegarde une copie du Frame courant juste AVANT d'appliquer un
-    // coup, pour permettre au bouton "Esc" de la telecommande 2.0
-    // d'annuler ce dernier coup (un seul niveau d'annulation -- pas de
-    // pile d'historique complete). Limite connue : si le coup annule
+    // Empile une copie du Frame courant juste AVANT d'appliquer un coup,
+    // pour permettre au bouton "Retour" d'annuler ce coup -- et, grace a
+    // la pile (m_undoStack), de continuer a remonter coup par coup a
+    // chaque nouvel appui. Limite connue : si le coup annule
     // avait termine la frame (victoire comptabilisee dans Match), le
     // compteur de frames du match n'est pas revert -- cas rare, non gere
     // pour l'instant.
@@ -212,9 +213,13 @@ private:
 
     GameManager m_gameManager;
 
-    // Voir snapshotFrameForUndo() / le bouton "Esc" de la telecommande 2.0.
-    Frame m_undoSnapshot;
-    bool m_hasUndoSnapshot = false;
+    // Historique d'annulation (voir snapshotFrameForUndo() / le bouton
+    // "Retour") : une PILE plutot qu'un simple etat unique, pour pouvoir
+    // remonter plusieurs coups en arriere (un appui sur "Retour" = un coup
+    // de plus annule), pas seulement le tout dernier. Chaque action qui
+    // modifie la frame (coup, faute, Fin de break...) empile l'etat
+    // d'AVANT elle-meme ; "Retour" depile et restaure le sommet.
+    std::vector<Frame> m_undoStack;
 
     SpeechAnnouncer* m_speech = nullptr;
     QPushButton* m_speechToggleButton = nullptr;

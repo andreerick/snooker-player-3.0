@@ -1,5 +1,6 @@
 #include "ShareSessionDialog.h"
 #include "MatchWebServer.h"
+#include "UiUtils.h"
 
 #include "qrcodegen.hpp"
 
@@ -91,6 +92,7 @@ ShareSessionDialog::ShareSessionDialog(MatchWebServer* server, QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle("Partager le suivi du match");
+    applyDarkTitleBar(this);
     setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
 
     QVBoxLayout* layout = new QVBoxLayout(this);

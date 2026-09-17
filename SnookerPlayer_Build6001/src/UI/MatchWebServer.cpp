@@ -134,7 +134,7 @@ namespace
   <div class="actiongrid">
     <button class="actionbtn" onclick="sendAction('missShot')">Fin de break</button>
     <button class="actionbtn" onclick="sendAction('armFoul')">Faute</button>
-    <button class="actionbtn" onclick="sendAction('undo')">Retour</button>
+    <button class="actionbtn" onclick="confirmUndo()">Retour</button>
     <button class="actionbtn" onclick="sendAction('finishFrame')">Game</button>
     <button class="actionbtn" onclick="sendAction('armMiss')">Miss</button>
     <button class="actionbtn" onclick="showFreeBallMenu()">Free ball &#9662;</button>
@@ -238,6 +238,14 @@ namespace
   // "Recommencer la frame" : confirmation cote telephone (aucune boite
   // de dialogue PC n'est possible depuis cette page), meme texte que la
   // QMessageBox du bureau.
+  // "Retour" : confirmation cote client (impossible de montrer une
+  // QMessageBox depuis cette page), meme raisonnement que
+  // confirmRestartFrame() ci-dessous.
+  function confirmUndo() {
+    if (confirm('Annuler le dernier coup enregistre ?')) {
+      sendAction('undo');
+    }
+  }
   function confirmRestartFrame() {
     document.getElementById('othermenu').classList.remove('show');
     if (confirm('Annuler tous les points de cette frame et remettre les billes en place (regle du Pat, meme joueur rouvre) ?')) {

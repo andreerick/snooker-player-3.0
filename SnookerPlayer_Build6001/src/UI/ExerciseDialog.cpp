@@ -1,4 +1,5 @@
 #include "ExerciseDialog.h"
+#include "UiUtils.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -1072,6 +1073,7 @@ ExerciseDialog::ExerciseDialog(QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle("Exercice");
+    applyDarkTitleBar(this);
     resize(820, 560);
     setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
 

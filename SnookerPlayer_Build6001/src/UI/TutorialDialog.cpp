@@ -1,4 +1,5 @@
 #include "TutorialDialog.h"
+#include "UiUtils.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -98,6 +99,7 @@ TutorialDialog::TutorialDialog(QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle("Tutoriels");
+    applyDarkTitleBar(this);
     resize(760, 520);
     setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
 

@@ -1,5 +1,6 @@
 #include "PlayersDialog.h"
 #include "../Storage/MatchStorage.h"
+#include "UiUtils.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -224,6 +225,7 @@ PlayersDialog::PlayersDialog(QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle("Joueurs");
+    applyDarkTitleBar(this);
     resize(820, 560);
     setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
 
@@ -467,6 +469,7 @@ void PlayersDialog::clearAllPlayers()
         "Effacer definitivement la liste des joueurs enregistres et leurs photos ?\n\n"
         "L'historique des matchs deja joues n'est pas touche.",
         QMessageBox::Yes | QMessageBox::No, this);
+    applyDarkTitleBar(&box);
     box.setStyleSheet(
         "QMessageBox { background-color: " + kBg + "; }"
         "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -520,6 +523,7 @@ void PlayersDialog::changePhoto()
     if (!QFile::copy(sourcePath, destPath))
     {
         QMessageBox box(QMessageBox::Warning, "Photo", "Impossible de copier cette image.", QMessageBox::Ok, this);
+        applyDarkTitleBar(&box);
         box.setStyleSheet(
             "QMessageBox { background-color: " + kBg + "; }"
             "QLabel { color: " + kWhite + "; background: transparent; }"

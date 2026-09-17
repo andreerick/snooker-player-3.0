@@ -10,6 +10,7 @@
 #include "TutorialDialog.h"
 #include "TrainingChoiceDialog.h"
 #include "ExerciseDialog.h"
+#include "UiUtils.h"
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -49,17 +50,6 @@
 #include <memory>
 #include <map>
 
-#ifdef Q_OS_WIN
-// NOMINMAX : sans ca, windows.h (inclus par dwmapi.h) definit des macros
-// min/max qui cassent tout appel a std::min/std::max plus bas dans ce
-// fichier (erreur de compilation cryptique "jeton non conforme").
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <dwmapi.h>
-#pragma comment(lib, "dwmapi.lib")
-#endif
-
 namespace
 {
     const QString kBg = "#000000";
@@ -82,6 +72,7 @@ namespace
     void showStyledMessage(QWidget* parent, QMessageBox::Icon icon, const QString& title, const QString& text)
     {
         QMessageBox box(icon, title, text, QMessageBox::Ok, parent);
+        applyDarkTitleBar(&box);
         box.setStyleSheet(
             "QMessageBox { background-color: " + kBg + "; }"
             "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -95,24 +86,6 @@ namespace
             "QPushButton:hover { border-color: " + kGray + "; }"
         );
         box.exec();
-    }
-
-    // Force la barre de titre native (Windows) en mode sombre : sans ca,
-    // elle reste blanche par defaut (dessinee par l'OS, pas par le style
-    // Qt applique au contenu), ce qui detonne avec le theme sombre de
-    // l'appli. Sans effet sur les autres plateformes. A appeler une fois
-    // le widget cree, avant .show()/.exec() (winId() force la creation de
-    // la fenetre native sous-jacente).
-    void applyDarkTitleBar(QWidget* window)
-    {
-#ifdef Q_OS_WIN
-        HWND hwnd = reinterpret_cast<HWND>(window->winId());
-        BOOL enabled = TRUE;
-        const DWORD kDwmwaUseImmersiveDarkMode = 20;
-        ::DwmSetWindowAttribute(hwnd, kDwmwaUseImmersiveDarkMode, &enabled, sizeof(enabled));
-#else
-        Q_UNUSED(window);
-#endif
     }
 
     // Applique une ombre portee douce a un widget, pour donner du relief
@@ -610,6 +583,7 @@ namespace
         dialog->setWindowModality(Qt::NonModal);
         dialog->setWindowTitle("Guide de repositionnement");
         dialog->setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
+        applyDarkTitleBar(dialog);
 
         QVBoxLayout* layout = new QVBoxLayout(dialog);
         layout->setAlignment(Qt::AlignCenter);
@@ -2096,20 +2070,37 @@ MainWindow::MainWindow(QWidget* parent)
 
     // ---------------------------------------------------
     // Retour : annule le dernier coup (bille empochee, faute ou "Fin de
-    // break"), voir snapshotFrameForUndo(). Un seul niveau d'annulation.
-    // Meme mecanique que sur les telecommandes 2.0 et telephone.
+    // break"), voir snapshotFrameForUndo(). Pile d'historique (m_undoStack) :
+    // chaque appui remonte un coup de plus en arriere, pas seulement le
+    // tout dernier. Confirmation demandee a chaque appui (demande par
+    // l'utilisateur, action potentiellement destructive sur plusieurs
+    // coups). Meme mecanique que sur les telecommandes 2.0 et telephone.
     // ---------------------------------------------------
     QPushButton* undoButton = new QPushButton("Retour", remotePanel);
     undoButton->setStyleSheet(secondaryButtonStyle);
     connect(undoButton, &QPushButton::clicked, this, [this]()
         {
-            if (!m_hasUndoSnapshot)
+            if (m_undoStack.empty())
             {
                 return;
             }
-            m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+            QMessageBox box(QMessageBox::Warning, "Retour",
+                "Annuler le dernier coup enregistre ?",
+                QMessageBox::Yes | QMessageBox::No, this);
+            applyDarkTitleBar(&box);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            if (box.exec() != QMessageBox::Yes)
+            {
+                return;
+            }
+            m_gameManager.getMatch().getCurrentFrame() = m_undoStack.back();
+            m_undoStack.pop_back();
             m_gameManager.getMatch().undoFrameConclusion();
-            m_hasUndoSnapshot = false;
             m_pendingAction = PendingAction::None;
             refreshDisplay();
         });
@@ -2192,6 +2183,7 @@ MainWindow::MainWindow(QWidget* parent)
                 "Annuler tous les points de cette frame et remettre les billes en place\n"
                 "(regle du Pat, meme joueur rouvre) ?",
                 QMessageBox::Yes | QMessageBox::No, this);
+            applyDarkTitleBar(&box);
             box.setStyleSheet(
                 "QMessageBox { background-color: " + kBg + "; }"
                 "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -2225,6 +2217,7 @@ MainWindow::MainWindow(QWidget* parent)
             QPushButton* p1Button = box.addButton(name1 + " concede", QMessageBox::AcceptRole);
             QPushButton* p2Button = box.addButton(name2 + " concede", QMessageBox::AcceptRole);
             box.addButton("Annuler", QMessageBox::RejectRole);
+            applyDarkTitleBar(&box);
             box.setStyleSheet(
                 "QMessageBox { background-color: " + kBg + "; }"
                 "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -2275,6 +2268,7 @@ MainWindow::MainWindow(QWidget* parent)
             QPushButton* p1Button = box.addButton(name1 + " abandonne", QMessageBox::AcceptRole);
             QPushButton* p2Button = box.addButton(name2 + " abandonne", QMessageBox::AcceptRole);
             box.addButton("Annuler", QMessageBox::RejectRole);
+            applyDarkTitleBar(&box);
             box.setStyleSheet(
                 "QMessageBox { background-color: " + kBg + "; }"
                 "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -2304,22 +2298,22 @@ MainWindow::MainWindow(QWidget* parent)
             refreshDisplay();
         });
 
-    // Correction arbitre : annule le dernier coup enregistre (meme
-    // mecanisme que "Retour") puis attend que l'arbitre clique la bille
-    // REELLEMENT concernee, pour la rejouer et garder une trace explicite
-    // "avant -> apres" dans le journal (voir Frame::logCorrection()) au
-    // lieu de faire disparaitre l'erreur silencieusement comme le ferait
-    // un simple "Retour". Utile typiquement quand la detection automatique
-    // par camera s'est trompee de bille. Meme limite que "Retour" : un
-    // seul niveau d'annulation, donc uniquement le TOUT dernier coup.
+    // Correction arbitre : annule le dernier coup enregistre (meme pile
+    // que "Retour", voir m_undoStack) puis attend que l'arbitre clique la
+    // bille REELLEMENT concernee, pour la rejouer et garder une trace
+    // explicite "avant -> apres" dans le journal (voir Frame::logCorrection())
+    // au lieu de faire disparaitre l'erreur silencieusement comme le
+    // ferait un simple "Retour". Utile typiquement quand la detection
+    // automatique par camera s'est trompee de bille. Ne corrige que le
+    // TOUT dernier coup (sommet de la pile) -- pour remonter plus loin,
+    // utiliser "Retour" plusieurs fois avant de rejouer a la main.
     QAction* correctionAction = otherActionsMenu->addAction("Correction arbitre");
     connect(correctionAction, &QAction::triggered, this, [this]()
         {
-            if (!m_hasUndoSnapshot)
+            if (m_undoStack.empty())
             {
                 showStyledMessage(this, QMessageBox::Information, "Correction arbitre",
-                    "Aucun coup a corriger (un seul niveau d'annulation disponible, "
-                    "meme limite que \"Retour\").");
+                    "Aucun coup a corriger.");
                 return;
             }
 
@@ -2340,6 +2334,7 @@ MainWindow::MainWindow(QWidget* parent)
                 "Dernier coup enregistre : " + before + "\n\n"
                 "Annuler ce coup et cliquer ensuite la bille reellement concernee ?",
                 QMessageBox::Yes | QMessageBox::No, this);
+            applyDarkTitleBar(&box);
             box.setStyleSheet(
                 "QMessageBox { background-color: " + kBg + "; }"
                 "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -2352,9 +2347,9 @@ MainWindow::MainWindow(QWidget* parent)
             }
 
             m_pendingCorrectionBefore = before.toStdString();
-            m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+            m_gameManager.getMatch().getCurrentFrame() = m_undoStack.back();
+            m_undoStack.pop_back();
             m_gameManager.getMatch().undoFrameConclusion();
-            m_hasUndoSnapshot = false;
             m_pendingAction = PendingAction::CorrectionBall;
             refreshDisplay();
         });
@@ -2802,19 +2797,33 @@ MainWindow::MainWindow(QWidget* parent)
         });
     simpleActionsGrid->addWidget(simpleMissButton, 2, 0);
 
-    // Retour : annule le dernier coup (bille empochee, faute ou "Fin de
-    // break"), voir snapshotFrameForUndo(). Un seul niveau d'annulation.
+    // Retour : voir undoButton sur la telecommande 1.0 pour le detail
+    // (pile d'historique + confirmation a chaque appui).
     QPushButton* simpleUndoButton = new QPushButton("Retour", remotePanelSimple);
     simpleUndoButton->setStyleSheet(secondaryButtonStyle);
     connect(simpleUndoButton, &QPushButton::clicked, this, [this]()
         {
-            if (!m_hasUndoSnapshot)
+            if (m_undoStack.empty())
             {
                 return;
             }
-            m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+            QMessageBox box(QMessageBox::Warning, "Retour",
+                "Annuler le dernier coup enregistre ?",
+                QMessageBox::Yes | QMessageBox::No, this);
+            applyDarkTitleBar(&box);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            if (box.exec() != QMessageBox::Yes)
+            {
+                return;
+            }
+            m_gameManager.getMatch().getCurrentFrame() = m_undoStack.back();
+            m_undoStack.pop_back();
             m_gameManager.getMatch().undoFrameConclusion();
-            m_hasUndoSnapshot = false;
             m_pendingAction = PendingAction::None;
             refreshDisplay();
         });
@@ -2921,6 +2930,7 @@ MainWindow::MainWindow(QWidget* parent)
                 "Annuler tous les points de cette frame et remettre les billes en place\n"
                 "(regle du Pat, meme joueur rouvre) ?",
                 QMessageBox::Yes | QMessageBox::No, this);
+            applyDarkTitleBar(&box);
             box.setStyleSheet(
                 "QMessageBox { background-color: " + kBg + "; }"
                 "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -2948,6 +2958,7 @@ MainWindow::MainWindow(QWidget* parent)
             QPushButton* p1Button = box.addButton(name1 + " concede", QMessageBox::AcceptRole);
             QPushButton* p2Button = box.addButton(name2 + " concede", QMessageBox::AcceptRole);
             box.addButton("Annuler", QMessageBox::RejectRole);
+            applyDarkTitleBar(&box);
             box.setStyleSheet(
                 "QMessageBox { background-color: " + kBg + "; }"
                 "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -2995,6 +3006,7 @@ MainWindow::MainWindow(QWidget* parent)
             QPushButton* p1Button = box.addButton(name1 + " abandonne", QMessageBox::AcceptRole);
             QPushButton* p2Button = box.addButton(name2 + " abandonne", QMessageBox::AcceptRole);
             box.addButton("Annuler", QMessageBox::RejectRole);
+            applyDarkTitleBar(&box);
             box.setStyleSheet(
                 "QMessageBox { background-color: " + kBg + "; }"
                 "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -3027,11 +3039,10 @@ MainWindow::MainWindow(QWidget* parent)
     QAction* simpleCorrectionAction = simpleOtherActionsMenu->addAction("Correction arbitre");
     connect(simpleCorrectionAction, &QAction::triggered, this, [this]()
         {
-            if (!m_hasUndoSnapshot)
+            if (m_undoStack.empty())
             {
                 showStyledMessage(this, QMessageBox::Information, "Correction arbitre",
-                    "Aucun coup a corriger (un seul niveau d'annulation disponible, "
-                    "meme limite que \"Retour\").");
+                    "Aucun coup a corriger.");
                 return;
             }
 
@@ -3052,6 +3063,7 @@ MainWindow::MainWindow(QWidget* parent)
                 "Dernier coup enregistre : " + before + "\n\n"
                 "Annuler ce coup et cliquer ensuite la bille reellement concernee ?",
                 QMessageBox::Yes | QMessageBox::No, this);
+            applyDarkTitleBar(&box);
             box.setStyleSheet(
                 "QMessageBox { background-color: " + kBg + "; }"
                 "QLabel { color: " + kWhite + "; background: transparent; }"
@@ -3064,9 +3076,9 @@ MainWindow::MainWindow(QWidget* parent)
             }
 
             m_pendingCorrectionBefore = before.toStdString();
-            m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+            m_gameManager.getMatch().getCurrentFrame() = m_undoStack.back();
+            m_undoStack.pop_back();
             m_gameManager.getMatch().undoFrameConclusion();
-            m_hasUndoSnapshot = false;
             m_pendingAction = PendingAction::CorrectionBall;
             refreshDisplay();
         });
@@ -4244,8 +4256,7 @@ void MainWindow::announceNewEvents(Frame& frame)
 
 void MainWindow::snapshotFrameForUndo()
 {
-    m_undoSnapshot = m_gameManager.getMatch().getCurrentFrame();
-    m_hasUndoSnapshot = true;
+    m_undoStack.push_back(m_gameManager.getMatch().getCurrentFrame());
 }
 
 void MainWindow::applyRemotePanelVisibility()
@@ -4665,7 +4676,7 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
         // PendingAction::CorrectionBall -- le bandeau "pending" (voir
         // pendingText plus haut) guide alors vers la bille a cliquer,
         // exactement comme pour "armFoul"/"armBallOffTable".
-        if (!m_hasUndoSnapshot)
+        if (m_undoStack.empty())
         {
             return;
         }
@@ -4676,9 +4687,9 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
             return;
         }
         m_pendingCorrectionBefore = describeLogEntry(log.back()).toStdString();
-        m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+        m_gameManager.getMatch().getCurrentFrame() = m_undoStack.back();
+        m_undoStack.pop_back();
         m_gameManager.getMatch().undoFrameConclusion();
-        m_hasUndoSnapshot = false;
         m_pendingAction = PendingAction::CorrectionBall;
         refreshDisplay();
         return;
@@ -4752,15 +4763,17 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
     if (action == "undo")
     {
         // Meme logique que le bouton "Retour" de la telecommande de
-        // bureau 2.0 : un seul niveau d'annulation (voir
-        // snapshotFrameForUndo()).
-        if (!m_hasUndoSnapshot)
+        // bureau 2.0 : pile d'historique (m_undoStack), un appui = un
+        // coup de plus annule. La confirmation se fait cote telephone
+        // (JS confirm(), voir confirmUndo() dans kPageHtml) avant meme
+        // que cette action ne soit envoyee.
+        if (m_undoStack.empty())
         {
             return;
         }
-        m_gameManager.getMatch().getCurrentFrame() = m_undoSnapshot;
+        m_gameManager.getMatch().getCurrentFrame() = m_undoStack.back();
+        m_undoStack.pop_back();
         m_gameManager.getMatch().undoFrameConclusion();
-        m_hasUndoSnapshot = false;
         m_pendingAction = PendingAction::None;
         refreshDisplay();
         return;

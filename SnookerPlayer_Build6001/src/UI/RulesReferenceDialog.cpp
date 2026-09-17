@@ -1,4 +1,5 @@
 #include "RulesReferenceDialog.h"
+#include "UiUtils.h"
 
 #include <QVBoxLayout>
 #include <QLineEdit>
@@ -30,6 +31,7 @@ RulesReferenceDialog::RulesReferenceDialog(QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle("Reglement officiel du snooker");
+    applyDarkTitleBar(this);
     resize(720, 560);
     setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
 
