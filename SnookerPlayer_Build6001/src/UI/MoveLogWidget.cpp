@@ -83,10 +83,14 @@ void MoveLogWidget::refresh(const ShotHistory& history)
         }
         else if (entry.type == LogEntry::Type::TouchingBall)
         {
+            QString ballSuffix = entry.ballName.empty()
+                ? QString()
+                : (" (" + QString::fromStdString(entry.ballName) + ")");
             text =
                 QString::number(i + 1) + ". "
                 + QString::fromStdString(entry.playerName)
-                + " — BILLE TOUCHANTE (premier contact deja valide pour le prochain coup)";
+                + " — BILLE TOUCHANTE" + ballSuffix
+                + " (premier contact deja valide pour le prochain coup)";
             color = kGray;
         }
         else if (entry.type == LogEntry::Type::Replay)

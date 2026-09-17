@@ -137,10 +137,10 @@ namespace
     <button class="actionbtn" onclick="sendAction('undo')">Retour</button>
     <button class="actionbtn" onclick="sendAction('finishFrame')">Game</button>
     <button class="actionbtn" onclick="sendAction('armMiss')">Miss</button>
-    <button class="actionbtn" onclick="showFreeBallMenu()">Free ball</button>
-    <button class="actionbtn wide" onclick="showOtherMenu()">Autre</button>
+    <button class="actionbtn" onclick="showFreeBallMenu()">Free ball &#9662;</button>
     <button class="actionbtn" onclick="showNewMatchForm()">Nouveau match</button>
     <button class="actionbtn" onclick="sendAction('goHome')">Esc</button>
+    <button class="actionbtn wide" onclick="showOtherMenu()">Autre &#9662;</button>
   </div>
   <div class="missmenu" id="freeballmenu">
     <button class="actionbtn" onclick="chooseFreeBall('missReplay')">Remettre en place</button>

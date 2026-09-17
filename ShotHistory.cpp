@@ -87,11 +87,12 @@ void ShotHistory::addMiss(const std::string& playerName)
 // Ajouter un armement de "bille touchante"
 // =====================================
 
-void ShotHistory::addTouchingBall(const std::string& playerName)
+void ShotHistory::addTouchingBall(const std::string& playerName, const std::string& ballName)
 {
     LogEntry entry;
     entry.type = LogEntry::Type::TouchingBall;
     entry.playerName = playerName;
+    entry.ballName = ballName;
     m_log.push_back(entry);
 }
 

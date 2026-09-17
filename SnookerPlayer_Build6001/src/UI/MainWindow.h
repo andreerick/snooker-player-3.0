@@ -80,7 +80,13 @@ enum class PendingAction
     // l'arbitre clique la bille REELLEMENT concernee pour la rejouer et
     // enregistrer la correction dans le journal (voir Frame::logCorrection(),
     // m_pendingCorrectionBefore).
-    CorrectionBall
+    CorrectionBall,
+    // Bille touchante (voir bouton "Bille touchante") : on attend que
+    // l'arbitre clique la bille avec laquelle la blanche est en contact,
+    // uniquement pour que ce soit note dans le journal (voir Frame::
+    // setTouchingBall()) -- ce clic n'est pas un coup joue, le VRAI coup
+    // suit juste apres (bouton de bille ou "Fin de break").
+    TouchingBallTarget
 };
 
 class MainWindow : public QMainWindow

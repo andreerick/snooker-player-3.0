@@ -142,7 +142,11 @@ public:
     // apres ce seul coup, comme le Free Ball. Ne couvre PAS le poussé de
     // bille si la bille touchante bouge anormalement : ca reste a
     // l'appreciation de l'arbitre humain via le bouton "Faute" classique.
-    void setTouchingBall(bool value);
+    // `ballName` est purement informatif (trace dans le journal, voir
+    // ShotHistory::addTouchingBall()) : la bille annoncee ne change rien
+    // au contournement lui-meme, qui s'applique au prochain coup quel
+    // qu'il soit.
+    void setTouchingBall(bool value, const std::string& ballName = "");
 
     bool isTouchingBall() const;
 

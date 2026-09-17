@@ -921,7 +921,7 @@ bool Frame::isFreeBall() const
 // =====================================
 // Touching Ball
 // =====================================
-void Frame::setTouchingBall(bool value)
+void Frame::setTouchingBall(bool value, const std::string& ballName)
 {
     m_touchingBall = value;
 
@@ -931,7 +931,7 @@ void Frame::setTouchingBall(bool value)
     // qu'il soit ou non concerne par une bille touchante.
     if (value)
     {
-        m_history.addTouchingBall(m_currentPlayer->getName());
+        m_history.addTouchingBall(m_currentPlayer->getName(), ballName);
     }
 }
 

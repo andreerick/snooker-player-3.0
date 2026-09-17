@@ -18,7 +18,9 @@ struct LogEntry
     // soit un enregistrement fidele et rejouable de la partie.
     // TouchingBall = armement de la "bille touchante" (voir Frame::
     // setTouchingBall()) : meme raison d'etre que Miss, sans quoi ce
-    // geste d'arbitrage resterait invisible et non rejouable.
+    // geste d'arbitrage resterait invisible et non rejouable. Le nom de
+    // la bille annoncee (purement informatif) est stocke dans le champ
+    // `ballName` ci-dessous, partage avec Shot.
     // Replay = "Faire rejouer" (reglement Sect. 3 §13) : le non-fautif
     // choisit de faire rejouer le fautif plutot que de prendre la
     // position telle quelle (voir Frame::requestReplay()). Sans cette
@@ -81,7 +83,8 @@ public:
     void addMiss(const std::string& playerName);
 
     // Ajouter un armement de "bille touchante" (voir Frame::setTouchingBall()).
-    void addTouchingBall(const std::string& playerName);
+    // `ballName` est optionnel (annonce non renseignee).
+    void addTouchingBall(const std::string& playerName, const std::string& ballName = "");
 
     // Ajouter un "Faire rejouer" (voir Frame::requestReplay()). playerName
     // est celui qui REJOUE (le fautif, apres le changement de joueur),

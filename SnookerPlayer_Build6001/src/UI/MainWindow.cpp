@@ -668,9 +668,14 @@ namespace
             else if (entry.type == LogEntry::Type::TouchingBall)
             {
                 // Meme principe que MISS ci-dessus : mot-cle repere sans
-                // ambiguite par parseScenarioFile().
+                // ambiguite par parseScenarioFile() (elle ne regarde que
+                // " -- BILLE TOUCHANTE", le reste de la ligne est libre).
+                QString ballSuffix = entry.ballName.empty()
+                    ? QString()
+                    : (" (" + QString::fromStdString(entry.ballName) + ")");
                 out << (i + 1) << ". " << QString::fromStdString(entry.playerName)
-                    << " -- BILLE TOUCHANTE (premier contact deja valide pour le prochain coup)\n";
+                    << " -- BILLE TOUCHANTE" << ballSuffix
+                    << " (premier contact deja valide pour le prochain coup)\n";
             }
             else if (entry.type == LogEntry::Type::Replay)
             {
@@ -1987,7 +1992,7 @@ MainWindow::MainWindow(QWidget* parent)
             promptPlayerNames(player1Name, player2Name, framesToWin);
             restartMatch(player1Name, player2Name, framesToWin);
         });
-    actionsGrid->addWidget(newMatchButton, 4, 0);
+    actionsGrid->addWidget(newMatchButton, 3, 0);
 
     QPushButton* foulButton = new QPushButton("Faute", remotePanel);
     foulButton->setStyleSheet(secondaryButtonStyle);
@@ -2092,7 +2097,7 @@ MainWindow::MainWindow(QWidget* parent)
         {
             m_rootStack->setCurrentIndex(1);
         });
-    actionsGrid->addWidget(exitButton, 4, 1);
+    actionsGrid->addWidget(exitButton, 3, 1);
 
     // ---------------------------------------------------
     // "Autre" : regroupe 6 actions d'arbitrage peu frequentes (nom
@@ -2112,13 +2117,14 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Bille touchante : l'arbitre l'annonce quand la blanche est deja au
     // repos en contact avec une bille jouable, AVANT que le coup suivant
-    // ne soit joue (voir Frame::setTouchingBall()). Action immediate (pas
-    // de bille a choisir ensuite) : elle arme juste l'etat pour le
-    // prochain coup.
+    // ne soit joue (voir Frame::setTouchingBall()). Demande d'abord quelle
+    // bille est en contact (PendingAction::TouchingBallTarget), uniquement
+    // pour que ce soit visible dans le journal -- le prochain coup reste
+    // ensuite libre (n'importe quelle bille, ou "Fin de break").
     QAction* touchingBallAction = otherActionsMenu->addAction("Bille touchante");
     connect(touchingBallAction, &QAction::triggered, this, [this]()
         {
-            m_gameManager.getMatch().getCurrentFrame().setTouchingBall(true);
+            m_pendingAction = PendingAction::TouchingBallTarget;
             refreshDisplay();
         });
 
@@ -2289,7 +2295,7 @@ MainWindow::MainWindow(QWidget* parent)
         });
 
     otherActionsButton->setMenu(otherActionsMenu);
-    actionsGrid->addWidget(otherActionsButton, 3, 0, 1, 2);
+    actionsGrid->addWidget(otherActionsButton, 4, 0, 1, 2);
 
     // "Reglement" et "Partager en Wi-Fi" retires de cette telecommande
     // (2026-09-16) : doublons exacts de l'accueil ("Regles" et la tuile
@@ -2775,7 +2781,7 @@ MainWindow::MainWindow(QWidget* parent)
             promptPlayerNames(player1Name, player2Name, framesToWin);
             restartMatch(player1Name, player2Name, framesToWin);
         });
-    simpleActionsGrid->addWidget(simpleNewMatchButton, 4, 0);
+    simpleActionsGrid->addWidget(simpleNewMatchButton, 3, 0);
 
     // Esc : quitte l'ecran de match et revient a l'accueil (voir
     // m_rootStack, index 1). Le match reste construit et en l'etat en
@@ -2787,7 +2793,7 @@ MainWindow::MainWindow(QWidget* parent)
         {
             m_rootStack->setCurrentIndex(1);
         });
-    simpleActionsGrid->addWidget(simpleExitButton, 4, 1);
+    simpleActionsGrid->addWidget(simpleExitButton, 3, 1);
 
     // "Autre" : meme regroupement que sur la telecommande 1.0
     // (otherActionsButton/otherActionsMenu plus haut), demande par
@@ -2813,7 +2819,7 @@ MainWindow::MainWindow(QWidget* parent)
     QAction* simpleTouchingBallAction = simpleOtherActionsMenu->addAction("Bille touchante");
     connect(simpleTouchingBallAction, &QAction::triggered, this, [this]()
         {
-            m_gameManager.getMatch().getCurrentFrame().setTouchingBall(true);
+            m_pendingAction = PendingAction::TouchingBallTarget;
             refreshDisplay();
         });
 
@@ -2950,7 +2956,7 @@ MainWindow::MainWindow(QWidget* parent)
         });
 
     simpleOtherActionsButton->setMenu(simpleOtherActionsMenu);
-    simpleActionsGrid->addWidget(simpleOtherActionsButton, 3, 0, 1, 2);
+    simpleActionsGrid->addWidget(simpleOtherActionsButton, 4, 0, 1, 2);
 
     simpleLayout->addStretch();
 
@@ -3779,6 +3785,9 @@ void MainWindow::refreshDisplay()
     case PendingAction::CorrectionBall:
         pendingText = "CORRECTION : cliquez la bille reellement concernee";
         break;
+    case PendingAction::TouchingBallTarget:
+        pendingText = "BILLE TOUCHANTE : cliquez la bille en contact avec la blanche";
+        break;
     case PendingAction::None:
     default:
         break;
@@ -4309,6 +4318,17 @@ void MainWindow::handleBallAction(const QString& ballName, int ballValue)
         refreshDisplay();
         return;
     }
+    case PendingAction::TouchingBallTarget:
+    {
+        // Ce clic n'est PAS un coup joue : il annonce juste quelle bille
+        // est en contact avec la blanche (purement pour le journal, voir
+        // Frame::setTouchingBall()). Le vrai coup suit juste apres, via un
+        // clic normal sur une bille ou "Fin de break".
+        frame.setTouchingBall(true, clickedBall.getName());
+        m_pendingAction = PendingAction::None;
+        refreshDisplay();
+        return;
+    }
     case PendingAction::ArmFreeBall:
     {
         frame.setFreeBall(true);
@@ -4505,9 +4525,10 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
     }
     if (action == "touchingBall")
     {
-        // Action immediate (pas d'attente de bille), voir touchingBallButton
-        // dans le constructeur : arme juste l'etat pour le prochain coup.
-        frame.setTouchingBall(true);
+        // Demande d'abord quelle bille est en contact avec la blanche
+        // (PendingAction::TouchingBallTarget), voir touchingBallAction
+        // dans le constructeur.
+        m_pendingAction = PendingAction::TouchingBallTarget;
         refreshDisplay();
         return;
     }
