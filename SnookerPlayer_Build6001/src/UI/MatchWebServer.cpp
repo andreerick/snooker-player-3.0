@@ -152,6 +152,7 @@ namespace
     <button class="actionbtn" onclick="chooseOther('whiteOffTable')">Blanche sortie de table</button>
     <button class="actionbtn" onclick="confirmRestartFrame()">Recommencer la frame</button>
     <button class="actionbtn" onclick="showConcedeMenu()">Conceder la frame</button>
+    <button class="actionbtn" onclick="showConcedeMatchMenu()">Conceder le match</button>
     <button class="actionbtn" onclick="chooseOther('armCorrection')">Correction arbitre</button>
     <button class="actionbtn" onclick="chooseOther('closeRepositionGuide')">Fermer le guide</button>
   </div>
@@ -159,6 +160,11 @@ namespace
     <button class="actionbtn" id="concedebtn1" onclick="chooseConcede(1)">-</button>
     <button class="actionbtn" id="concedebtn2" onclick="chooseConcede(2)">-</button>
     <button class="actionbtn" onclick="document.getElementById('concedemenu').classList.remove('show')">Annuler</button>
+  </div>
+  <div class="missmenu" id="concedematchmenu">
+    <button class="actionbtn" id="concedematchbtn1" onclick="chooseConcedeMatch(1)">-</button>
+    <button class="actionbtn" id="concedematchbtn2" onclick="chooseConcedeMatch(2)">-</button>
+    <button class="actionbtn" onclick="document.getElementById('concedematchmenu').classList.remove('show')">Annuler</button>
   </div>
   </div>
 
@@ -249,6 +255,16 @@ namespace
     document.getElementById('concedemenu').classList.remove('show');
     sendAction('concedeFrame', { player });
   }
+  // "Conceder le match" : abandon DEFINITIF, distinct de "Conceder la
+  // frame" ci-dessus -- meme sous-menu nomme, action serveur differente.
+  function showConcedeMatchMenu() {
+    document.getElementById('othermenu').classList.remove('show');
+    document.getElementById('concedematchmenu').classList.add('show');
+  }
+  function chooseConcedeMatch(player) {
+    document.getElementById('concedematchmenu').classList.remove('show');
+    sendAction('concedeMatch', { player });
+  }
 
   let startingNewMatch = false;
   let namesFormShown = false;
@@ -338,6 +354,8 @@ namespace
       document.getElementById('score2').textContent = d.player2Score;
       document.getElementById('concedebtn1').textContent = d.player1Name + ' concede';
       document.getElementById('concedebtn2').textContent = d.player2Name + ' concede';
+      document.getElementById('concedematchbtn1').textContent = d.player1Name + ' abandonne';
+      document.getElementById('concedematchbtn2').textContent = d.player2Name + ' abandonne';
       document.getElementById('row1').className = 'row' + (d.p1Active ? ' active' : '');
       document.getElementById('row2').className = 'row' + (!d.p1Active ? ' active' : '');
       document.getElementById('breakvalue').textContent = d.breakValue;

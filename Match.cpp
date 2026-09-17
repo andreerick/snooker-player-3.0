@@ -238,6 +238,18 @@ bool Match::isMatchFinished() const
     return false;
 }
 
+void Match::forceMatchEnd(Player& winner)
+{
+    if (&winner == &m_player1)
+    {
+        m_framesPlayer1 = m_framesToWin;
+    }
+    else
+    {
+        m_framesPlayer2 = m_framesToWin;
+    }
+}
+
 int Match::getFramesToWin() const
 {
     return m_framesToWin;

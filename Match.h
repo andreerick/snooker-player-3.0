@@ -79,6 +79,14 @@ public:
     // n'est actuellement en attente de la frame suivante.
     void undoFrameConclusion();
 
+    // "Conceder le match" (abandon definitif, ex: joueur parti sans
+    // revenir) : force le tally de frames du VAINQUEUR directement a
+    // m_framesToWin, quel que soit le score actuel, pour que
+    // isMatchFinished() devienne vrai immediatement. A appeler APRES avoir
+    // conceder la frame en cours (Frame::concedeFrame() + afterShot()) --
+    // ne s'occupe que du tally global, pas de la frame en cours.
+    void forceMatchEnd(Player& winner);
+
 
 
 private:

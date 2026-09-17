@@ -49,6 +49,17 @@
 #include <memory>
 #include <map>
 
+#ifdef Q_OS_WIN
+// NOMINMAX : sans ca, windows.h (inclus par dwmapi.h) definit des macros
+// min/max qui cassent tout appel a std::min/std::max plus bas dans ce
+// fichier (erreur de compilation cryptique "jeton non conforme").
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <dwmapi.h>
+#pragma comment(lib, "dwmapi.lib")
+#endif
+
 namespace
 {
     const QString kBg = "#000000";
@@ -84,6 +95,24 @@ namespace
             "QPushButton:hover { border-color: " + kGray + "; }"
         );
         box.exec();
+    }
+
+    // Force la barre de titre native (Windows) en mode sombre : sans ca,
+    // elle reste blanche par defaut (dessinee par l'OS, pas par le style
+    // Qt applique au contenu), ce qui detonne avec le theme sombre de
+    // l'appli. Sans effet sur les autres plateformes. A appeler une fois
+    // le widget cree, avant .show()/.exec() (winId() force la creation de
+    // la fenetre native sous-jacente).
+    void applyDarkTitleBar(QWidget* window)
+    {
+#ifdef Q_OS_WIN
+        HWND hwnd = reinterpret_cast<HWND>(window->winId());
+        BOOL enabled = TRUE;
+        const DWORD kDwmwaUseImmersiveDarkMode = 20;
+        ::DwmSetWindowAttribute(hwnd, kDwmwaUseImmersiveDarkMode, &enabled, sizeof(enabled));
+#else
+        Q_UNUSED(window);
+#endif
     }
 
     // Applique une ombre portee douce a un widget, pour donner du relief
@@ -2226,6 +2255,55 @@ MainWindow::MainWindow(QWidget* parent)
             refreshDisplay();
         });
 
+    // Conceder le match : abandon DEFINITIF (le joueur quitte la table et
+    // ne revient pas), distinct de "Conceder la frame" (abandon temporaire
+    // de la frame en cours seulement). Concede aussi la frame en cours
+    // (meme mecanisme), puis force en plus la fin du match entier via
+    // Match::forceMatchEnd() -- decision de l'arbitre, l'appli ne juge pas
+    // si l'absence est justifiee (excuse sanitaire, etc.).
+    QAction* concedeMatchAction = otherActionsMenu->addAction("Conceder le match");
+    connect(concedeMatchAction, &QAction::triggered, this, [this]()
+        {
+            Frame& frame = m_gameManager.getMatch().getCurrentFrame();
+            QString name1 = QString::fromStdString(frame.getPlayer1().getName());
+            QString name2 = QString::fromStdString(frame.getPlayer2().getName());
+
+            QMessageBox box(QMessageBox::Warning, "Conceder le match",
+                "Quel joueur abandonne DEFINITIVEMENT le match (ne revient pas) ?\n"
+                "L'adversaire remporte le match immediatement, quel que soit le score de frames actuel.",
+                QMessageBox::NoButton, this);
+            QPushButton* p1Button = box.addButton(name1 + " abandonne", QMessageBox::AcceptRole);
+            QPushButton* p2Button = box.addButton(name2 + " abandonne", QMessageBox::AcceptRole);
+            box.addButton("Annuler", QMessageBox::RejectRole);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            box.exec();
+
+            Player* conceder = nullptr;
+            if (box.clickedButton() == p1Button)
+            {
+                conceder = &frame.getPlayer1();
+            }
+            else if (box.clickedButton() == p2Button)
+            {
+                conceder = &frame.getPlayer2();
+            }
+            if (conceder == nullptr)
+            {
+                return;
+            }
+
+            Player& winner = (conceder == &frame.getPlayer1()) ? frame.getPlayer2() : frame.getPlayer1();
+            frame.concedeFrame(*conceder);
+            m_gameManager.afterShot();
+            m_gameManager.getMatch().forceMatchEnd(winner);
+            refreshDisplay();
+        });
+
     // Correction arbitre : annule le dernier coup enregistre (meme
     // mecanisme que "Retour") puis attend que l'arbitre clique la bille
     // REELLEMENT concernee, pour la rejouer et garder une trace explicite
@@ -2900,6 +2978,52 @@ MainWindow::MainWindow(QWidget* parent)
             refreshDisplay();
         });
 
+    // Conceder le match : voir concedeMatchAction sur la telecommande 1.0
+    // pour le detail du raisonnement (abandon definitif, distinct de
+    // "Conceder la frame").
+    QAction* simpleConcedeMatchAction = simpleOtherActionsMenu->addAction("Conceder le match");
+    connect(simpleConcedeMatchAction, &QAction::triggered, this, [this]()
+        {
+            Frame& frame = m_gameManager.getMatch().getCurrentFrame();
+            QString name1 = QString::fromStdString(frame.getPlayer1().getName());
+            QString name2 = QString::fromStdString(frame.getPlayer2().getName());
+
+            QMessageBox box(QMessageBox::Warning, "Conceder le match",
+                "Quel joueur abandonne DEFINITIVEMENT le match (ne revient pas) ?\n"
+                "L'adversaire remporte le match immediatement, quel que soit le score de frames actuel.",
+                QMessageBox::NoButton, this);
+            QPushButton* p1Button = box.addButton(name1 + " abandonne", QMessageBox::AcceptRole);
+            QPushButton* p2Button = box.addButton(name2 + " abandonne", QMessageBox::AcceptRole);
+            box.addButton("Annuler", QMessageBox::RejectRole);
+            box.setStyleSheet(
+                "QMessageBox { background-color: " + kBg + "; }"
+                "QLabel { color: " + kWhite + "; background: transparent; }"
+                "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+                "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+            );
+            box.exec();
+
+            Player* conceder = nullptr;
+            if (box.clickedButton() == p1Button)
+            {
+                conceder = &frame.getPlayer1();
+            }
+            else if (box.clickedButton() == p2Button)
+            {
+                conceder = &frame.getPlayer2();
+            }
+            if (conceder == nullptr)
+            {
+                return;
+            }
+
+            Player& winner = (conceder == &frame.getPlayer1()) ? frame.getPlayer2() : frame.getPlayer1();
+            frame.concedeFrame(*conceder);
+            m_gameManager.afterShot();
+            m_gameManager.getMatch().forceMatchEnd(winner);
+            refreshDisplay();
+        });
+
     QAction* simpleCorrectionAction = simpleOtherActionsMenu->addAction("Correction arbitre");
     connect(simpleCorrectionAction, &QAction::triggered, this, [this]()
         {
@@ -3400,8 +3524,18 @@ void MainWindow::promptPlayerNames(QString& player1Name, QString& player2Name, i
         QDialog nameDialog(this);
         nameDialog.setWindowTitle("Noms des joueurs");
         nameDialog.setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
+        applyDarkTitleBar(&nameDialog);
 
-        QFormLayout* formLayout = new QFormLayout(&nameDialog);
+        // Disposition en 3 tuiles (demande par l'utilisateur le 2026-09-17,
+        // remplace l'ancien formulaire vertical) : Joueur 1 et Joueur 2
+        // cote a cote, "Longueur du match" en dessous des deux, en pleine
+        // largeur.
+        QVBoxLayout* dialogLayout = new QVBoxLayout(&nameDialog);
+        QHBoxLayout* playersRowLayout = new QHBoxLayout();
+        dialogLayout->addLayout(playersRowLayout);
+
+        const QString tileStyle =
+            "background-color: " + kPanel + "; border: 1px solid " + kBorder + "; border-radius: 6px;";
 
         auto populateCombo = [](QComboBox* combo, const QStringList& names)
             {
@@ -3517,17 +3651,30 @@ void MainWindow::promptPlayerNames(QString& player1Name, QString& player2Name, i
         QObject::connect(player2DeleteButton, &QPushButton::clicked, &nameDialog,
             [deleteSelected, player2Combo]() { deleteSelected(player2Combo); });
 
-        formLayout->addRow(label1);
-        formLayout->addRow(player1ComboRow);
-        formLayout->addRow(player1Edit);
-        formLayout->addRow(label2);
-        formLayout->addRow(player2ComboRow);
-        formLayout->addRow(player2Edit);
+        QFrame* player1Tile = new QFrame(&nameDialog);
+        player1Tile->setStyleSheet("QFrame {" + tileStyle + "}");
+        QVBoxLayout* player1TileLayout = new QVBoxLayout(player1Tile);
+        player1TileLayout->addWidget(label1);
+        player1TileLayout->addWidget(player1ComboRow);
+        player1TileLayout->addWidget(player1Edit);
+        playersRowLayout->addWidget(player1Tile);
+
+        QFrame* player2Tile = new QFrame(&nameDialog);
+        player2Tile->setStyleSheet("QFrame {" + tileStyle + "}");
+        QVBoxLayout* player2TileLayout = new QVBoxLayout(player2Tile);
+        player2TileLayout->addWidget(label2);
+        player2TileLayout->addWidget(player2ComboRow);
+        player2TileLayout->addWidget(player2Edit);
+        playersRowLayout->addWidget(player2Tile);
 
         // --- Longueur du match : choisie ici, a chaque match, plutot
         // qu'un reglage global dans "Parametres" (discute avec
         // l'utilisateur -- ca depend du temps disponible ce jour-la,
-        // pas une preference fixe).
+        // pas une preference fixe). Troisieme tuile, en pleine largeur,
+        // sous les 2 tuiles joueurs.
+        QFrame* framesTile = new QFrame(&nameDialog);
+        framesTile->setStyleSheet("QFrame {" + tileStyle + "}");
+        QVBoxLayout* framesTileLayout = new QVBoxLayout(framesTile);
         QLabel* framesLabel = new QLabel("Longueur du match :", &nameDialog);
         framesLabel->setStyleSheet("color: " + kWhite + ";");
         QComboBox* framesCombo = new QComboBox(&nameDialog);
@@ -3537,12 +3684,13 @@ void MainWindow::promptPlayerNames(QString& player1Name, QString& player2Name, i
         framesCombo->addItem("Meilleur des 5 frames", 3);
         framesCombo->addItem("Meilleur des 7 frames", 4);
         framesCombo->addItem("Meilleur des 9 frames", 5);
-        formLayout->addRow(framesLabel);
-        formLayout->addRow(framesCombo);
+        framesTileLayout->addWidget(framesLabel);
+        framesTileLayout->addWidget(framesCombo);
+        dialogLayout->addWidget(framesTile);
 
         QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok, &nameDialog);
         buttonBox->setStyleSheet("color: " + kWhite + ";");
-        formLayout->addRow(buttonBox);
+        dialogLayout->addWidget(buttonBox);
 
         QObject::connect(buttonBox, &QDialogButtonBox::accepted, &nameDialog, &QDialog::accept);
 
@@ -3561,7 +3709,7 @@ void MainWindow::promptPlayerNames(QString& player1Name, QString& player2Name, i
                 "Ou saisissez les noms depuis le telephone connecte.", &nameDialog
             );
             wifiHint->setStyleSheet("color: " + kGray + "; font-size: 11px;");
-            formLayout->addRow(wifiHint);
+            dialogLayout->addWidget(wifiHint);
 
             QObject::connect(m_webServer, &MatchWebServer::controlActionRequested, &nameDialog,
                 [&nameDialog, player1Edit, player2Edit](const QString& action, const QJsonObject& params)
@@ -4487,6 +4635,24 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
             return;
         }
         m_gameManager.afterShot();
+        refreshDisplay();
+        return;
+    }
+    if (action == "concedeMatch")
+    {
+        // Meme fonction que "Conceder le match" sur PC (abandon DEFINITIF,
+        // distinct de "concedeFrame") ; choix du joueur fait cote page
+        // telephone comme pour concedeFrame ci-dessus.
+        int playerNumber = params.value("player").toInt();
+        if (playerNumber != 1 && playerNumber != 2)
+        {
+            return;
+        }
+        Player& conceder = (playerNumber == 1) ? frame.getPlayer1() : frame.getPlayer2();
+        Player& winner = (playerNumber == 1) ? frame.getPlayer2() : frame.getPlayer1();
+        frame.concedeFrame(conceder);
+        m_gameManager.afterShot();
+        m_gameManager.getMatch().forceMatchEnd(winner);
         refreshDisplay();
         return;
     }
