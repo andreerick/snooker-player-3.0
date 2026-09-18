@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QStandardItemModel>
 #include <QPushButton>
 #include <QLabel>
 #include <QFrame>
@@ -259,6 +260,28 @@ SettingsDialog::SettingsDialog(QWidget* parent)
     remoteVersionHint->setWordWrap(true);
     remoteVersionHint->setStyleSheet("color: " + kGray + "; font-size: 10px; background: transparent;");
     remoteCard->addWidget(remoteVersionHint);
+
+    // --- Mode de suivi ---
+    // "Manuel" : comptage a la telecommande, cameras uniquement pour le
+    // guide de repositionnement. "Automatique" (suivi complet des billes
+    // par camera) n'existe pas encore : liste mais non selectionnable.
+    QVBoxLayout* trackingCard = addSettingsCard(layout, content, "MODE DE SUIVI");
+
+    QComboBox* trackingCombo = new QComboBox(content);
+    trackingCombo->setStyleSheet(comboStyle);
+    trackingCombo->addItem("Manuel", "manual");
+    trackingCombo->addItem("Automatique (bientot)", "auto");
+    qobject_cast<QStandardItemModel*>(trackingCombo->model())->item(1)->setEnabled(false);
+    trackingCard->addWidget(trackingCombo);
+
+    QLabel* trackingHint = new QLabel(
+        "Manuel : le comptage se fait a la telecommande, les cameras servent "
+        "uniquement a guider le repositionnement des billes.",
+        content
+    );
+    trackingHint->setWordWrap(true);
+    trackingHint->setStyleSheet("color: " + kGray + "; font-size: 10px; background: transparent;");
+    trackingCard->addWidget(trackingHint);
 
     // --- Camera ---
     QVBoxLayout* cameraCard = addSettingsCard(layout, content, "CAMERA");
