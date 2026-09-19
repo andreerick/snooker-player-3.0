@@ -949,26 +949,52 @@ void Frame::requestReplay()
     m_history.addReplay(m_currentPlayer->getName());
 }
 
-std::string Frame::missReplayWarningPlayer() const
+namespace
+{
+    // Nombre de paires ("Faute et Miss", "Faire rejouer") consecutives
+    // qui se terminent juste avant l'index `end` du journal.
+    int countMissReplayPairs(const std::vector<LogEntry>& log, size_t end)
+    {
+        int pairs = 0;
+        size_t i = end;
+        while (i >= 2
+            && log[i - 1].type == LogEntry::Type::Replay
+            && log[i - 2].type == LogEntry::Type::Foul
+            && log[i - 2].reason == Frame::kMissFoulReason)
+        {
+            ++pairs;
+            i -= 2;
+        }
+        return pairs;
+    }
+}
+
+int Frame::missReplayChain(std::string& player) const
 {
     const std::vector<LogEntry>& log = m_history.getLog();
-
-    int pairs = 0;
-    size_t i = log.size();
-    while (i >= 2
-        && log[i - 1].type == LogEntry::Type::Replay
-        && log[i - 2].type == LogEntry::Type::Foul
-        && log[i - 2].reason == kMissFoulReason)
+    int pairs = countMissReplayPairs(log, log.size());
+    if (pairs > 0)
     {
-        ++pairs;
-        i -= 2;
+        player = log.back().playerName;
     }
+    return pairs;
+}
 
-    if (pairs < 2)
+bool Frame::isMissFrameForfeitDue(std::string& offender) const
+{
+    const std::vector<LogEntry>& log = m_history.getLog();
+    if (log.empty()
+        || log.back().type != LogEntry::Type::Foul
+        || log.back().reason != kMissFoulReason)
     {
-        return std::string();
+        return false;
     }
-    return log.back().playerName;
+    if (countMissReplayPairs(log, log.size() - 1) < 2)
+    {
+        return false;
+    }
+    offender = log.back().playerName;
+    return true;
 }
 
 void Frame::logCorrection(const std::string& before, const std::string& after)

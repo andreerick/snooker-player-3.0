@@ -275,6 +275,7 @@ namespace
     sendAction('concedeMatch', { player });
   }
 
+  let forfeitPromptShown = false;
   let startingNewMatch = false;
   let namesFormShown = false;
 
@@ -389,6 +390,12 @@ namespace
       document.getElementById('touchingball').className = 'freeball' + (d.isTouchingBall ? ' show' : '');
       document.getElementById('misswarning').textContent = d.missWarningText || '';
       document.getElementById('misswarning').className = 'freeball' + (d.missWarningText ? ' show' : '');
+      if (d.missForfeitPrompt && !forfeitPromptShown) {
+        forfeitPromptShown = true;
+        setTimeout(() => { sendAction(confirm(d.missForfeitText) ? 'missForfeitYes' : 'missForfeitNo'); }, 0);
+      } else if (!d.missForfeitPrompt) {
+        forfeitPromptShown = false;
+      }
       document.getElementById('misschoicemenu').className = 'missmenu' + (d.isMissChoicePending ? ' show' : '');
     } catch (e) {
       document.getElementById('offline').style.display = 'block';

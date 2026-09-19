@@ -3938,13 +3938,28 @@ void MainWindow::refreshDisplay()
     m_simpleTouchingBallStatusLabel->setText(touchingBallText);
     m_simpleTouchingBallStatusLabel->setVisible(isTouchingBall);
 
-    // Rappel d'avertissement (Sect. 3 §14(d)) : 2 "Faute et Miss" de suite
-    // rejouees depuis la position d'origine -> l'arbitre doit prevenir le
-    // joueur qu'un nouvel echec lui fait perdre la frame.
-    QString missWarningPlayer = QString::fromStdString(frame.missReplayWarningPlayer());
-    QString missWarningText = missWarningPlayer.isEmpty()
-        ? QString()
-        : "AVERTIR " + missWarningPlayer + " : un nouvel echec = frame perdue (Faute et Miss repetee)";
+    // Rappel d'avertissement (Sect. 3 §14(d)) des la 1re "Faute et Miss"
+    // rejouee depuis la position d'origine : a la 3e de suite, la frame est
+    // attribuee a l'adversaire (voir offerMissFrameForfeit()).
+    std::string missWarningPlayerStd;
+    int missChain = frame.missReplayChain(missWarningPlayerStd);
+    QString missWarningPlayer = QString::fromStdString(missWarningPlayerStd);
+    QString missWarningText;
+    if (missChain == 1)
+    {
+        missWarningText = "AVERTIR " + missWarningPlayer
+            + " : Faute et Miss 1/3 -- a la 3e de suite, la frame est perdue";
+    }
+    else if (missChain == 2)
+    {
+        missWarningText = "DERNIER AVERTISSEMENT " + missWarningPlayer
+            + " : Faute et Miss 2/3 -- un nouvel echec = frame perdue";
+    }
+    else if (missChain >= 3)
+    {
+        missWarningText = missWarningPlayer + " : " + QString::number(missChain)
+            + " Faute et Miss de suite -- frame attribuable a l'adversaire";
+    }
     m_missWarningLabel->setText(missWarningText);
     m_missWarningLabel->setVisible(!missWarningText.isEmpty());
     m_simpleMissWarningLabel->setText(missWarningText);
@@ -4029,6 +4044,9 @@ void MainWindow::refreshDisplay()
         shareState["isBlackReplay"] = isBlackReplay;
         shareState["isTouchingBall"] = isTouchingBall;
         shareState["missWarningText"] = missWarningText;
+        shareState["missForfeitPrompt"] = !m_missForfeitBox.isNull();
+        shareState["missForfeitText"] = m_missForfeitBox
+            ? m_missForfeitBox->property("promptText").toString() : QString();
         // Meme regle que m_ballButtons/m_simpleBallButtons cote bureau :
         // le telephone grise un bouton de bille des qu'elle n'est plus
         // physiquement sur la table (voir BallSet::isOnTable()).
@@ -4425,6 +4443,54 @@ void MainWindow::triggerBlancheOffTableFoul()
     refreshDisplay();
 }
 
+bool MainWindow::offerMissFrameForfeit()
+{
+    Frame& frame = m_gameManager.getMatch().getCurrentFrame();
+    std::string offenderStd;
+    if (!frame.isMissFrameForfeitDue(offenderStd))
+    {
+        return false;
+    }
+
+    Player& offender = (frame.getPlayer1().getName() == offenderStd)
+        ? frame.getPlayer1() : frame.getPlayer2();
+    Player& opponent = (&offender == &frame.getPlayer1())
+        ? frame.getPlayer2() : frame.getPlayer1();
+
+    QString text = "3e \"Faute et Miss\" de suite pour "
+        + QString::fromStdString(offender.getName())
+        + " (Sect. 3 §14(d)).\nAttribuer la frame a "
+        + QString::fromStdString(opponent.getName()) + " ?";
+
+    QMessageBox box(QMessageBox::Warning, "Frame perdue", text,
+        QMessageBox::Yes | QMessageBox::No, this);
+    applyDarkTitleBar(&box);
+    box.setStyleSheet(
+        "QMessageBox { background-color: " + kBg + "; }"
+        "QLabel { color: " + kWhite + "; background: transparent; }"
+        "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+        "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
+    );
+    box.setProperty("promptText", text);
+
+    m_missForfeitAnswer = -1;
+    m_missForfeitBox = &box;
+    refreshDisplay();
+    int result = box.exec();
+    m_missForfeitBox = nullptr;
+
+    bool award = (m_missForfeitAnswer == 1)
+        || (m_missForfeitAnswer == -1 && result == QMessageBox::Yes);
+    m_missForfeitAnswer = -1;
+
+    if (award && frame.concedeFrame(offender))
+    {
+        m_gameManager.afterShot();
+        return true;
+    }
+    return false;
+}
+
 void MainWindow::handleBallAction(const QString& ballName, int ballValue)
 {
     snapshotFrameForUndo();
@@ -4490,6 +4556,10 @@ void MainWindow::handleBallAction(const QString& ballName, int ballValue)
         int penalty = foulReferee.calculateFoul(clickedBall, m_pendingFoulTouchedBall);
         frame.foul(clickedBall, m_pendingFoulTouchedBall, penalty, m_pendingFoulReason);
         m_gameManager.afterShot();
+        if (m_pendingFoulReason == Frame::kMissFoulReason)
+        {
+            offerMissFrameForfeit();
+        }
         m_pendingAction = PendingAction::None;
         refreshDisplay();
         return;
@@ -4559,6 +4629,14 @@ void MainWindow::handleBallAction(const QString& ballName, int ballValue)
         int penalty = foulReferee.calculateFoul(required, clickedBall);
         frame.foul(required, clickedBall, penalty, Frame::kMissFoulReason);
         m_gameManager.afterShot();
+        // 3e "Faute et Miss" de suite : propose d'attribuer la frame (si
+        // accepte, plus de choix "Remettre en place" a faire).
+        if (offerMissFrameForfeit())
+        {
+            m_pendingAction = PendingAction::None;
+            refreshDisplay();
+            return;
+        }
         // La main passe deja naturellement a l'adversaire (comme une faute
         // normale, equivalent a "il joue la position telle quelle"), mais
         // on ne cloture pas encore l'action en attente : MissChoice
@@ -4809,6 +4887,17 @@ void MainWindow::handleRemoteControlAction(const QString& action, const QJsonObj
         m_gameManager.getMatch().undoFrameConclusion();
         m_pendingAction = PendingAction::None;
         refreshDisplay();
+        return;
+    }
+    if (action == "missForfeitYes" || action == "missForfeitNo")
+    {
+        // Reponse donnee depuis le telephone a la question posee par
+        // offerMissFrameForfeit() : ferme la boite PC en attente.
+        if (m_missForfeitBox)
+        {
+            m_missForfeitAnswer = (action == "missForfeitYes") ? 1 : 0;
+            m_missForfeitBox->close();
+        }
         return;
     }
     if (action == "goHome")

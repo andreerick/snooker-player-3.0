@@ -356,11 +356,21 @@ private:
     // touchee ou empochee ensuite (Sect. 3 §8(c)(i) du reglement).
     QLabel* m_touchingBallStatusLabel = nullptr;
     QLabel* m_simpleTouchingBallStatusLabel = nullptr;
-    // Rappel d'avertissement Sect. 3 §14(d) (voir
-    // Frame::missReplayWarningPlayer()) : visible quand un joueur enchaine
-    // des "Faute et Miss" rejouees depuis la position d'origine.
+    // Rappel d'avertissement Sect. 3 §14(d) (voir Frame::missReplayChain()) :
+    // visible des la 1re "Faute et Miss" rejouee depuis la position
+    // d'origine, avec un compteur.
     QLabel* m_missWarningLabel = nullptr;
     QLabel* m_simpleMissWarningLabel = nullptr;
+
+    // A la 3e "Faute et Miss" de suite (Frame::isMissFrameForfeitDue()),
+    // demande confirmation pour attribuer la frame a l'adversaire. Renvoie
+    // vrai si la frame a ete attribuee. La boite est bloquante cote PC ;
+    // cote telephone, la meme question s'affiche (JS confirm(), voir
+    // MatchWebServer) et sa reponse ferme la boite PC via
+    // m_missForfeitBox/m_missForfeitAnswer.
+    bool offerMissFrameForfeit();
+    QPointer<QDialog> m_missForfeitBox;
+    int m_missForfeitAnswer = -1;
     QLabel* m_pendingActionLabel = nullptr;
     QPushButton* m_cancelPendingButton = nullptr;
     // Meme role que m_pendingActionLabel, mais pour la telecommande 2.0

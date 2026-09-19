@@ -165,14 +165,21 @@ public:
     // (Miss)" (voir Frame::missReplayWarningPlayer()).
     static constexpr const char* kMissFoulReason = "Absence de veritable tentative (Miss)";
 
-    // Sect. 3 §14(d) : nom du joueur a AVERTIR (un nouvel echec = frame
-    // attribuee a l'adversaire) quand le journal se termine par au moins 2
-    // "Faute et Miss" consecutives suivies chacune d'un "Faire rejouer"
-    // (le meme joueur rejoue depuis la position d'origine). Chaine vide
-    // sinon -- elle est rompue par n'importe quel autre evenement (coup
-    // reussi, Fin de break, adversaire qui prend la table...). Rappel
-    // seulement : rien n'est sanctionne automatiquement.
-    std::string missReplayWarningPlayer() const;
+    // Sect. 3 §14(d) : nombre de "Faute et Miss" CONSECUTIVES suivies
+    // chacune d'un "Faire rejouer" (le meme joueur rejoue depuis la
+    // position d'origine) a la fin du journal. 0 si le journal ne se
+    // termine pas par un "Faire rejouer" de ce type -- la chaine est
+    // rompue par n'importe quel autre evenement (coup reussi, Fin de
+    // break, adversaire qui prend la table...). `player` recoit le nom du
+    // joueur qui rejoue (a avertir).
+    int missReplayChain(std::string& player) const;
+
+    // Vrai si le journal se termine par une 3e "Faute et Miss" de suite
+    // (deja 2 rejouees avant) : la frame peut etre attribuee a
+    // l'adversaire. `offender` recoit le nom du fautif. Sans effet sur la
+    // frame -- c'est l'appelant qui demande confirmation puis appelle
+    // concedeFrame().
+    bool isMissFrameForfeitDue(std::string& offender) const;
 
     // Correction d'arbitre (voir MainWindow, bouton "Correction arbitre") :
     // enregistre une trace explicite "avant -> apres" dans le journal.
