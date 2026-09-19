@@ -37,7 +37,39 @@ namespace
                 "ou en tapant un nouveau nom) et la longueur du match : 1 frame (partie rapide) "
                 "ou meilleur des 3/5/7/9 frames.<br><br>"
                 "L'appli bascule alors sur l'ecran de match, avec le score, le suivi de break et "
-                "les boutons d'action (faute, bille sortie, free ball...)."
+                "la telecommande (voir les rubriques suivantes)."
+            },
+            {
+                "Utiliser la telecommande",
+                "Pendant un match, clique la <b>bille</b> concernee a chaque coup reussi : l'appli "
+                "compte les points, le break et change de joueur toute seule.<br><br>"
+                "<b>Fin de break</b> : le joueur n'a rien empoche mais sans faute, la main passe.<br>"
+                "<b>Faute</b> : clique Faute, puis la bille concernee.<br>"
+                "<b>Miss</b> : le joueur n'a pas vraiment tente son coup. Clique Miss puis la bille ; "
+                "l'adversaire choisit ensuite <i>Remettre en place</i> (le fautif rejoue) ou "
+                "<i>Prendre la table</i>.<br>"
+                "<b>Free ball</b> : pour le joueur snooke apres une faute, avec les choix "
+                "<i>Remettre en place</i> ou <i>Choisir la bille de depart</i>.<br>"
+                "<b>Retour</b> : annule le dernier coup, et chaque nouvel appui remonte d'un coup "
+                "de plus. Une confirmation est demandee a chaque fois.<br>"
+                "<b>Game</b> : termine la frame en cours, le vainqueur etant celui qui mene au score.<br>"
+                "<b>Nouveau match</b> et <b>Esc</b> (retour a l'accueil)."
+            },
+            {
+                "Cas particuliers (bouton Autre)",
+                "Le bouton <b>Autre</b>, en bas de la telecommande, regroupe les actions "
+                "d'arbitrage moins frequentes :<br><br>"
+                "<b>Bille touchante</b> : la blanche touche deja une bille ; indique laquelle, "
+                "puis joue : le premier contact est deja valide.<br>"
+                "<b>Bille sortie de table</b> / <b>Blanche sortie de table</b> : faute automatique.<br>"
+                "<b>Recommencer la frame</b> : blocage (regle du Pat), le meme joueur rouvre.<br>"
+                "<b>Conceder la frame</b> : le joueur choisi perd la frame.<br>"
+                "<b>Conceder le match</b> : abandon definitif, le match est perdu.<br>"
+                "<b>Correction arbitre</b> : corrige le tout dernier coup en gardant une trace dans "
+                "le journal.<br><br>"
+                "<b>Faute et Miss repetee</b> : si un joueur enchaine les Miss avec remise en place, "
+                "un bandeau rouge previent (1/3, puis 2/3) et, a la 3e de suite, l'appli propose "
+                "d'attribuer la frame a l'adversaire."
             },
             {
                 "Connecter un telephone",
@@ -80,9 +112,11 @@ namespace
             {
                 "Regler l'application",
                 "Le bouton <b>PARAMETRES</b> (en haut a droite) regroupe : les annonces vocales "
-                "(activer/desactiver, choisir une voix feminine ou masculine), le statut des "
-                "cameras avec acces direct a leur calibration, et les informations sur la version "
-                "du logiciel."
+                "(activer/desactiver, choisir une voix feminine ou masculine), le modele de "
+                "telecommande de bureau (complete pour les tests, ou simplifiee pour l'usage "
+                "courant), le mode de suivi (<b>Manuel</b> : comptage a la telecommande, cameras "
+                "seulement pour le repositionnement des billes), le statut des cameras avec acces "
+                "direct a leur calibration, et les informations sur la version du logiciel."
             },
             {
                 "Consulter le reglement",
