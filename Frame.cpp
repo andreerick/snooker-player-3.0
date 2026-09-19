@@ -949,6 +949,28 @@ void Frame::requestReplay()
     m_history.addReplay(m_currentPlayer->getName());
 }
 
+std::string Frame::missReplayWarningPlayer() const
+{
+    const std::vector<LogEntry>& log = m_history.getLog();
+
+    int pairs = 0;
+    size_t i = log.size();
+    while (i >= 2
+        && log[i - 1].type == LogEntry::Type::Replay
+        && log[i - 2].type == LogEntry::Type::Foul
+        && log[i - 2].reason == kMissFoulReason)
+    {
+        ++pairs;
+        i -= 2;
+    }
+
+    if (pairs < 2)
+    {
+        return std::string();
+    }
+    return log.back().playerName;
+}
+
 void Frame::logCorrection(const std::string& before, const std::string& after)
 {
     m_history.addCorrection(before, after);

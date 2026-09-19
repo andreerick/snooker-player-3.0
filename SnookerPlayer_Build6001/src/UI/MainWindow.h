@@ -356,6 +356,11 @@ private:
     // touchee ou empochee ensuite (Sect. 3 §8(c)(i) du reglement).
     QLabel* m_touchingBallStatusLabel = nullptr;
     QLabel* m_simpleTouchingBallStatusLabel = nullptr;
+    // Rappel d'avertissement Sect. 3 §14(d) (voir
+    // Frame::missReplayWarningPlayer()) : visible quand un joueur enchaine
+    // des "Faute et Miss" rejouees depuis la position d'origine.
+    QLabel* m_missWarningLabel = nullptr;
+    QLabel* m_simpleMissWarningLabel = nullptr;
     QLabel* m_pendingActionLabel = nullptr;
     QPushButton* m_cancelPendingButton = nullptr;
     // Meme role que m_pendingActionLabel, mais pour la telecommande 2.0

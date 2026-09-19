@@ -1750,6 +1750,16 @@ MainWindow::MainWindow(QWidget* parent)
     m_touchingBallStatusLabel->setVisible(false);
     remoteLayout->addWidget(m_touchingBallStatusLabel);
 
+    m_missWarningLabel = new QLabel(remotePanel);
+    m_missWarningLabel->setAlignment(Qt::AlignHCenter);
+    m_missWarningLabel->setWordWrap(true);
+    m_missWarningLabel->setStyleSheet(
+        "color: " + kWhite + "; background-color: " + kRecordingRed + ";"
+        "border-radius: 4px; font-size: 11px; font-weight: bold; padding: 4px;"
+    );
+    m_missWarningLabel->setVisible(false);
+    remoteLayout->addWidget(m_missWarningLabel);
+
     // Bandeau d'instruction : affiche quelle action est en attente d'une
     // bille cliquee sur la telecommande (voir enum PendingAction), avec un
     // bouton pour annuler si l'utilisateur change d'avis.
@@ -2495,7 +2505,7 @@ MainWindow::MainWindow(QWidget* parent)
                         Ball touched(action.ballName.toStdString(), value);
                         Referee foulReferee;
                         int penalty = foulReferee.calculateFoul(required, touched);
-                        frame.foul(required, touched, penalty, "Absence de veritable tentative (Miss)");
+                        frame.foul(required, touched, penalty, Frame::kMissFoulReason);
                     }
                     else if (action.kind == ReplayAction::Kind::FreeBallShot)
                     {
@@ -2625,6 +2635,16 @@ MainWindow::MainWindow(QWidget* parent)
     );
     m_simpleTouchingBallStatusLabel->setVisible(false);
     simpleLayout->addWidget(m_simpleTouchingBallStatusLabel);
+
+    m_simpleMissWarningLabel = new QLabel(remotePanelSimple);
+    m_simpleMissWarningLabel->setAlignment(Qt::AlignHCenter);
+    m_simpleMissWarningLabel->setWordWrap(true);
+    m_simpleMissWarningLabel->setStyleSheet(
+        "color: " + kWhite + "; background-color: " + kRecordingRed + ";"
+        "border-radius: 4px; font-size: 11px; font-weight: bold; padding: 4px;"
+    );
+    m_simpleMissWarningLabel->setVisible(false);
+    simpleLayout->addWidget(m_simpleMissWarningLabel);
 
     // Bandeau d'instruction (meme role que m_pendingActionLabel sur la
     // 1.0, absent jusqu'ici sur cette telecommande) + choix suivant un
@@ -3918,6 +3938,18 @@ void MainWindow::refreshDisplay()
     m_simpleTouchingBallStatusLabel->setText(touchingBallText);
     m_simpleTouchingBallStatusLabel->setVisible(isTouchingBall);
 
+    // Rappel d'avertissement (Sect. 3 §14(d)) : 2 "Faute et Miss" de suite
+    // rejouees depuis la position d'origine -> l'arbitre doit prevenir le
+    // joueur qu'un nouvel echec lui fait perdre la frame.
+    QString missWarningPlayer = QString::fromStdString(frame.missReplayWarningPlayer());
+    QString missWarningText = missWarningPlayer.isEmpty()
+        ? QString()
+        : "AVERTIR " + missWarningPlayer + " : un nouvel echec = frame perdue (Faute et Miss repetee)";
+    m_missWarningLabel->setText(missWarningText);
+    m_missWarningLabel->setVisible(!missWarningText.isEmpty());
+    m_simpleMissWarningLabel->setText(missWarningText);
+    m_simpleMissWarningLabel->setVisible(!missWarningText.isEmpty());
+
     QString pendingText;
     switch (m_pendingAction)
     {
@@ -3996,6 +4028,7 @@ void MainWindow::refreshDisplay()
         shareState["isMissChoicePending"] = isMissChoicePending;
         shareState["isBlackReplay"] = isBlackReplay;
         shareState["isTouchingBall"] = isTouchingBall;
+        shareState["missWarningText"] = missWarningText;
         // Meme regle que m_ballButtons/m_simpleBallButtons cote bureau :
         // le telephone grise un bouton de bille des qu'elle n'est plus
         // physiquement sur la table (voir BallSet::isOnTable()).
@@ -4518,13 +4551,13 @@ void MainWindow::handleBallAction(const QString& ballName, int ballValue)
         if (required.getName() == "Couleur")
         {
             m_pendingFoulTouchedBall = clickedBall;
-            m_pendingFoulReason = "Absence de veritable tentative (Miss)";
+            m_pendingFoulReason = Frame::kMissFoulReason;
             m_pendingAction = PendingAction::AnnounceFoulTarget;
             refreshDisplay();
             return;
         }
         int penalty = foulReferee.calculateFoul(required, clickedBall);
-        frame.foul(required, clickedBall, penalty, "Absence de veritable tentative (Miss)");
+        frame.foul(required, clickedBall, penalty, Frame::kMissFoulReason);
         m_gameManager.afterShot();
         // La main passe deja naturellement a l'adversaire (comme une faute
         // normale, equivalent a "il joue la position telle quelle"), mais
