@@ -46,6 +46,8 @@ add_library(MesureVision STATIC
     TableCapture.h
     ShotAnalyzer.cpp
     ShotAnalyzer.h
+    SnookerGeometry.cpp
+    SnookerGeometry.h
 )
 target_include_directories(MesureVision PUBLIC
     ${OpenCV_INCLUDE_DIRS}
