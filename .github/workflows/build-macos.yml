@@ -7,19 +7,49 @@ on:
     branches: [master]
   workflow_dispatch:
 
+env:
+  OPENCV_VERSION: 4.14.0
+
 jobs:
   build:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Qt6 and OpenCV
-        run: brew install qt opencv ninja
+      - name: Install Qt6 and build tools
+        run: brew install qt ninja
+
+      # Homebrew's "opencv" formula tracks OpenCV 5.x, which removed/moved
+      # APIs this project still uses (cv::minEnclosingCircle, contourArea,
+      # findHomography, RANSAC, ...). Build OpenCV 4.x from source instead,
+      # same as the local macOS dev setup -- cached so only the first run
+      # (or a version bump) pays the ~15-20 min build cost.
+      - name: Cache OpenCV build
+        id: cache-opencv
+        uses: actions/cache@v4
+        with:
+          path: ~/opencv-install
+          key: opencv-${{ env.OPENCV_VERSION }}-macos-14-v1
+
+      - name: Build OpenCV ${{ env.OPENCV_VERSION }} from source
+        if: steps.cache-opencv.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL -o /tmp/opencv.tar.gz \
+            "https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSION}.tar.gz"
+          tar -xzf /tmp/opencv.tar.gz -C /tmp
+          cmake -S "/tmp/opencv-${OPENCV_VERSION}" -B /tmp/opencv-build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$HOME/opencv-install" \
+            -DBUILD_LIST=core,imgproc,imgcodecs,videoio,highgui,objdetect,calib3d,features2d,flann \
+            -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_DOCS=OFF \
+            -DBUILD_opencv_python2=OFF -DBUILD_opencv_python3=OFF -DBUILD_opencv_apps=OFF \
+            -DBUILD_JAVA=OFF -DWITH_QT=OFF -DWITH_OPENGL=OFF -DBUILD_SHARED_LIBS=ON
+          cmake --build /tmp/opencv-build --target install -j"$(sysctl -n hw.ncpu)"
 
       - name: Configure
         run: |
           cmake -S . -B build -G Ninja \
-            -DCMAKE_PREFIX_PATH="$(brew --prefix qt);$(brew --prefix opencv)"
+            -DCMAKE_PREFIX_PATH="$(brew --prefix qt);$HOME/opencv-install"
 
       - name: Build
         run: cmake --build build --target SnookerPlayer
