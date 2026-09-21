@@ -112,6 +112,24 @@ add_executable(VisionGameBridgeDemo
 )
 target_link_libraries(VisionGameBridgeDemo PRIVATE MesureVision)
 
+# Tests automatiques du moteur de regles (sans Qt ni OpenCV) : lancer avec
+# `ctest --output-on-failure` (ou l'executable EngineTests directement).
+enable_testing()
+add_executable(EngineTests
+    tests/EngineTests.cpp
+    Frame.cpp
+    Match.cpp
+    Player.cpp
+    Ball.cpp
+    BallSet.cpp
+    Referee.cpp
+    ShotHistory.cpp
+    Shot.cpp
+    SnookerGeometry.cpp
+)
+target_include_directories(EngineTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME EngineTests COMMAND EngineTests)
+
 qt_add_executable(SnookerPlayer
     SnookerPlayer_Build6001/src/main.cpp
     SnookerPlayer_Build6001/src/UI/MainWindow.cpp

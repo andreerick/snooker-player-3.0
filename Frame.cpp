@@ -172,11 +172,6 @@ void Frame::potColor(Ball ball)
     else if (m_phase == FramePhase::FinalColors)
     {
         m_nextColor++;
-        checkInsurmountableLead();
-        if (m_phase == FramePhase::Finished)
-        {
-            return;
-        }
         if (m_nextColor >= 6)
         {
             // Toutes les couleurs finales sont jouees, y compris la
@@ -620,10 +615,6 @@ bool Frame::playFreeBall(const Ball& ball)
     m_freeBallColor =
         Ball("Aucune", 0);
 
-    // Cas exotique (Free Ball pendant les couleurs finales, voir plus
-    // haut) : verifie apres coup, une fois les points reellement ajoutes.
-    checkInsurmountableLead();
-
     return true;
 }
 
@@ -666,6 +657,10 @@ void Frame::missShot()
     {
         m_needColor = false;
     }
+
+    // Un tour termine sans empocher la noire seule restante peut confirmer
+    // un ecart insurmontable (voir checkInsurmountableLead()).
+    checkInsurmountableLead();
 }
 
 // =====================================
