@@ -1,0 +1,9 @@
+=== Export du journal des coups ===
+2026-09-15T20:33:00
+
+Joueur 1 : Eric
+Joueur 2 : David
+Joueur au tir : Eric
+
+1. Eric -- Rouge (+1)
+2. FAUTE -- Eric : Absence de veritable tentative (Miss) (bille demandee : Bleue, bille jouee : Bleue) -- adverse +5

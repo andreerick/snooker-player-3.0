@@ -4,8 +4,11 @@
 #include "Match.h"
 #include "Referee.h"
 #include "SnookerGeometry.h"
+#include "ScenarioReplay.h"
 
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 namespace
@@ -258,6 +261,58 @@ namespace
         checkEq(m.getFramesPlayer1(), 2, "le vainqueur passe au nombre de frames gagnantes");
     }
 
+    // Rejoue un scenario_*.txt (les memes fichiers/logique que le bouton
+    // "Rejouer le scenario" de la telecommande) sur un match neuf, puis
+    // compare les scores finaux de la frame en cours.
+    void replayScenario(const std::string& fileName, int expectedEric, int expectedDavid)
+    {
+        std::ifstream in(std::string(SCENARIO_DIR) + "/" + fileName, std::ios::binary);
+        std::stringstream buffer;
+        buffer << in.rdbuf();
+        check(in.good() || in.eof(), "scenario lisible : " + fileName);
+
+        std::vector<ReplayAction> actions = parseScenarioText(buffer.str());
+        check(!actions.empty(), "scenario non vide : " + fileName);
+
+        Match match;
+        match.setPlayerNames("Eric", "David");
+        match.setFramesToWin(5);
+        match.start();
+        for (const ReplayAction& action : actions)
+        {
+            applyReplayAction(match.getCurrentFrame(), action);
+            match.checkFrameEnd();
+        }
+
+        Frame& frame = match.getCurrentFrame();
+        if (match.isFrameJustFinished())
+        {
+            // La frame est terminee : Match la garde jusqu'a proceedToNextFrame().
+            checkEq(match.getFrameResults().back().scorePlayer1, expectedEric, fileName + " : score Eric");
+            checkEq(match.getFrameResults().back().scorePlayer2, expectedDavid, fileName + " : score David");
+        }
+        else
+        {
+            checkEq(frame.getPlayer1().getScore(), expectedEric, fileName + " : score Eric");
+            checkEq(frame.getPlayer2().getScore(), expectedDavid, fileName + " : score David");
+        }
+    }
+
+    void testScenarioReplay()
+    {
+        // Scores verifies a la main puis confirmes par rejeu reel (2026-09-15).
+        replayScenario("s15_faute_pendant_free_ball.txt", 23, 4);
+        replayScenario("s17_fautes_couleurs_finales.txt", 55, 71);
+        replayScenario("s33_rate_complet_couleur_ambigue.txt", 1, 5);
+        replayScenario("s60_noire_respotee_mort_subite.txt", 63, 56);
+
+        // Une trace "CORRECTION ARBITRE" n'est pas un evenement de jeu, meme si
+        // son texte contient " -- adverse +N".
+        std::vector<ReplayAction> corrected = parseScenarioText(
+            "4. CORRECTION ARBITRE : Rouge (+1) -> FAUTE (bille jouee : Rose) -- adverse +6\n");
+        check(corrected.empty(), "une ligne CORRECTION ARBITRE est ignoree au rejeu");
+    }
+
     void testSnookerGeometry()
     {
         PositionedBall cue{ "Blanche", 100, 89 };
@@ -290,6 +345,7 @@ int main()
     testConcedeFrame();
     testMissWarningChain();
     testMatch();
+    testScenarioReplay();
     testSnookerGeometry();
 
     std::cout << g_checks << " controles, " << g_failures << " echec(s)" << std::endl;

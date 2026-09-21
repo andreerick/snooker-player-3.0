@@ -1,0 +1,56 @@
+=== Export du journal des coups ===
+2026-09-15T20:60:00
+
+Joueur 1 : Eric
+Joueur 2 : David
+Joueur au tir : Eric
+
+1. Eric -- Rouge (+1)
+2. Eric -- Rouge (+1)
+3. Eric -- Noire (+7)
+4. Eric -- MISS (fin de tour, aucune bille jouee)
+5. FAUTE -- David : Absence de veritable tentative (Miss) (bille demandee : Rouge, bille jouee : Rouge) -- adverse +4
+6. David -- REMETTRE EN PLACE (rejoue depuis la position)
+7. FAUTE -- David : Absence de veritable tentative (Miss) (bille demandee : Rouge, bille jouee : Rouge) -- adverse +4
+8. David -- REMETTRE EN PLACE (rejoue depuis la position)
+9. David -- MISS (fin de tour, aucune bille jouee)
+10. FAUTE -- Eric : Mauvaise bille touchee (bille demandee : Rouge, bille jouee : Bleue) -- adverse +5
+11. David -- Rouge (+1)
+12. David -- Noire (+7)
+13. David -- MISS (fin de tour, aucune bille jouee)
+14. FAUTE -- Eric : Absence de veritable tentative (Miss) (bille demandee : Rouge, bille jouee : Rouge) -- adverse +4
+15. David -- Marron (+1)
+16. David -- Noire (+7)
+17. David -- Rouge (+1)
+18. David -- Jaune (+2)
+19. David -- Rouge (+1)
+20. David -- Jaune (+2)
+21. David -- Rouge (+1)
+22. David -- Jaune (+2)
+23. David -- Rouge (+1)
+24. David -- Jaune (+2)
+25. David -- Rouge (+1)
+26. David -- Jaune (+2)
+27. David -- Rouge (+1)
+28. David -- Jaune (+2)
+29. David -- MISS (fin de tour, aucune bille jouee)
+30. Eric -- Rouge (+1)
+31. Eric -- Rose (+6)
+32. Eric -- Rouge (+1)
+33. Eric -- Marron (+4)
+34. Eric -- Rouge (+1)
+35. Eric -- Verte (+3)
+36. Eric -- Rouge (+1)
+37. Eric -- Jaune (+2)
+38. Eric -- Rouge (+1)
+39. Eric -- Jaune (+2)
+40. Eric -- Rouge (+1)
+41. Eric -- Jaune (+2)
+42. Eric -- Jaune (+2)
+43. Eric -- Verte (+3)
+44. Eric -- Marron (+4)
+45. Eric -- Bleue (+5)
+46. Eric -- MISS (fin de tour, aucune bille jouee)
+47. David -- Rose (+6)
+48. David -- Noire (+7)
+49. FAUTE -- David : Absence de veritable tentative (Miss) (bille demandee : Noire, bille jouee : Noire) -- adverse +7

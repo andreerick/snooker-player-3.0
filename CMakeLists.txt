@@ -126,8 +126,11 @@ add_executable(EngineTests
     ShotHistory.cpp
     Shot.cpp
     SnookerGeometry.cpp
+    ScenarioReplay.cpp
 )
 target_include_directories(EngineTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(EngineTests PRIVATE
+    SCENARIO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/scenarios")
 add_test(NAME EngineTests COMMAND EngineTests)
 
 qt_add_executable(SnookerPlayer
@@ -199,6 +202,10 @@ qt_add_executable(SnookerPlayer
     Shot.cpp
     Shot.h
     FoulRecord.h
+
+    # Rejeu des scenarios (partage avec les tests automatiques)
+    ScenarioReplay.cpp
+    ScenarioReplay.h
 )
 
 target_include_directories(SnookerPlayer PRIVATE

@@ -1,0 +1,14 @@
+=== Export du journal des coups ===
+2026-09-15T20:15:00
+
+Joueur 1 : Eric
+Joueur 2 : David
+Joueur au tir : Eric
+
+1. FAUTE -- Eric : Mauvaise bille touchee (bille demandee : Rouge, bille jouee : Jaune) -- adverse +4
+2. FAUTE -- David : Faute pendant un Free Ball (bille demandee : Bleue, bille jouee : Noire) -- adverse +7
+3. Eric -- Rouge (+1)
+4. Eric -- Noire (+7)
+5. Eric -- Rouge (+1)
+6. Eric -- Noire (+7)
+7. Eric -- MISS (fin de tour, aucune bille jouee)
