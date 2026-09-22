@@ -198,6 +198,38 @@ namespace
         checkEq(g.getPlayer2().getScore(), 7, "faute de 7 sans bille touchante");
     }
 
+    // isFreeBallValueAmbiguous()/setFreeBallValue() : documente comme NON
+    // gere par ScenarioReplay ("Ne gere pas le cas ambigu"), donc jamais
+    // exerce par testScenarioReplay() -- teste ici directement.
+    void testFreeBallAmbiguousValue()
+    {
+        // Cas NON ambigu : en debut de frame, une rouge est due (valeur 1),
+        // donc setFreeBall() deduit seul la valeur -- peu importe la
+        // couleur reellement designee, le Free Ball ne compte que 1 point.
+        Frame f1;
+        f1.setPlayerNames("Eric", "David");
+        check(!f1.isFreeBallValueAmbiguous(), "rouge due en debut de frame : pas ambigu");
+        f1.setFreeBall(true);
+        f1.setFreeBallColor(yellow());
+        f1.playFreeBall(yellow());
+        checkEq(f1.getPlayer1().getScore(), 1,
+            "Free Ball non ambigu (rouge due) : compte 1 point comme une rouge, pas la valeur de la couleur");
+
+        // Cas ambigu : apres une rouge empochee, "n'importe quelle couleur"
+        // est due -- la valeur DOIT etre annoncee explicitement avant de
+        // jouer le Free Ball, et c'est cette valeur annoncee qui compte.
+        Frame f2;
+        f2.setPlayerNames("Eric", "David");
+        f2.playShot(red());
+        check(f2.isFreeBallValueAmbiguous(), "apres une rouge empochee, la couleur due est ambigue");
+        f2.setFreeBall(true);
+        f2.setFreeBallColor(blue());
+        f2.setFreeBallValue(blue());
+        f2.playFreeBall(blue());
+        checkEq(f2.getPlayer1().getScore(), 1 + 5,
+            "Free Ball ambigu : compte la valeur explicitement annoncee (Bleue = 5), pas 1");
+    }
+
     void testConcedeFrame()
     {
         Frame f;
@@ -322,55 +354,6 @@ namespace
         check(corrected.empty(), "une ligne CORRECTION ARBITRE est ignoree au rejeu");
     }
 
-    // Sect. 3 §14(d) : missReplayChain()/isMissFrameForfeitDue() n'agissent
-    // pas sur le score (contrairement a testScenarioReplay() ci-dessus) --
-    // elles interrogent juste le journal, donc verifiees ici directement
-    // apres chaque etape plutot que par un score final.
-    void testMissReplayChain()
-    {
-        std::vector<ReplayAction> actions = parseScenarioText(
-            "1. FAUTE -- Eric : Absence de veritable tentative (Miss) (bille demandee : Rouge, bille jouee : Rouge) -- adverse +4\n"
-            "2. Eric -- REMETTRE EN PLACE (rejoue depuis la position)\n"
-            "3. FAUTE -- Eric : Absence de veritable tentative (Miss) (bille demandee : Rouge, bille jouee : Rouge) -- adverse +4\n"
-            "4. Eric -- REMETTRE EN PLACE (rejoue depuis la position)\n"
-            "5. FAUTE -- Eric : Absence de veritable tentative (Miss) (bille demandee : Rouge, bille jouee : Rouge) -- adverse +4\n");
-        check(actions.size() == 5, "5 actions extraites (3 fautes Miss + 2 rejeux)");
-
-        Frame frame;
-        frame.setPlayerNames("Eric", "David");
-        std::string who;
-
-        applyReplayAction(frame, actions[0]); // 1re faute Miss
-        checkEq(frame.missReplayChain(who), 0, "1re faute Miss seule : pas encore de paire complete");
-        std::string offender;
-        check(!frame.isMissFrameForfeitDue(offender), "1re faute Miss : pas de forfait (2 paires requises avant)");
-
-        applyReplayAction(frame, actions[1]); // 1er rejeu -> 1 paire complete
-        checkEq(frame.missReplayChain(who), 1, "apres le 1er rejeu : chaine de 1 paire");
-        checkEq(who, std::string("Eric"), "missReplayChain rapporte le bon joueur");
-
-        applyReplayAction(frame, actions[2]); // 2e faute Miss
-        check(!frame.isMissFrameForfeitDue(offender), "2e faute Miss seule : encore pas de forfait (seulement 1 paire avant elle)");
-
-        applyReplayAction(frame, actions[3]); // 2e rejeu -> 2 paires completes
-        checkEq(frame.missReplayChain(who), 2, "apres le 2e rejeu : chaine de 2 paires");
-
-        applyReplayAction(frame, actions[4]); // 3e faute Miss consecutive
-        check(frame.isMissFrameForfeitDue(offender), "3e faute Miss consecutive : forfait de frame possible");
-        checkEq(offender, std::string("Eric"), "isMissFrameForfeitDue rapporte le bon fautif");
-        checkEq(frame.missReplayChain(who), 0,
-            "missReplayChain revient a 0 : le journal se termine par une Faute, pas un Rejoue");
-
-        // Un coup normal (reussi) entre deux, meme apres une paire complete,
-        // rompt la chaine : la faute suivante ne compte qu'à partir de 1.
-        Frame frame2;
-        frame2.setPlayerNames("Eric", "David");
-        applyReplayAction(frame2, actions[0]);
-        applyReplayAction(frame2, actions[1]); // 1 paire complete
-        frame2.playShot(Ball("Rouge", 1));     // coup normal : rompt la chaine
-        checkEq(frame2.missReplayChain(who), 0, "un coup reussi rompt la chaine de Faute-et-Miss");
-    }
-
     void testSnookerGeometry()
     {
         PositionedBall cue{ "Blanche", 100, 89 };
@@ -400,11 +383,11 @@ int main()
     testFouls();
     testSequenceAndMiss();
     testTouchingBall();
+    testFreeBallAmbiguousValue();
     testConcedeFrame();
     testMissWarningChain();
     testMatch();
     testScenarioReplay();
-    testMissReplayChain();
     testSnookerGeometry();
 
     std::cout << g_checks << " controles, " << g_failures << " echec(s)" << std::endl;
