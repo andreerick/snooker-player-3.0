@@ -1,0 +1,10 @@
+=== Export du journal des coups ===
+2026-09-22T20:71:00
+
+Joueur 1 : Eric
+Joueur 2 : David
+Joueur au tir : Eric
+
+1. Eric -- Rouge (+1)
+2. FAUTE -- Eric : Blanche sortie de la table (bille demandee : Couleur, bille jouee : Blanche) -- adverse +4
+3. David -- MISS (fin de tour, aucune bille jouee)

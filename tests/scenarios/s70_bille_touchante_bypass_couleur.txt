@@ -1,0 +1,12 @@
+=== Export du journal des coups ===
+2026-09-22T20:70:00
+
+Joueur 1 : Eric
+Joueur 2 : David
+Joueur au tir : Eric
+
+1. Eric -- Rouge (+1)
+2. Eric -- Noire (+7)
+3. Eric -- BILLE TOUCHANTE (Noire) (premier contact deja valide pour le prochain coup)
+4. Eric -- Noire (+7)
+5. Eric -- MISS (fin de tour, aucune bille jouee)

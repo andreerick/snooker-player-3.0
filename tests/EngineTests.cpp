@@ -305,6 +305,15 @@ namespace
         replayScenario("s17_fautes_couleurs_finales.txt", 55, 71);
         replayScenario("s33_rate_complet_couleur_ambigue.txt", 1, 5);
         replayScenario("s60_noire_respotee_mort_subite.txt", 63, 56);
+        // Score raisonne a la main (Rouge +1, Noire +7, puis Noire +7 de
+        // nouveau grace a la Bille Touchante qui dispense de l'alternance
+        // rouge/couleur pour ce seul coup) puis confirme par rejeu reel.
+        replayScenario("s70_bille_touchante_bypass_couleur.txt", 15, 0);
+        // Score raisonne a la main (Rouge +1 puis faute "Blanche sortie de
+        // la table" : penalite = max(4, valeur bille demandee, valeur
+        // bille touchee) = max(4, 0, 0) = 4 pour l'adversaire) puis
+        // confirme par rejeu reel.
+        replayScenario("s71_blanche_sortie_de_table.txt", 1, 4);
 
         // Une trace "CORRECTION ARBITRE" n'est pas un evenement de jeu, meme si
         // son texte contient " -- adverse +N".
