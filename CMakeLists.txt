@@ -133,6 +133,15 @@ target_compile_definitions(EngineTests PRIVATE
     SCENARIO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/scenarios")
 add_test(NAME EngineTests COMMAND EngineTests)
 
+# Tests de la logique Championnat/Tournoi (TournamentManager, Qt Core seul).
+add_executable(CompetitionTests
+    tests/CompetitionTests.cpp
+    SnookerPlayer_Build6001/src/UI/TournamentManager.cpp
+)
+target_include_directories(CompetitionTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/SnookerPlayer_Build6001/src/UI)
+target_link_libraries(CompetitionTests PRIVATE Qt6::Core)
+add_test(NAME CompetitionTests COMMAND CompetitionTests)
+
 qt_add_executable(SnookerPlayer
     SnookerPlayer_Build6001/src/main.cpp
     SnookerPlayer_Build6001/src/UI/MainWindow.cpp

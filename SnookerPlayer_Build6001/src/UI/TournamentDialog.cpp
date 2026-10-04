@@ -322,7 +322,8 @@ void TournamentDialog::refreshActiveView()
     QString formatText = (m_tournament.format() == TournamentManager::Format::Elimination)
         ? "Elimination directe"
         : (m_tournament.format() == TournamentManager::Format::League)
-            ? "Aller-retour, meilleur des " + QString::number(2 * m_tournament.framesToWin() - 1) + " frames"
+            ? (m_tournament.framesToWin() == 1 ? QString("Aller-retour, 1 frame par match")
+                : "Aller-retour, meilleur des " + QString::number(2 * m_tournament.framesToWin() - 1) + " frames")
             : "Round robin";
     m_titleLabel->setText(m_tournament.name() + " -- " + formatText);
 
@@ -348,10 +349,9 @@ void TournamentDialog::refreshActiveView()
         html += "<table cellspacing='0' cellpadding='4' style='color:" + kWhite + ";'>";
         html += "<tr style='color:" + kGray + ";'>" + QString(withPoints ? "<td>#</td>" : "") + "<td>Joueur</td>" + QString(withPoints ? "<td><b>Pts</b></td>" : "")
               + "<td>V</td><td>J</td><td>Frames</td></tr>";
-        int rank = 0;
         for (const TournamentManager::Standing& s : m_tournament.standings())
         {
-            html += "<tr>" + (withPoints ? "<td>" + QString::number(++rank) + "</td>" : QString()) + "<td>" + s.name + "</td>"
+            html += "<tr>" + (withPoints ? "<td>" + QString::number(s.rank) + "</td>" : QString()) + "<td>" + s.name + "</td>"
                   + (withPoints ? "<td><b>" + QString::number(s.points) + "</b></td>" : QString())
                   + "<td>" + QString::number(s.won) + "</td><td>"
                   + QString::number(s.played) + "</td><td>" + QString::number(s.framesFor) + "-" + QString::number(s.framesAgainst) + "</td></tr>";
@@ -361,7 +361,7 @@ void TournamentDialog::refreshActiveView()
 
     if (m_tournament.isFinished())
     {
-        html += "<p style='color:" + kOrange + "; font-size:15px; font-weight:bold; margin-top:18px;'>CHAMPION : " + m_tournament.champion() + "</p>";
+        html += "<p style='color:" + kOrange + "; font-size:15px; font-weight:bold; margin-top:18px;'>" + QString(m_tournament.champions().size() > 1 ? "EGALITE PARFAITE EN TETE : " : "CHAMPION : ") + m_tournament.champion() + "</p>";
     }
     m_bracketLabel->setText(html);
 

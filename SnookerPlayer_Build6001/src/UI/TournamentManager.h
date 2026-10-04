@@ -113,16 +113,24 @@ public:
     // true si le tournoi a un vainqueur final (elimination : le dernier
     // match joue ; round robin : tous les matchs joues).
     bool isFinished() const;
-    QString champion() const; // vide si pas encore termine
+    // Vide tant que pas termine ; plusieurs noms seulement en cas
+    // d'egalite parfaite en tete (voir Standing::rank).
+    QStringList champions() const;
+    QString champion() const; // champions() joints par " et "
 
-    // Classement round-robin (points desc. -- 2 par victoire, pas de
-    // nul possible --, puis difference de frames desc.) -- vide/non pertinent en elimination.
+    // Classement round-robin : points desc. (2 par victoire, pas de nul
+    // possible), puis difference de frames desc., puis resultats des
+    // matchs DIRECTS entre les joueurs encore a egalite (victoires, puis
+    // difference de frames dans ces seuls matchs). Si rien ne les
+    // departage, ils gardent le meme rang (Standing::rank) -- jamais
+    // d'ordre arbitraire presente comme un vrai classement. -- vide/non pertinent en elimination.
     struct Standing
     {
         QString name;
         int played = 0;
         int won = 0;
         int points = 0; // Championnat : kPointsPerWin par victoire, 0 par defaite
+        int rank = 0;   // 1 = premier ; deux joueurs vraiment indeparables partagent le meme rang
         int framesFor = 0;
         int framesAgainst = 0;
     };

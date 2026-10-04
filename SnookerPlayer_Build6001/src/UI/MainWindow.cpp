@@ -3274,7 +3274,8 @@ void MainWindow::handleTournamentMatchFinished()
         + " - " + QString::number(loserFrames) + ").";
     if (tournament.isFinished())
     {
-        message += (isChampionship ? "\n\nChampionnat termine ! Champion : " : "\n\nTournoi termine ! Champion : ") + tournament.champion();
+        message += QString(isChampionship ? "\n\nChampionnat termine ! " : "\n\nTournoi termine ! ")
+            + (tournament.champions().size() > 1 ? "Egalite parfaite en tete : " : "Champion : ") + tournament.champion();
         showStyledMessage(this, QMessageBox::Information, competitionTitle, message);
         return;
     }

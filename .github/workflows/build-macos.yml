@@ -57,5 +57,8 @@ jobs:
       - name: Build engine tests
         run: cmake --build build --target EngineTests
 
+      - name: Build competition tests
+        run: cmake --build build --target CompetitionTests
+
       - name: Run engine tests
         run: ctest --test-dir build --output-on-failure

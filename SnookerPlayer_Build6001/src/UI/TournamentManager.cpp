@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QMap>
 #include <algorithm>
 
 namespace
@@ -272,16 +273,24 @@ bool TournamentManager::isFinished() const
     return false;
 }
 
-QString TournamentManager::champion() const
+QStringList TournamentManager::champions() const
 {
     if (!isFinished())
     {
-        return QString();
+        return QStringList();
     }
     if (isRoundRobinLike())
     {
-        QVector<Standing> table = standings();
-        return table.isEmpty() ? QString() : table.first().name;
+        QStringList result;
+        for (const Standing& st : standings())
+        {
+            if (st.rank != 1)
+            {
+                break;
+            }
+            result.append(st.name);
+        }
+        return result;
     }
 
     int maxRound = 0;
@@ -293,10 +302,15 @@ QString TournamentManager::champion() const
     {
         if (m.round == maxRound)
         {
-            return m.winner;
+            return QStringList{ m.winner };
         }
     }
-    return QString();
+    return QStringList();
+}
+
+QString TournamentManager::champion() const
+{
+    return champions().join(" et ");
 }
 
 QVector<TournamentManager::Standing> TournamentManager::standings() const
@@ -349,14 +363,75 @@ QVector<TournamentManager::Standing> TournamentManager::standings() const
         }
     }
 
-    std::sort(table.begin(), table.end(), [](const Standing& a, const Standing& b)
+    auto frameDiff = [](const Standing& st) { return st.framesFor - st.framesAgainst; };
+    std::sort(table.begin(), table.end(), [&](const Standing& a, const Standing& b)
         {
             if (a.points != b.points)
             {
                 return a.points > b.points;
             }
-            return (a.framesFor - a.framesAgainst) > (b.framesFor - b.framesAgainst);
+            return frameDiff(a) > frameDiff(b);
         });
+
+    // Egalite de points ET de difference de frames : on regarde les
+    // matchs directs entre les joueurs concernes seulement (mini-poule).
+    // Une cle par joueur (et non une comparaison deux a deux) pour
+    // rester un ordre total valable meme a 3 joueurs a egalite.
+    struct Key
+    {
+        int wins = 0;
+        int diff = 0;
+        bool operator==(const Key& other) const { return wins == other.wins && diff == other.diff; }
+    };
+    QMap<QString, Key> keys;
+    for (int start = 0; start < table.size();)
+    {
+        int end = start + 1;
+        while (end < table.size() && table[end].points == table[start].points
+               && frameDiff(table[end]) == frameDiff(table[start]))
+        {
+            ++end;
+        }
+        if (end - start > 1)
+        {
+            QStringList group;
+            for (int i = start; i < end; ++i)
+            {
+                group.append(table[i].name);
+            }
+            for (const Matchup& m : m_matchups)
+            {
+                if (!m.isPlayed() || !group.contains(m.player1) || !group.contains(m.player2))
+                {
+                    continue;
+                }
+                keys[m.winner].wins++;
+                keys[m.player1].diff += m.scorePlayer1 - m.scorePlayer2;
+                keys[m.player2].diff += m.scorePlayer2 - m.scorePlayer1;
+            }
+            std::stable_sort(table.begin() + start, table.begin() + end, [&](const Standing& a, const Standing& b)
+                {
+                    const Key ka = keys.value(a.name);
+                    const Key kb = keys.value(b.name);
+                    if (ka.wins != kb.wins)
+                    {
+                        return ka.wins > kb.wins;
+                    }
+                    return ka.diff > kb.diff;
+                });
+        }
+        start = end;
+    }
+
+    // Meme rang uniquement si TOUT est identique, matchs directs compris.
+    for (int i = 0; i < table.size(); ++i)
+    {
+        bool sameAsPrevious = i > 0
+            && table[i].points == table[i - 1].points
+            && frameDiff(table[i]) == frameDiff(table[i - 1])
+            && keys.value(table[i].name) == keys.value(table[i - 1].name);
+        table[i].rank = sameAsPrevious ? table[i - 1].rank : i + 1;
+    }
     return table;
 }
 
