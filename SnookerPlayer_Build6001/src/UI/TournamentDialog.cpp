@@ -1,6 +1,7 @@
 #include "TournamentDialog.h"
 #include "../Storage/MatchStorage.h"
 #include "UiUtils.h"
+#include "CompetitionPrintout.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -19,6 +20,9 @@
 #include <QDate>
 #include <QListWidgetItem>
 #include <QSpinBox>
+#include <QTextDocument>
+#include <QPrinter>
+#include <QPrintPreviewDialog>
 #include <algorithm>
 
 namespace
@@ -285,6 +289,11 @@ TournamentDialog::TournamentDialog(TournamentManager::Kind kind, QWidget* parent
     );
     connect(clearTournamentButton, &QPushButton::clicked, this, &TournamentDialog::clearTournament);
     bottomRow->addWidget(clearTournamentButton);
+
+    QPushButton* printButton = new QPushButton("Imprimer / PDF...", activePage);
+    printButton->setStyleSheet(smallButtonStyle);
+    connect(printButton, &QPushButton::clicked, this, &TournamentDialog::printCompetition);
+    bottomRow->addWidget(printButton);
 
     bottomRow->addStretch();
     QPushButton* closeButton = new QPushButton("Fermer", activePage);
@@ -614,4 +623,30 @@ void TournamentDialog::clearTournament()
     m_tournament.clear();
     m_tournament.save();
     showCreationForm();
+}
+
+void TournamentDialog::printCompetition()
+{
+    // Document construit a partir de l'etat ACTUEL (scores deja saisis
+    // compris) ; l'apercu permet d'imprimer ou d'enregistrer en PDF
+    // (boutons de la fenetre d'apercu, ou "PDF" dans la boite d'impression
+    // du systeme).
+    QTextDocument document;
+    document.setHtml(competitionPrintoutHtml(m_tournament));
+
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setPageSize(QPageSize(QPageSize::A4));
+    printer.setDocName(m_tournament.name());
+
+    QPrintPreviewDialog preview(&printer, this);
+    preview.setWindowTitle(m_isChampionship ? "Imprimer le championnat" : "Imprimer le tournoi");
+    // Reprend le style clair par defaut du systeme plutot que le fond noir
+    // de cette fenetre : l'apercu represente une page blanche imprimee.
+    preview.setStyleSheet(QString());
+    preview.resize(900, 760);
+    connect(&preview, &QPrintPreviewDialog::paintRequested, this, [&document](QPrinter* target)
+        {
+            document.print(target);
+        });
+    preview.exec();
 }

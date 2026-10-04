@@ -22,7 +22,7 @@ if(APPLE)
     set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}")
 endif()
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets TextToSpeech Network)
+find_package(Qt6 REQUIRED COMPONENTS Widgets TextToSpeech Network PrintSupport)
 qt_standard_project_setup()
 
 # ---------------------------------------------------------------------
@@ -137,6 +137,7 @@ add_test(NAME EngineTests COMMAND EngineTests)
 add_executable(CompetitionTests
     tests/CompetitionTests.cpp
     SnookerPlayer_Build6001/src/UI/TournamentManager.cpp
+    SnookerPlayer_Build6001/src/UI/CompetitionPrintout.cpp
 )
 target_include_directories(CompetitionTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/SnookerPlayer_Build6001/src/UI)
 target_link_libraries(CompetitionTests PRIVATE Qt6::Core)
@@ -166,6 +167,8 @@ qt_add_executable(SnookerPlayer
     SnookerPlayer_Build6001/src/UI/PlayersDialog.h
     SnookerPlayer_Build6001/src/UI/TournamentManager.cpp
     SnookerPlayer_Build6001/src/UI/TournamentManager.h
+    SnookerPlayer_Build6001/src/UI/CompetitionPrintout.cpp
+    SnookerPlayer_Build6001/src/UI/CompetitionPrintout.h
     SnookerPlayer_Build6001/src/UI/TournamentDialog.cpp
     SnookerPlayer_Build6001/src/UI/TournamentDialog.h
     SnookerPlayer_Build6001/src/UI/SettingsDialog.cpp
@@ -224,7 +227,7 @@ target_include_directories(SnookerPlayer PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party
 )
 
-target_link_libraries(SnookerPlayer PRIVATE Qt6::Widgets Qt6::TextToSpeech Qt6::Network MesureVision)
+target_link_libraries(SnookerPlayer PRIVATE Qt6::Widgets Qt6::TextToSpeech Qt6::Network Qt6::PrintSupport MesureVision)
 
 # ws2_32 : sockets Windows, necessaires a cpp-httplib (voir MatchWebServer)
 # meme en HTTP simple (pas de HTTPS, donc pas besoin d'OpenSSL ici).

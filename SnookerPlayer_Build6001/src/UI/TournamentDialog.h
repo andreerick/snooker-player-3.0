@@ -55,6 +55,9 @@ private:
     void clearTournament();
     void launchSelectedMatch();
     void enterResultManually();
+    // Apercu avant impression / export PDF / impression de la feuille
+    // de la competition (voir CompetitionPrintout).
+    void printCompetition();
 
     // Renvoie le Matchup selectionne dans m_pendingMatchCombo, ou
     // nullptr si aucun (liste vide -- tournoi fini ou round d'elimination

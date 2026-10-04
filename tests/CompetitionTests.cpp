@@ -1,6 +1,7 @@
 // Tests automatiques de la logique Championnat / Tournoi (TournamentManager) :
 // sans interface ni camera. Lance par ctest ; code non nul si un controle echoue.
 #include "TournamentManager.h"
+#include "CompetitionPrintout.h"
 
 #include <iostream>
 #include <string>
@@ -161,6 +162,34 @@ int main()
         play(tm, "A", "D", "D", 2, 0);
         check(tm.isFinished(), "elimination terminee apres la finale");
         check(tm.champions() == QStringList{ "D" }, "D champion unique");
+    }
+
+    // --- Version imprimable ---
+    {
+        TM tm(TM::Kind::Championship);
+        tm.create("Ligue <b>Club</b>", TM::Format::League, { "Alice", "Bob & Co", "Eric" }, 3);
+        play(tm, "Alice", "Bob & Co", "Alice", 3, 1);
+        const QString html = competitionPrintoutHtml(tm);
+        check(html.contains("Ligue &lt;b&gt;Club&lt;/b&gt;"), "nom echappe (pas de HTML injecte)");
+        check(html.contains("Bob &amp; Co"), "noms de joueurs echappes");
+        check(html.contains("Matchs aller") && html.contains("Matchs retour"), "sections aller et retour");
+        check(html.contains("3 - 1"), "score du match joue present");
+        check(html.contains("__ - __"), "case a remplir pour les matchs a jouer");
+        check(html.contains(">Pts<") || html.contains("<b>Pts</b>"), "colonne Pts du classement");
+        check(html.contains("meilleur des 5 frames"), "longueur des matchs indiquee");
+        check(!html.contains("Champion : ") && !html.contains("Egalite parfaite"), "pas de champion tant que pas termine");
+    }
+    {
+        TM tm;
+        tm.create("Tournoi", TM::Format::Elimination, { "A", "B", "C", "D" });
+        QString html = competitionPrintoutHtml(tm);
+        check(html.contains("Demi-finales") && html.contains("Finale"), "elimination : demi-finales et finale");
+        check(!html.contains("Classement"), "elimination : pas de classement");
+        play(tm, "A", "B", "A", 2, 0);
+        play(tm, "C", "D", "D", 2, 1);
+        play(tm, "A", "D", "D", 2, 0);
+        html = competitionPrintoutHtml(tm);
+        check(html.contains("Champion : D"), "champion affiche en fin de tournoi");
     }
 
     std::cout << g_checks << " controles, " << g_failures << " echec(s)" << std::endl;
