@@ -8,21 +8,27 @@
 
 namespace
 {
-    QString tournamentFilePath()
+    QString competitionFilePath(TournamentManager::Kind kind)
     {
-        return QCoreApplication::applicationDirPath() + "/tournoi.json";
+        QString fileName = (kind == TournamentManager::Kind::Championship) ? "/championnat.json" : "/tournoi.json";
+        return QCoreApplication::applicationDirPath() + fileName;
     }
 }
 
-void TournamentManager::create(const QString& name, Format format, const QStringList& players)
+void TournamentManager::create(const QString& name, Format format, const QStringList& players, int framesToWin)
 {
     clear();
     m_name = name;
     m_format = format;
+    m_framesToWin = framesToWin;
 
     if (format == Format::Elimination)
     {
         generateElimination(players);
+    }
+    else if (format == Format::League)
+    {
+        generateLeague(players);
     }
     else
     {
@@ -109,6 +115,26 @@ void TournamentManager::generateRoundRobin(const QStringList& players)
     }
 }
 
+void TournamentManager::generateLeague(const QStringList& players)
+{
+    // Phase aller puis phase retour : meme paires, roles inverses.
+    for (int leg = 1; leg <= 2; ++leg)
+    {
+        for (int i = 0; i < players.size(); ++i)
+        {
+            for (int j = i + 1; j < players.size(); ++j)
+            {
+                Matchup m;
+                m.round = leg;
+                m.leg = leg;
+                m.player1 = (leg == 1) ? players[i] : players[j];
+                m.player2 = (leg == 1) ? players[j] : players[i];
+                m_matchups.append(m);
+            }
+        }
+    }
+}
+
 void TournamentManager::advanceEliminationIfRoundComplete(int completedRound)
 {
     QVector<Matchup*> roundMatches;
@@ -182,14 +208,20 @@ QVector<const TournamentManager::Matchup*> TournamentManager::pendingMatches() c
 
 void TournamentManager::recordResult(const QString& player1, const QString& player2, const QString& winner, int scoreWinner, int scoreLoser)
 {
+    // Deux passes : d'abord l'ordre exact (player1, player2), puis
+    // l'ordre inverse. Indispensable en Championnat ou la meme paire
+    // apparait deux fois (aller A-B, retour B-A) : le match joue doit
+    // etre rattache a la bonne manche.
+    for (int pass = 0; pass < 2; ++pass)
     for (Matchup& m : m_matchups)
     {
         if (m.isPlayed() || m.isBye)
         {
             continue;
         }
-        bool matches = (m.player1 == player1 && m.player2 == player2)
-                    || (m.player1 == player2 && m.player2 == player1);
+        bool matches = (pass == 0)
+            ? (m.player1 == player1 && m.player2 == player2)
+            : (m.player1 == player2 && m.player2 == player1);
         if (!matches)
         {
             continue;
@@ -220,7 +252,7 @@ bool TournamentManager::isFinished() const
     {
         return false;
     }
-    if (m_format == Format::RoundRobin)
+    if (isRoundRobinLike())
     {
         return std::all_of(m_matchups.begin(), m_matchups.end(), [](const Matchup& m) { return m.isPlayed(); });
     }
@@ -246,7 +278,7 @@ QString TournamentManager::champion() const
     {
         return QString();
     }
-    if (m_format == Format::RoundRobin)
+    if (isRoundRobinLike())
     {
         QVector<Standing> table = standings();
         return table.isEmpty() ? QString() : table.first().name;
@@ -330,7 +362,9 @@ void TournamentManager::save() const
 {
     QJsonObject root;
     root["name"] = m_name;
-    root["format"] = (m_format == Format::Elimination) ? "elimination" : "roundrobin";
+    root["format"] = (m_format == Format::Elimination) ? "elimination"
+                   : (m_format == Format::League) ? "league" : "roundrobin";
+    root["framesToWin"] = m_framesToWin;
 
     QJsonArray matchArray;
     for (const Matchup& m : m_matchups)
@@ -343,11 +377,12 @@ void TournamentManager::save() const
         obj["scorePlayer1"] = m.scorePlayer1;
         obj["scorePlayer2"] = m.scorePlayer2;
         obj["isBye"] = m.isBye;
+        obj["leg"] = m.leg;
         matchArray.append(obj);
     }
     root["matchups"] = matchArray;
 
-    QFile file(tournamentFilePath());
+    QFile file(competitionFilePath(m_kind));
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
         file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
@@ -355,11 +390,11 @@ void TournamentManager::save() const
     }
 }
 
-TournamentManager TournamentManager::load()
+TournamentManager TournamentManager::load(Kind kind)
 {
-    TournamentManager tm;
+    TournamentManager tm(kind);
 
-    QFile file(tournamentFilePath());
+    QFile file(competitionFilePath(kind));
     if (!file.open(QIODevice::ReadOnly))
     {
         return tm;
@@ -373,7 +408,10 @@ TournamentManager TournamentManager::load()
 
     QJsonObject root = doc.object();
     tm.m_name = root.value("name").toString();
-    tm.m_format = (root.value("format").toString() == "roundrobin") ? Format::RoundRobin : Format::Elimination;
+    QString formatName = root.value("format").toString();
+    tm.m_format = (formatName == "roundrobin") ? Format::RoundRobin
+                : (formatName == "league") ? Format::League : Format::Elimination;
+    tm.m_framesToWin = root.value("framesToWin").toInt(2);
 
     for (const QJsonValue& value : root.value("matchups").toArray())
     {
@@ -386,6 +424,7 @@ TournamentManager TournamentManager::load()
         m.scorePlayer1 = obj.value("scorePlayer1").toInt();
         m.scorePlayer2 = obj.value("scorePlayer2").toInt();
         m.isBye = obj.value("isBye").toBool();
+        m.leg = obj.value("leg").toInt();
         tm.m_matchups.append(m);
     }
     return tm;

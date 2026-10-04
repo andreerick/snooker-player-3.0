@@ -157,7 +157,7 @@ CompetitionChoiceDialog::CompetitionChoiceDialog(QWidget* parent)
     };
 
     QPushButton* championshipTile = makeTile(podiumIcon(), "CHAMPIONNAT", kBlue,
-        "Classement et matchs");
+        "Matchs aller-retour");
     QPushButton* tournamentTile = makeTile(trophyIcon(), "TOURNOI", kGold,
         "Creer ou gerer un tournoi");
 

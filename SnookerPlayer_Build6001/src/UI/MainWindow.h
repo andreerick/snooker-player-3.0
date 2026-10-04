@@ -21,6 +21,7 @@
 #include "RulesReferenceDialog.h"
 #include "MatchWebServer.h"
 #include "HomeScreen.h"
+#include "TournamentManager.h"
 #include "CueSenseLauncher.h"
 #include <QStackedWidget>
 #include "VisionGameBridge.h"
@@ -190,7 +191,11 @@ private:
     // fois ce match termine, qu'il doit enregistrer le resultat dans
     // TournamentManager et proposer le match suivant (voir
     // handleTournamentMatchFinished()).
-    void startTournamentMatch(const QString& player1Name, const QString& player2Name);
+    // framesToWin : longueur du match (2 pour un tournoi, choisie a la
+    // creation pour un championnat) ; `kind` dit dans quel fichier
+    // (tournoi.json / championnat.json) enregistrer le resultat.
+    void startTournamentMatch(const QString& player1Name, const QString& player2Name, int framesToWin = 2,
+        TournamentManager::Kind kind = TournamentManager::Kind::Tournament);
 
     // Enregistre le resultat du match de tournoi qui vient de se
     // terminer dans tournoi.json, puis propose (boite de dialogue) de
@@ -244,6 +249,9 @@ private:
     // plutot que simplement sauvegarder dans matchs.json comme un match
     // isole. Remis a false des que le resultat a ete enregistre.
     bool m_tournamentMatchActive = false;
+    // Competition (tournoi ou championnat) a laquelle appartient le match
+    // en cours quand m_tournamentMatchActive est vrai.
+    TournamentManager::Kind m_competitionKind = TournamentManager::Kind::Tournament;
 
     // Vrai des que le tout premier match a reellement demarre (voir
     // beginMatch()) : protege handleRemoteControlAction() contre une

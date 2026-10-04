@@ -23,11 +23,26 @@
 class TournamentManager
 {
 public:
+    // Tournoi et Championnat partagent toute la logique mais pas le
+    // fichier de sauvegarde : les deux peuvent exister en meme temps
+    // (tournoi.json / championnat.json), voir CompetitionChoiceDialog.
+    enum class Kind
+    {
+        Tournament,
+        Championship
+    };
+
     enum class Format
     {
         Elimination,
-        RoundRobin
+        RoundRobin,
+        // Championnat : round robin ALLER-RETOUR (chaque paire se
+        // rencontre deux fois, une fois a domicile de chacun -- le
+        // joueur1 du match retour est le joueur2 du match aller).
+        League
     };
+
+    explicit TournamentManager(Kind kind = Kind::Tournament) : m_kind(kind) {}
 
     // Un affrontement prevu au tournoi. `winner` reste vide tant que le
     // match n'a pas ete joue. `isBye` : joueur2 absent (nombre de
@@ -42,6 +57,7 @@ public:
         int scorePlayer1 = 0;
         int scorePlayer2 = 0;
         bool isBye = false;
+        int leg = 0; // Championnat : 1 = match aller, 2 = match retour (0 sinon)
         bool isPlayed() const { return !winner.isEmpty(); }
     };
 
@@ -50,13 +66,18 @@ public:
 
     const QString& name() const { return m_name; }
     Format format() const { return m_format; }
+    Kind kind() const { return m_kind; }
+    // Longueur d'un match en frames a gagner (Championnat : choisie a
+    // la creation ; Tournoi : toujours 2, comportement historique).
+    int framesToWin() const { return m_framesToWin; }
+    bool isRoundRobinLike() const { return m_format != Format::Elimination; }
     const QVector<Matchup>& matchups() const { return m_matchups; }
 
     // Cree un nouveau tournoi (remplace l'eventuel tournoi en cours,
     // sans le sauvegarder au prealable -- a l'appelant de confirmer
     // aupres de l'utilisateur avant d'appeler ceci si un tournoi non
     // termine existait deja). `players` : au moins 2 noms.
-    void create(const QString& name, Format format, const QStringList& players);
+    void create(const QString& name, Format format, const QStringList& players, int framesToWin = 2);
 
     void clear();
 
@@ -104,14 +125,17 @@ public:
     QVector<Standing> standings() const;
 
     void save() const;
-    static TournamentManager load();
+    static TournamentManager load(Kind kind = Kind::Tournament);
 
 private:
     void generateElimination(const QStringList& players);
     void generateRoundRobin(const QStringList& players);
+    void generateLeague(const QStringList& players);
     void advanceEliminationIfRoundComplete(int completedRound);
 
     QString m_name;
     Format m_format = Format::Elimination;
+    Kind m_kind = Kind::Tournament;
+    int m_framesToWin = 2;
     QVector<Matchup> m_matchups;
 };

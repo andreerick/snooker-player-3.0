@@ -93,8 +93,12 @@ namespace
                 "liste et les photos (sans toucher a l'historique des matchs deja joues)."
             },
             {
-                "Organiser un tournoi",
-                "La tuile <b>TOURNOI</b> permet de creer un tournoi avec les joueurs de ton choix, "
+                "Organiser un championnat ou un tournoi",
+                "La tuile <b>CHAMPIONNAT ET TOURNOI</b> propose deux choix.<br><br>"
+                "<b>Championnat</b> : chaque joueur affronte chaque autre en match <b>aller</b> puis "
+                "match <b>retour</b>. Tu choisis le nombre de frames par match a la creation ; le "
+                "classement se fait par victoires puis difference de frames.<br><br>"
+                "<b>Tournoi</b> : cree un tournoi avec les joueurs de ton choix, "
                 "en <b>elimination directe</b> (bracket, avec exemption automatique si le nombre de "
                 "joueurs n'est pas une puissance de 2) ou en <b>round robin</b> (tout le monde "
                 "affronte tout le monde, classement par victoires puis difference de frames).<br><br>"

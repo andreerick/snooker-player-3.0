@@ -76,10 +76,12 @@ namespace
     }
 }
 
-TournamentDialog::TournamentDialog(QWidget* parent)
+TournamentDialog::TournamentDialog(TournamentManager::Kind kind, QWidget* parent)
     : QDialog(parent)
+    , m_isChampionship(kind == TournamentManager::Kind::Championship)
+    , m_tournament(kind)
 {
-    setWindowTitle("Tournoi");
+    setWindowTitle(m_isChampionship ? "Championnat" : "Tournoi");
     applyDarkTitleBar(this);
     resize(760, 600);
     setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
@@ -94,7 +96,7 @@ TournamentDialog::TournamentDialog(QWidget* parent)
     QVBoxLayout* creationLayout = new QVBoxLayout(creationPage);
     creationLayout->setSpacing(14);
 
-    QLabel* creationTitle = new QLabel("NOUVEAU TOURNOI", creationPage);
+    QLabel* creationTitle = new QLabel(m_isChampionship ? "NOUVEAU CHAMPIONNAT" : "NOUVEAU TOURNOI", creationPage);
     creationTitle->setStyleSheet("color: " + kWhite + "; font-size: 16px; font-weight: bold; letter-spacing: 1px;");
     creationLayout->addWidget(creationTitle);
 
@@ -102,24 +104,53 @@ TournamentDialog::TournamentDialog(QWidget* parent)
         "background-color: " + kPanel + "; color: " + kWhite + ";"
         "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 8px;";
 
-    QLabel* nameHint = new QLabel("Nom du tournoi", creationPage);
+    QLabel* nameHint = new QLabel(m_isChampionship ? "Nom du championnat" : "Nom du tournoi", creationPage);
     nameHint->setStyleSheet("color: " + kGray + "; font-size: 11px;");
     creationLayout->addWidget(nameHint);
     m_nameEdit = new QLineEdit(creationPage);
     m_nameEdit->setStyleSheet(fieldStyle);
-    m_nameEdit->setPlaceholderText("Ex. Tournoi du club - Septembre 2026");
+    m_nameEdit->setPlaceholderText(m_isChampionship ? "Ex. Championnat du club - Saison 2026" : "Ex. Tournoi du club - Septembre 2026");
     creationLayout->addWidget(m_nameEdit);
 
-    QLabel* formatHint = new QLabel("Format", creationPage);
-    formatHint->setStyleSheet("color: " + kGray + "; font-size: 11px; margin-top: 8px;");
-    creationLayout->addWidget(formatHint);
-    m_formatCombo = new QComboBox(creationPage);
-    m_formatCombo->setStyleSheet(
-        "QComboBox { " + fieldStyle + " }"
-    );
-    m_formatCombo->addItem("Elimination directe");
-    m_formatCombo->addItem("Round robin (tout le monde affronte tout le monde)");
-    creationLayout->addWidget(m_formatCombo);
+    if (m_isChampionship)
+    {
+        // Format fixe : chaque joueur rencontre chaque autre une fois a
+        // l'aller et une fois au retour. Seule la longueur d'un match
+        // est a choisir (memes choix que "Nouveau match").
+        QLabel* formatInfo = new QLabel("Format : chaque joueur affronte chaque autre en match aller et match retour.", creationPage);
+        formatInfo->setWordWrap(true);
+        formatInfo->setStyleSheet("color: " + kGray + "; font-size: 11px; margin-top: 8px;");
+        creationLayout->addWidget(formatInfo);
+
+        QLabel* framesHint = new QLabel("Nombre de frames par match", creationPage);
+        framesHint->setStyleSheet("color: " + kGray + "; font-size: 11px; margin-top: 8px;");
+        creationLayout->addWidget(framesHint);
+        m_framesCombo = new QComboBox(creationPage);
+        m_framesCombo->setStyleSheet("QComboBox { " + fieldStyle + " }");
+        m_framesCombo->addItem("1 frame (partie rapide)", 1);
+        m_framesCombo->addItem("Meilleur des 3 frames", 2);
+        m_framesCombo->addItem("Meilleur des 5 frames", 3);
+        m_framesCombo->addItem("Meilleur des 7 frames", 4);
+        m_framesCombo->addItem("Meilleur des 9 frames", 5);
+        m_framesCombo->addItem("Meilleur des 11 frames", 6);
+        m_framesCombo->addItem("Meilleur des 13 frames", 7);
+        m_framesCombo->setCurrentIndex(1);
+        creationLayout->addWidget(m_framesCombo);
+    }
+    else
+    {
+        QLabel* formatHint = new QLabel("Format", creationPage);
+        formatHint->setStyleSheet("color: " + kGray + "; font-size: 11px; margin-top: 8px;");
+        creationLayout->addWidget(formatHint);
+        m_formatCombo = new QComboBox(creationPage);
+        m_formatCombo->setStyleSheet(
+            "QComboBox { " + fieldStyle + " }"
+        );
+        m_formatCombo->addItem("Elimination directe");
+        m_formatCombo->addItem("Round robin (tout le monde affronte tout le monde)");
+        creationLayout->addWidget(m_formatCombo);
+
+    }
 
     QLabel* playersHint = new QLabel("Joueurs participants (2 minimum)", creationPage);
     playersHint->setStyleSheet("color: " + kGray + "; font-size: 11px; margin-top: 8px;");
@@ -149,7 +180,7 @@ TournamentDialog::TournamentDialog(QWidget* parent)
     }
     creationLayout->addWidget(m_playerCheckList, 1);
 
-    QPushButton* createButton = new QPushButton("Creer le tournoi", creationPage);
+    QPushButton* createButton = new QPushButton(m_isChampionship ? "Creer le championnat" : "Creer le tournoi", creationPage);
     createButton->setStyleSheet(
         "QPushButton { background-color: " + kGreen + "; color: " + kWhite + ";"
         "border: none; border-radius: 6px; padding: 12px; font-weight: bold; }"
@@ -236,7 +267,7 @@ TournamentDialog::TournamentDialog(QWidget* parent)
         "  border: 1px solid " + kBorder + "; border-radius: 4px; padding: 8px 14px;"
         "}"
         "QPushButton:hover { border-color: " + kGray + "; }";
-    QPushButton* newTournamentButton = new QPushButton("Nouveau tournoi", activePage);
+    QPushButton* newTournamentButton = new QPushButton(m_isChampionship ? "Nouveau championnat" : "Nouveau tournoi", activePage);
     newTournamentButton->setStyleSheet(smallButtonStyle);
     connect(newTournamentButton, &QPushButton::clicked, this, &TournamentDialog::confirmNewTournament);
     bottomRow->addWidget(newTournamentButton);
@@ -244,7 +275,7 @@ TournamentDialog::TournamentDialog(QWidget* parent)
     // Distinct de "Nouveau tournoi" (qui invite a en recreer un) : sert
     // juste a effacer sans rien recreer. Reste ici (pas dans Parametres)
     // puisque c'est l'ecran du tournoi, sur demande de l'utilisateur.
-    QPushButton* clearTournamentButton = new QPushButton("Effacer le tournoi en cours", activePage);
+    QPushButton* clearTournamentButton = new QPushButton(m_isChampionship ? "Effacer le championnat en cours" : "Effacer le tournoi en cours", activePage);
     clearTournamentButton->setStyleSheet(
         "QPushButton {"
         "  background-color: " + kPanel + "; color: #e74c3c;"
@@ -264,7 +295,7 @@ TournamentDialog::TournamentDialog(QWidget* parent)
 
     m_stack->addWidget(activePage);
 
-    m_tournament = TournamentManager::load();
+    m_tournament = TournamentManager::load(kind);
     if (m_tournament.isActive())
     {
         showActiveTournament();
@@ -289,22 +320,28 @@ void TournamentDialog::showActiveTournament()
 void TournamentDialog::refreshActiveView()
 {
     QString formatText = (m_tournament.format() == TournamentManager::Format::Elimination)
-        ? "Elimination directe" : "Round robin";
+        ? "Elimination directe"
+        : (m_tournament.format() == TournamentManager::Format::League)
+            ? "Aller-retour, meilleur des " + QString::number(2 * m_tournament.framesToWin() - 1) + " frames"
+            : "Round robin";
     m_titleLabel->setText(m_tournament.name() + " -- " + formatText);
 
     QString html;
     int currentRound = -1;
     for (const TournamentManager::Matchup& m : m_tournament.matchups())
     {
-        if (m_tournament.format() == TournamentManager::Format::Elimination && m.round != currentRound)
+        if (m_tournament.format() != TournamentManager::Format::RoundRobin && m.round != currentRound)
         {
             currentRound = m.round;
-            html += "<p style='color:" + kGray + "; font-size:11px; letter-spacing:1px; margin-top:14px;'>ROUND " + QString::number(currentRound) + "</p>";
+            QString heading = (m_tournament.format() == TournamentManager::Format::League)
+                ? (currentRound == 1 ? "MATCHS ALLER" : "MATCHS RETOUR")
+                : "ROUND " + QString::number(currentRound);
+            html += "<p style='color:" + kGray + "; font-size:11px; letter-spacing:1px; margin-top:14px;'>" + heading + "</p>";
         }
         html += "<p style='margin:4px 0;'>" + matchupLine(m) + "</p>";
     }
 
-    if (m_tournament.format() == TournamentManager::Format::RoundRobin)
+    if (m_tournament.isRoundRobinLike())
     {
         html += "<p style='color:" + kGray + "; font-size:11px; letter-spacing:1px; margin-top:18px;'>CLASSEMENT</p>";
         html += "<table cellspacing='0' cellpadding='4' style='color:" + kWhite + ";'>";
@@ -332,6 +369,10 @@ void TournamentDialog::refreshActiveView()
         {
             label = "Round " + QString::number(m->round) + " : " + label;
         }
+        else if (m_tournament.format() == TournamentManager::Format::League)
+        {
+            label = (m->leg == 1 ? "Aller : " : "Retour : ") + label;
+        }
         // itemData porte les deux noms (pas un pointeur -- invalide des
         // que m_tournament est reassigne/rechargee) : identifie le
         // Matchup a nouveau au moment du clic, voir selectedPendingMatch().
@@ -344,7 +385,7 @@ void TournamentDialog::refreshActiveView()
     m_manualResultButton->setEnabled(hasPending);
     if (!hasPending)
     {
-        m_pendingMatchCombo->addItem(m_tournament.isFinished() ? "Tournoi termine" : "Aucun match determine pour l'instant");
+        m_pendingMatchCombo->addItem(m_tournament.isFinished() ? (m_isChampionship ? "Championnat termine" : "Tournoi termine") : "Aucun match determine pour l'instant");
     }
 }
 
@@ -376,7 +417,7 @@ void TournamentDialog::launchSelectedMatch()
     {
         return;
     }
-    emit matchRequested(match->player1, match->player2);
+    emit matchRequested(match->player1, match->player2, m_tournament.framesToWin());
     accept();
 }
 
@@ -481,7 +522,7 @@ void TournamentDialog::createTournament()
     QString name = m_nameEdit->text().trimmed();
     if (name.isEmpty())
     {
-        name = "Tournoi du " + QDate::currentDate().toString("dd/MM/yyyy");
+        name = (m_isChampionship ? "Championnat du " : "Tournoi du ") + QDate::currentDate().toString("dd/MM/yyyy");
     }
 
     QStringList selected;
@@ -492,7 +533,7 @@ void TournamentDialog::createTournament()
 
     if (selected.size() < 2)
     {
-        QMessageBox box(QMessageBox::Warning, "Tournoi", "Selectionnez au moins 2 joueurs.", QMessageBox::Ok, this);
+        QMessageBox box(QMessageBox::Warning, m_isChampionship ? "Championnat" : "Tournoi", "Selectionnez au moins 2 joueurs.", QMessageBox::Ok, this);
         applyDarkTitleBar(&box);
         box.setStyleSheet(
             "QMessageBox { background-color: " + kBg + "; }"
@@ -501,6 +542,14 @@ void TournamentDialog::createTournament()
             "border: 1px solid " + kBorder + "; border-radius: 5px; padding: 6px 16px; }"
         );
         box.exec();
+        return;
+    }
+
+    if (m_isChampionship)
+    {
+        m_tournament.create(name, TournamentManager::Format::League, selected, m_framesCombo->currentData().toInt());
+        m_tournament.save();
+        showActiveTournament();
         return;
     }
 
@@ -516,8 +565,8 @@ void TournamentDialog::confirmNewTournament()
 {
     if (!m_tournament.isFinished())
     {
-        QMessageBox box(QMessageBox::Question, "Nouveau tournoi",
-            "Le tournoi en cours n'est pas termine. Le remplacer par un nouveau tournoi effacera sa progression. Continuer ?",
+        QMessageBox box(QMessageBox::Question, m_isChampionship ? "Nouveau championnat" : "Nouveau tournoi",
+            m_isChampionship ? "Le championnat en cours n'est pas termine. En creer un nouveau effacera sa progression. Continuer ?" : "Le tournoi en cours n'est pas termine. Le remplacer par un nouveau tournoi effacera sa progression. Continuer ?",
             QMessageBox::Yes | QMessageBox::No, this);
         applyDarkTitleBar(&box);
         box.setStyleSheet(
@@ -537,8 +586,9 @@ void TournamentDialog::confirmNewTournament()
 
 void TournamentDialog::clearTournament()
 {
-    QMessageBox box(QMessageBox::Warning, "Effacer le tournoi",
-        "Effacer definitivement le tournoi en cours (progression comprise) ?",
+    QMessageBox box(QMessageBox::Warning, m_isChampionship ? "Effacer le championnat" : "Effacer le tournoi",
+        m_isChampionship ? "Effacer definitivement le championnat en cours (progression comprise) ?"
+                         : "Effacer definitivement le tournoi en cours (progression comprise) ?",
         QMessageBox::Yes | QMessageBox::No, this);
     applyDarkTitleBar(&box);
     box.setStyleSheet(

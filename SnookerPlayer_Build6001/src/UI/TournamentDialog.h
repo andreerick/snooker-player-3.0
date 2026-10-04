@@ -36,10 +36,15 @@ class TournamentDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit TournamentDialog(QWidget* parent = nullptr);
+    // `kind` : Tournoi (comportement historique) ou Championnat (round
+    // robin aller-retour, nombre de frames choisi a la creation) -- meme
+    // ecran, memes mecaniques, voir TournamentManager::Kind.
+    explicit TournamentDialog(TournamentManager::Kind kind = TournamentManager::Kind::Tournament, QWidget* parent = nullptr);
 
 signals:
-    void matchRequested(const QString& player1, const QString& player2);
+    // framesToWin : longueur du match (2 pour un tournoi, choisie a la
+    // creation pour un championnat).
+    void matchRequested(const QString& player1, const QString& player2, int framesToWin);
 
 private:
     void showCreationForm();
@@ -61,6 +66,7 @@ private:
     // --- Page de creation ---
     QLineEdit* m_nameEdit = nullptr;
     QComboBox* m_formatCombo = nullptr;
+    QComboBox* m_framesCombo = nullptr; // Championnat uniquement
     QListWidget* m_playerCheckList = nullptr;
 
     // --- Page tournoi actif ---
@@ -70,5 +76,6 @@ private:
     QPushButton* m_launchButton = nullptr;
     QPushButton* m_manualResultButton = nullptr;
 
+    bool m_isChampionship = false;
     TournamentManager m_tournament;
 };

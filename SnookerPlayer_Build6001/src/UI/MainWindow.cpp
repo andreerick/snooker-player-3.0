@@ -2951,14 +2951,23 @@ MainWindow::MainWindow(QWidget* parent)
             CompetitionChoiceDialog dialog(this);
             connect(&dialog, &CompetitionChoiceDialog::tournamentRequested, this, [this]()
                 {
-                    TournamentDialog tournamentDialog(this);
-                    connect(&tournamentDialog, &TournamentDialog::matchRequested, this, &MainWindow::startTournamentMatch);
+                    TournamentDialog tournamentDialog(TournamentManager::Kind::Tournament, this);
+                    connect(&tournamentDialog, &TournamentDialog::matchRequested, this,
+                        [this](const QString& p1, const QString& p2, int framesToWin)
+                        {
+                            startTournamentMatch(p1, p2, framesToWin, TournamentManager::Kind::Tournament);
+                        });
                     tournamentDialog.exec();
                 });
             connect(&dialog, &CompetitionChoiceDialog::championshipRequested, this, [this]()
                 {
-                    showStyledMessage(this, QMessageBox::Information, "Championnat",
-                        "Le championnat arrive bientot : cette fonctionnalite n'est pas encore disponible.");
+                    TournamentDialog championshipDialog(TournamentManager::Kind::Championship, this);
+                    connect(&championshipDialog, &TournamentDialog::matchRequested, this,
+                        [this](const QString& p1, const QString& p2, int framesToWin)
+                        {
+                            startTournamentMatch(p1, p2, framesToWin, TournamentManager::Kind::Championship);
+                        });
+                    championshipDialog.exec();
                 });
             dialog.exec();
         });
@@ -3227,16 +3236,18 @@ void MainWindow::restartMatch(const QString& player1Name, const QString& player2
     refreshDisplay();
 }
 
-void MainWindow::startTournamentMatch(const QString& player1Name, const QString& player2Name)
+void MainWindow::startTournamentMatch(const QString& player1Name, const QString& player2Name, int framesToWin,
+    TournamentManager::Kind kind)
 {
     m_tournamentMatchActive = true;
+    m_competitionKind = kind;
     if (m_matchStarted)
     {
-        restartMatch(player1Name, player2Name);
+        restartMatch(player1Name, player2Name, framesToWin);
     }
     else
     {
-        beginMatch(player1Name, player2Name);
+        beginMatch(player1Name, player2Name, framesToWin);
     }
 }
 
@@ -3251,30 +3262,32 @@ void MainWindow::handleTournamentMatchFinished()
     int winnerFrames = std::max(framesP1, framesP2);
     int loserFrames = std::min(framesP1, framesP2);
 
-    TournamentManager tournament = TournamentManager::load();
+    const bool isChampionship = (m_competitionKind == TournamentManager::Kind::Championship);
+    const QString competitionTitle = isChampionship ? "Championnat" : "Tournoi";
+    TournamentManager tournament = TournamentManager::load(m_competitionKind);
     tournament.recordResult(player1Name, player2Name, winnerName, winnerFrames, loserFrames);
     tournament.save();
     m_tournamentMatchActive = false;
 
     const TournamentManager::Matchup* next = tournament.nextMatch();
-    QString message = winnerName + " remporte ce match du tournoi (" + QString::number(winnerFrames)
+    QString message = winnerName + (isChampionship ? " remporte ce match du championnat (" : " remporte ce match du tournoi (") + QString::number(winnerFrames)
         + " - " + QString::number(loserFrames) + ").";
     if (tournament.isFinished())
     {
-        message += "\n\nTournoi termine ! Champion : " + tournament.champion();
-        showStyledMessage(this, QMessageBox::Information, "Tournoi", message);
+        message += (isChampionship ? "\n\nChampionnat termine ! Champion : " : "\n\nTournoi termine ! Champion : ") + tournament.champion();
+        showStyledMessage(this, QMessageBox::Information, competitionTitle, message);
         return;
     }
     if (!next)
     {
         // Round d'elimination pas encore entierement joue (l'autre
         // demi-finale, par exemple) : rien a proposer pour l'instant.
-        showStyledMessage(this, QMessageBox::Information, "Tournoi", message);
+        showStyledMessage(this, QMessageBox::Information, competitionTitle, message);
         return;
     }
 
     QDialog dialog(this);
-    dialog.setWindowTitle("Tournoi");
+    dialog.setWindowTitle(competitionTitle);
     dialog.setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
     QVBoxLayout* layout = new QVBoxLayout(&dialog);
     layout->setContentsMargins(24, 24, 24, 24);
@@ -3301,7 +3314,7 @@ void MainWindow::handleTournamentMatchFinished()
 
     if (dialog.exec() == QDialog::Accepted)
     {
-        startTournamentMatch(next->player1, next->player2);
+        startTournamentMatch(next->player1, next->player2, tournament.framesToWin(), m_competitionKind);
     }
 }
 
