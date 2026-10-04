@@ -5,6 +5,7 @@
 #include "ShareSessionDialog.h"
 #include "PlayersDialog.h"
 #include "TournamentDialog.h"
+#include "CompetitionChoiceDialog.h"
 #include "TournamentManager.h"
 #include "SettingsDialog.h"
 #include "TutorialDialog.h"
@@ -2945,8 +2946,20 @@ MainWindow::MainWindow(QWidget* parent)
         });
     connect(m_homeScreen, &HomeScreen::tournamentRequested, this, [this]()
         {
-            TournamentDialog dialog(this);
-            connect(&dialog, &TournamentDialog::matchRequested, this, &MainWindow::startTournamentMatch);
+            // La tuile d'accueil s'appelle "Championnat et Tournoi" : elle
+            // ouvre d'abord le choix entre les deux (comme l'Entrainement).
+            CompetitionChoiceDialog dialog(this);
+            connect(&dialog, &CompetitionChoiceDialog::tournamentRequested, this, [this]()
+                {
+                    TournamentDialog tournamentDialog(this);
+                    connect(&tournamentDialog, &TournamentDialog::matchRequested, this, &MainWindow::startTournamentMatch);
+                    tournamentDialog.exec();
+                });
+            connect(&dialog, &CompetitionChoiceDialog::championshipRequested, this, [this]()
+                {
+                    showStyledMessage(this, QMessageBox::Information, "Championnat",
+                        "Le championnat arrive bientot : cette fonctionnalite n'est pas encore disponible.");
+                });
             dialog.exec();
         });
     connect(m_homeScreen, &HomeScreen::rulesRequested, this, [this]()

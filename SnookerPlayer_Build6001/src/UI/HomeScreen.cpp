@@ -1,6 +1,9 @@
 #include "HomeScreen.h"
 
 #include <QPainter>
+#include <QImage>
+#include <QFont>
+#include <QFontMetrics>
 #include <QPushButton>
 #include <QLabel>
 #include <QApplication>
@@ -104,6 +107,84 @@ namespace
         }
         return ok;
     }
+
+    // La tuile "Tournoi" du decor devient "Championnat et Tournoi" (elle
+    // ouvre desormais le choix entre les deux, voir CompetitionChoiceDialog).
+    // Son texte est dessine DANS l'image : on efface donc la zone du titre +
+    // sous-titre en reconstituant le fond d'origine (degrade sombre de la
+    // tuile, interpole colonne par colonne entre trois lignes sans texte du
+    // decor), puis on y ecrit le nouveau texte. Le trophee et la bordure
+    // doree ne sont pas touches. Coordonnees = tuile en (896,598), meme
+    // rectangle que le hotspot tournamentTile dans le constructeur.
+    QPixmap withChampionshipTournamentTile(const QPixmap& source)
+    {
+        const int tileX = 896;
+        const int tileY = 598;
+        const int x0 = tileX + 22;
+        const int x1 = tileX + 230;
+        const int yTop = tileY + 104;
+        const int yBottom = tileY + 186;
+        const int yA = tileY + 100; // sans texte (entre le trophee et le titre)
+        const int yB = tileY + 135; // sans texte (entre le titre et le sous-titre)
+        const int yC = tileY + 192; // sans texte (sous le sous-titre)
+
+        if (source.isNull() || x1 >= source.width() || yC >= source.height())
+        {
+            return source;
+        }
+
+        QImage image = source.toImage().convertToFormat(QImage::Format_ARGB32);
+        for (int y = yTop; y <= yBottom; ++y)
+        {
+            const int ya = (y <= yB) ? yA : yB;
+            const int yb = (y <= yB) ? yB : yC;
+            const double t = static_cast<double>(y - ya) / static_cast<double>(yb - ya);
+            for (int x = x0; x <= x1; ++x)
+            {
+                const QRgb top = image.pixel(x, ya);
+                const QRgb bottom = image.pixel(x, yb);
+                auto mix = [t](int a, int b) { return static_cast<int>(a + (b - a) * t + 0.5); };
+                image.setPixel(x, y, qRgb(
+                    mix(qRed(top), qRed(bottom)),
+                    mix(qGreen(top), qGreen(bottom)),
+                    mix(qBlue(top), qBlue(bottom))));
+            }
+        }
+
+        QPixmap result = QPixmap::fromImage(image);
+        QPainter painter(&result);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setRenderHint(QPainter::TextAntialiasing);
+
+        auto makeFont = [](bool bold, int maxWidth, int startPixelSize, const QString& widestLine)
+        {
+            QFont font;
+            font.setFamilies({ "Segoe UI", "Helvetica Neue", "Arial" });
+            font.setBold(bold);
+            int size = startPixelSize;
+            font.setPixelSize(size);
+            while (size > 8 && QFontMetrics(font).horizontalAdvance(widestLine) > maxWidth)
+            {
+                font.setPixelSize(--size);
+            }
+            return font;
+        };
+
+        const int maxWidth = x1 - x0 - 12;
+        const int left = x0;
+        const int width = x1 - x0;
+
+        painter.setPen(QColor(230, 188, 0));
+        painter.setFont(makeFont(true, maxWidth, 26, "CHAMPIONNAT"));
+        painter.drawText(QRect(left, tileY + 106, width, 26), Qt::AlignCenter, "CHAMPIONNAT");
+        painter.drawText(QRect(left, tileY + 131, width, 26), Qt::AlignCenter, "ET TOURNOI");
+
+        painter.setPen(QColor(245, 245, 245));
+        painter.setFont(makeFont(false, maxWidth, 17, "Championnats et tournois"));
+        painter.drawText(QRect(left, tileY + 160, width, 24), Qt::AlignCenter, "Championnats et tournois");
+
+        return result;
+    }
 }
 
 HomeScreen::HomeScreen(QWidget* parent)
@@ -112,7 +193,7 @@ HomeScreen::HomeScreen(QWidget* parent)
     setStyleSheet("background-color: " + kBg + ";");
     setMinimumSize(400, 267); // conserve le ratio 1536x1024, evite un widget degenere
 
-    m_background = QPixmap(HOME_SCREEN_IMAGE_PATH);
+    m_background = withChampionshipTournamentTile(QPixmap(HOME_SCREEN_IMAGE_PATH));
 
     // --- Bandeau du haut ---
     QPushButton* aideButton = createHotspot(QRect(1165, 10, 110, 85), true, QString());
