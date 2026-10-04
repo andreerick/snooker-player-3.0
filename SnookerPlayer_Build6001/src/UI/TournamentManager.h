@@ -42,6 +42,9 @@ public:
         League
     };
 
+    // Points de classement d'une victoire (une defaite vaut 0).
+    static constexpr int kPointsPerWin = 2;
+
     explicit TournamentManager(Kind kind = Kind::Tournament) : m_kind(kind) {}
 
     // Un affrontement prevu au tournoi. `winner` reste vide tant que le
@@ -112,13 +115,14 @@ public:
     bool isFinished() const;
     QString champion() const; // vide si pas encore termine
 
-    // Classement round-robin (victoires desc., puis difference de
-    // frames desc.) -- vide/non pertinent en elimination.
+    // Classement round-robin (points desc. -- 2 par victoire, pas de
+    // nul possible --, puis difference de frames desc.) -- vide/non pertinent en elimination.
     struct Standing
     {
         QString name;
         int played = 0;
         int won = 0;
+        int points = 0; // Championnat : kPointsPerWin par victoire, 0 par defaite
         int framesFor = 0;
         int framesAgainst = 0;
     };

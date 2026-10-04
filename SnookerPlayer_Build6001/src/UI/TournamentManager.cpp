@@ -319,7 +319,7 @@ QVector<TournamentManager::Standing> TournamentManager::standings() const
                 return i;
             }
         }
-        table.append(Standing{ name, 0, 0, 0, 0 });
+        table.append(Standing{ name, 0, 0, 0, 0, 0 });
         return table.size() - 1;
     };
 
@@ -340,18 +340,20 @@ QVector<TournamentManager::Standing> TournamentManager::standings() const
         if (m.winner == m.player1)
         {
             table[i1].won++;
+            table[i1].points += kPointsPerWin;
         }
         else
         {
             table[i2].won++;
+            table[i2].points += kPointsPerWin;
         }
     }
 
     std::sort(table.begin(), table.end(), [](const Standing& a, const Standing& b)
         {
-            if (a.won != b.won)
+            if (a.points != b.points)
             {
-                return a.won > b.won;
+                return a.points > b.points;
             }
             return (a.framesFor - a.framesAgainst) > (b.framesFor - b.framesAgainst);
         });

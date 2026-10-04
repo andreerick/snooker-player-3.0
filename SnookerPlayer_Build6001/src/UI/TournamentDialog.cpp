@@ -344,11 +344,16 @@ void TournamentDialog::refreshActiveView()
     if (m_tournament.isRoundRobinLike())
     {
         html += "<p style='color:" + kGray + "; font-size:11px; letter-spacing:1px; margin-top:18px;'>CLASSEMENT</p>";
+        const bool withPoints = (m_tournament.format() == TournamentManager::Format::League);
         html += "<table cellspacing='0' cellpadding='4' style='color:" + kWhite + ";'>";
-        html += "<tr style='color:" + kGray + ";'><td>Joueur</td><td>V</td><td>J</td><td>Frames</td></tr>";
+        html += "<tr style='color:" + kGray + ";'>" + QString(withPoints ? "<td>#</td>" : "") + "<td>Joueur</td>" + QString(withPoints ? "<td><b>Pts</b></td>" : "")
+              + "<td>V</td><td>J</td><td>Frames</td></tr>";
+        int rank = 0;
         for (const TournamentManager::Standing& s : m_tournament.standings())
         {
-            html += "<tr><td>" + s.name + "</td><td>" + QString::number(s.won) + "</td><td>"
+            html += "<tr>" + (withPoints ? "<td>" + QString::number(++rank) + "</td>" : QString()) + "<td>" + s.name + "</td>"
+                  + (withPoints ? "<td><b>" + QString::number(s.points) + "</b></td>" : QString())
+                  + "<td>" + QString::number(s.won) + "</td><td>"
                   + QString::number(s.played) + "</td><td>" + QString::number(s.framesFor) + "-" + QString::number(s.framesAgainst) + "</td></tr>";
         }
         html += "</table>";
