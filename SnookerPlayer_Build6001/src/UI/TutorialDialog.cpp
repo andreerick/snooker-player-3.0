@@ -108,6 +108,8 @@ namespace
                 "Le bouton <b>Imprimer / PDF...</b> prepare une feuille A4 (matchs, scores, classement) "
                 "avec des cases vides pour noter a la main les scores des matchs a venir ; tu peux "
                 "l'imprimer ou l'enregistrer en PDF.<br><br>"
+                "Sur l'ecran de creation, <b>Imprimer une feuille vierge...</b> donne une feuille a "
+                "remplir entierement au stylo (joueurs, matchs, scores, classement), sans passer par l'appli.<br><br>"
                 "Si plusieurs matchs se jouent EN MEME TEMPS sur d'autres tables, choisis le match "
                 "concerne dans la liste puis \"Saisir un resultat...\" pour l'enregistrer sans rien "
                 "lancer sur cette table."

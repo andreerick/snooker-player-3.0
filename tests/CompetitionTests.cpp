@@ -192,6 +192,26 @@ int main()
         check(html.contains("Champion : D"), "champion affiche en fin de tournoi");
     }
 
+    // --- Feuilles vierges ---
+    {
+        QString html = blankCompetitionPrintoutHtml(TM::Format::League, 4);
+        check(html.contains("Matchs aller") && html.contains("Matchs retour"), "vierge championnat : aller et retour");
+        check(html.contains("J1") && html.contains("J4") && !html.contains("J5"), "vierge championnat : joueurs J1..J4");
+        check(html.contains("Classement") && html.contains("<b>Pts</b>"), "vierge championnat : classement avec Pts");
+        check(html.contains("Frames par match"), "vierge championnat : ligne frames par match");
+
+        html = blankCompetitionPrintoutHtml(TM::Format::Elimination, 5);
+        check(html.contains("Quarts de finale") && html.contains("Demi-finales") && html.contains("Finale"),
+              "vierge elimination a 5 joueurs : 3 tours");
+        check(html.contains("exempt"), "vierge elimination a 5 joueurs : exemptions (byes)");
+        check(html.contains("Vainq. match 1"), "vierge elimination : renvoi 'Vainq. match N'");
+        check(html.contains("Champion : ______"), "vierge elimination : ligne champion a remplir");
+        check(!html.contains("Classement"), "vierge elimination : pas de classement");
+
+        html = blankCompetitionPrintoutHtml(TM::Format::RoundRobin, 3);
+        check(html.contains("Classement") && !html.contains("<b>Pts</b>"), "vierge round robin : classement sans Pts");
+    }
+
     std::cout << g_checks << " controles, " << g_failures << " echec(s)" << std::endl;
     return g_failures == 0 ? 0 : 1;
 }

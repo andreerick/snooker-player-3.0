@@ -192,6 +192,17 @@ TournamentDialog::TournamentDialog(TournamentManager::Kind kind, QWidget* parent
     connect(createButton, &QPushButton::clicked, this, &TournamentDialog::createTournament);
     creationLayout->addWidget(createButton);
 
+    // Feuille a remplir au stylo (sans passer par l'appli) : pas besoin
+    // d'avoir choisi les joueurs ici, le nombre de joueurs est demande.
+    QPushButton* blankSheetButton = new QPushButton("Imprimer une feuille vierge...", creationPage);
+    blankSheetButton->setStyleSheet(
+        "QPushButton { background-color: " + kPanel + "; color: " + kWhite + ";"
+        "border: 1px solid " + kBorder + "; border-radius: 6px; padding: 10px; }"
+        "QPushButton:hover { border-color: " + kGray + "; }"
+    );
+    connect(blankSheetButton, &QPushButton::clicked, this, &TournamentDialog::printBlankSheet);
+    creationLayout->addWidget(blankSheetButton);
+
     m_stack->addWidget(creationPage);
 
     // --- Page 1 : tournoi actif ---
@@ -631,12 +642,84 @@ void TournamentDialog::printCompetition()
     // compris) ; l'apercu permet d'imprimer ou d'enregistrer en PDF
     // (boutons de la fenetre d'apercu, ou "PDF" dans la boite d'impression
     // du systeme).
+    showPrintPreview(competitionPrintoutHtml(m_tournament), m_tournament.name());
+}
+
+void TournamentDialog::printBlankSheet()
+{
+    TournamentManager::Format format = TournamentManager::Format::League;
+    if (!m_isChampionship)
+    {
+        format = (m_formatCombo->currentIndex() == 0)
+            ? TournamentManager::Format::Elimination : TournamentManager::Format::RoundRobin;
+    }
+
+    // Petite fenetre maison (meme style que "Saisir un resultat") plutot
+    // que QInputDialog : titre complet, boutons en francais.
+    QDialog dialog(this);
+    dialog.setWindowTitle("Feuille vierge");
+    dialog.setStyleSheet("background-color: " + kBg + "; color: " + kWhite + ";");
+    applyDarkTitleBar(&dialog);
+    QVBoxLayout* layout = new QVBoxLayout(&dialog);
+    layout->setContentsMargins(20, 20, 20, 20);
+    layout->setSpacing(12);
+
+    QLabel* info = new QLabel(
+        m_isChampionship
+            ? "Feuille de championnat a remplir au stylo (matchs aller et retour, classement)."
+            : "Feuille de tournoi a remplir au stylo (matchs, scores, "
+              + QString(format == TournamentManager::Format::Elimination ? "tableau a elimination directe)." : "classement).")
+        , &dialog);
+    info->setWordWrap(true);
+    layout->addWidget(info);
+
+    QHBoxLayout* countRow = new QHBoxLayout();
+    QLabel* countLabel = new QLabel("Nombre de joueurs :", &dialog);
+    QSpinBox* countSpin = new QSpinBox(&dialog);
+    countSpin->setRange(2, 16);
+    countSpin->setValue(m_isChampionship ? 6 : 8);
+    countSpin->setStyleSheet(
+        "QSpinBox { background-color: " + kPanel + "; color: " + kWhite + ";"
+        "border: 1px solid " + kBorder + "; border-radius: 4px; padding: 6px; min-width: 60px; }");
+    countRow->addWidget(countLabel, 1);
+    countRow->addWidget(countSpin);
+    layout->addLayout(countRow);
+
+    QString buttonStyle =
+        "QPushButton {"
+        "  background-color: " + kPanel + "; color: " + kWhite + ";"
+        "  border: 1px solid " + kBorder + "; border-radius: 5px; padding: 8px 16px;"
+        "}"
+        "QPushButton:hover { border-color: " + kGreen + "; }";
+    QHBoxLayout* buttonRow = new QHBoxLayout();
+    QPushButton* cancelButton = new QPushButton("Annuler", &dialog);
+    QPushButton* okButton = new QPushButton("Apercu / Imprimer", &dialog);
+    cancelButton->setStyleSheet(buttonStyle);
+    okButton->setStyleSheet(buttonStyle);
+    okButton->setDefault(true);
+    buttonRow->addWidget(cancelButton);
+    buttonRow->addWidget(okButton);
+    layout->addLayout(buttonRow);
+    connect(cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
+    connect(okButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+
+    if (dialog.exec() != QDialog::Accepted)
+    {
+        return;
+    }
+    const int playerCount = countSpin->value();
+    showPrintPreview(blankCompetitionPrintoutHtml(format, playerCount),
+        m_isChampionship ? "Championnat (feuille vierge)" : "Tournoi (feuille vierge)");
+}
+
+void TournamentDialog::showPrintPreview(const QString& html, const QString& documentName)
+{
     QTextDocument document;
-    document.setHtml(competitionPrintoutHtml(m_tournament));
+    document.setHtml(html);
 
     QPrinter printer(QPrinter::HighResolution);
     printer.setPageSize(QPageSize(QPageSize::A4));
-    printer.setDocName(m_tournament.name());
+    printer.setDocName(documentName);
 
     QPrintPreviewDialog preview(&printer, this);
     preview.setWindowTitle(m_isChampionship ? "Imprimer le championnat" : "Imprimer le tournoi");

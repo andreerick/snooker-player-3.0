@@ -58,6 +58,10 @@ private:
     // Apercu avant impression / export PDF / impression de la feuille
     // de la competition (voir CompetitionPrintout).
     void printCompetition();
+    // Feuille VIERGE (a remplir a la main) : demande le nombre de joueurs.
+    void printBlankSheet();
+    // Apercu / impression / PDF d'un document HTML deja construit.
+    void showPrintPreview(const QString& html, const QString& documentName);
 
     // Renvoie le Matchup selectionne dans m_pendingMatchCombo, ou
     // nullptr si aucun (liste vide -- tournoi fini ou round d'elimination

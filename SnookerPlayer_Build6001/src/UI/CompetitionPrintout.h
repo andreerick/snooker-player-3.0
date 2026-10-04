@@ -18,3 +18,11 @@
 // imprimante) est faite par TournamentDialog::printCompetition().
 // =====================================================================
 QString competitionPrintoutHtml(const TournamentManager& competition);
+
+// Feuille VIERGE a remplir a la main (avant ou sans l'appli) : liste de
+// joueurs numerotes J1..Jn a nommer au stylo, matchs deja numerotes
+// ("J1" vs "J2", ou "Vainqueur match 3" en elimination), cases score et
+// vainqueur vides, tableau de classement vide. `format` : Elimination,
+// RoundRobin ou League (championnat aller-retour). Meme mise en page que
+// competitionPrintoutHtml().
+QString blankCompetitionPrintoutHtml(TournamentManager::Format format, int playerCount);
