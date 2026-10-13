@@ -1,4 +1,5 @@
 #include "ExerciseDialog.h"
+#include "ExerciseScoreDialog.h"
 #include "UiUtils.h"
 
 #include <QHBoxLayout>
@@ -8,6 +9,7 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QPainter>
+#include <QRegularExpression>
 
 namespace
 {
@@ -26,6 +28,17 @@ namespace
     const QColor kColorGreenBall("#00c853");
     const QColor kColorCue("#f5f5f5");
     const QColor kColorMarker("#d8c9a3");
+
+    // Positions de reference des couleurs (fractions de la largeur/hauteur
+    // du tapis), mesurees sur le schema "The T" valide par l'utilisateur le
+    // 2026-10-13 : noire, rose, bleue sur l'axe, marron au centre du "D",
+    // jaune et verte de part et d'autre. A reutiliser pour les schemas.
+    const qreal kSpotBlackX = 0.088;
+    const qreal kSpotPinkX = 0.262;
+    const qreal kSpotBlueX = 0.510;
+    const qreal kSpotBrownX = 0.788;
+    const qreal kSpotYellowY = 0.331;
+    const qreal kSpotGreenY = 0.663;
 
     struct Exercise
     {
@@ -107,7 +120,7 @@ namespace
         // Dessine l'arc + la ligne de depart + jaune/marron/vert, et
         // renvoie la position du point marron (repere le plus utilise
         // par les diagrammes).
-        QPointF dZone() const
+        QPointF dZone(bool drawColors = true) const
         {
             QPointF brownPt = at(0.82, 0.5);
             QPointF yellowPt = at(0.82, 0.30);
@@ -115,7 +128,9 @@ namespace
 
             painter.setPen(QPen(QColor(255, 255, 255, 160), 1.2));
             painter.setBrush(Qt::NoBrush);
-            qreal dRadius = clothRect.width() * 0.085;
+            // Rayon = ecart marron -> jaune/verte : les extremites du "D"
+            // tombent exactement sur la jaune et la verte.
+            qreal dRadius = clothRect.height() * 0.20;
             QRectF dRect(brownPt.x() - dRadius, brownPt.y() - dRadius, dRadius * 2, dRadius * 2);
             // Balaie vers la DROITE (span negatif) : le "D" doit se creuser
             // vers la bande la plus proche (cote mouche marron), pas vers
@@ -125,9 +140,12 @@ namespace
             painter.drawArc(dRect, 90 * 16, -180 * 16);
             painter.drawLine(QPointF(brownPt.x(), clothRect.top()), QPointF(brownPt.x(), clothRect.bottom()));
 
-            ball(brownPt, kColorBrown);
-            ball(yellowPt, kColorYellow);
-            ball(greenPt, kColorGreenBall);
+            if (drawColors)
+            {
+                ball(brownPt, kColorBrown);
+                ball(yellowPt, kColorYellow);
+                ball(greenPt, kColorGreenBall);
+            }
             return brownPt;
         }
     };
@@ -189,13 +207,15 @@ namespace
         };
 
         // Zone du "D" (billes jaune/vert/marron), a droite.
-        QPointF brownPt = toPt(0.82, 0.5);
-        QPointF yellowPt = toPt(0.82, 0.5 - 0.20);
-        QPointF greenPt = toPt(0.82, 0.5 + 0.20);
+        QPointF brownPt = toPt(kSpotBrownX, 0.5);
+        QPointF yellowPt = toPt(kSpotBrownX, kSpotYellowY);
+        QPointF greenPt = toPt(kSpotBrownX, kSpotGreenY);
 
         painter.setPen(QPen(QColor(255, 255, 255, 160), 1.2));
         painter.setBrush(Qt::NoBrush);
-        qreal dRadius = clothRect.width() * 0.085;
+        // Rayon = ecart marron -> jaune/verte : les extremites du "D"
+        // tombent exactement sur la jaune et la verte.
+        qreal dRadius = clothRect.height() * (0.5 - kSpotYellowY);
         QRectF dRect(brownPt.x() - dRadius, brownPt.y() - dRadius, dRadius * 2, dRadius * 2);
         // Span negatif : le "D" doit se creuser vers la bande la plus
         // proche, pas vers le paquet de rouges (voir meme correction dans
@@ -203,19 +223,29 @@ namespace
         painter.drawArc(dRect, 90 * 16, -180 * 16);
         painter.drawLine(QPointF(brownPt.x(), clothRect.top()), QPointF(brownPt.x(), clothRect.bottom()));
 
-        QPointF bluePt = toPt(0.52, 0.5);
-        QPointF pinkPt = toPt(0.67, 0.5);
-        QPointF blackPt = toPt(0.14, 0.5);
+        QPointF bluePt = toPt(kSpotBlueX, 0.5);
+        QPointF pinkPt = toPt(kSpotPinkX, 0.5);
+        QPointF blackPt = toPt(kSpotBlackX, 0.5);
 
-        // Les 15 rouges, alignees au centre de la table.
-        const int redCount = 15;
-        const qreal lineStartX = 0.06;
-        const qreal lineEndX = 0.60;
-        for (int i = 0; i < redCount; ++i)
+        // Les 15 rouges sur la MEME ligne que noire-rose-bleue-marron,
+        // a egale distance entre elles dans chaque intervalle : 2 entre la
+        // bande et la noire, 4 entre noire et rose, 4 entre rose et bleue,
+        // 5 entre bleue et marron (jamais sur un point de couleur).
+        struct RedGroup { qreal fromX; qreal toX; int count; };
+        const RedGroup groups[] = {
+            { 0.0, kSpotBlackX, 2 },
+            { kSpotBlackX, kSpotPinkX, 4 },
+            { kSpotPinkX, kSpotBlueX, 4 },
+            { kSpotBlueX, kSpotBrownX, 5 },
+        };
+        for (const RedGroup& g : groups)
         {
-            qreal t = static_cast<qreal>(i) / (redCount - 1);
-            qreal nx = lineStartX + t * (lineEndX - lineStartX);
-            drawBall(toPt(nx, 0.5), QColor("#ff3b30"));
+            for (int i = 1; i <= g.count; ++i)
+            {
+                qreal t = static_cast<qreal>(i) / (g.count + 1);
+                qreal nx = g.fromX + t * (g.toX - g.fromX);
+                drawBall(toPt(nx, 0.5), QColor("#ff3b30"));
+            }
         }
 
         drawBall(blackPt, QColor("#161616"));
@@ -234,123 +264,6 @@ namespace
         return pixmap;
     }
 
-    // Diagramme de mise en place de "The T" : une barre de 10 rouges
-    // traverse toute la largeur de la table (5 de chaque cote de l'axe
-    // de croisement), croisee par une barre de 5 rouges qui s'etend de
-    // cet axe vers la noire -- voir le schema de reference partage par
-    // l'utilisateur pour les proportions et l'orientation.
-    QPixmap drawTShapeDiagram(int width, int height)
-    {
-        QPixmap pixmap(width, height);
-        pixmap.fill(Qt::transparent);
-
-        QPainter painter(&pixmap);
-        painter.setRenderHint(QPainter::Antialiasing);
-
-        qreal margin = width * 0.03;
-        QRectF cushionRect(margin, margin, width - 2 * margin, height - 2 * margin);
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor("#4a2c17"));
-        painter.drawRoundedRect(cushionRect, 8, 8);
-
-        qreal clothMargin = width * 0.028;
-        QRectF clothRect(
-            cushionRect.left() + clothMargin, cushionRect.top() + clothMargin,
-            cushionRect.width() - 2 * clothMargin, cushionRect.height() - 2 * clothMargin
-        );
-        painter.setBrush(QColor("#1a6b1a"));
-        painter.drawRect(clothRect);
-
-        qreal pocketR = width * 0.016;
-        painter.setBrush(QColor("#111111"));
-        for (const QPointF& p : {
-            cushionRect.topLeft(), cushionRect.topRight(),
-            cushionRect.bottomLeft(), cushionRect.bottomRight(),
-            QPointF(cushionRect.center().x(), cushionRect.top()),
-            QPointF(cushionRect.center().x(), cushionRect.bottom())
-        })
-        {
-            painter.drawEllipse(p, pocketR, pocketR);
-        }
-
-        auto toPt = [&](qreal nx, qreal ny)
-        {
-            return QPointF(
-                clothRect.left() + nx * clothRect.width(),
-                clothRect.top() + ny * clothRect.height()
-            );
-        };
-
-        qreal ballR = clothRect.height() * 0.032;
-        auto drawBall = [&](QPointF p, const QColor& color)
-        {
-            painter.setPen(QPen(QColor("#000000"), 1));
-            painter.setBrush(color);
-            painter.drawEllipse(p, ballR, ballR);
-        };
-
-        // Zone du "D" (billes jaune/vert/marron), a droite -- identique
-        // au diagramme du Line-Up.
-        QPointF brownPt = toPt(0.82, 0.5);
-        QPointF yellowPt = toPt(0.82, 0.5 - 0.20);
-        QPointF greenPt = toPt(0.82, 0.5 + 0.20);
-
-        painter.setPen(QPen(QColor(255, 255, 255, 160), 1.2));
-        painter.setBrush(Qt::NoBrush);
-        qreal dRadius = clothRect.width() * 0.085;
-        QRectF dRect(brownPt.x() - dRadius, brownPt.y() - dRadius, dRadius * 2, dRadius * 2);
-        // Span negatif : le "D" doit se creuser vers la bande la plus
-        // proche, pas vers le paquet de rouges (voir meme correction dans
-        // BallPainter::dZone() ci-dessus).
-        painter.drawArc(dRect, 90 * 16, -180 * 16);
-        painter.drawLine(QPointF(brownPt.x(), clothRect.top()), QPointF(brownPt.x(), clothRect.bottom()));
-
-        QPointF bluePt = toPt(0.56, 0.5);
-        QPointF blackPt = toPt(0.12, 0.5);
-
-        // Axe de croisement du "T" : a mi-chemin entre la noire et la
-        // bleue le long de la longueur, au centre de la largeur.
-        qreal crossX = 0.36;
-
-        // Barre verticale (10 rouges, toute la largeur de la table,
-        // 5 de chaque cote de l'axe).
-        const int vertCount = 10;
-        for (int i = 0; i < vertCount; ++i)
-        {
-            qreal t = static_cast<qreal>(i) / (vertCount - 1);
-            qreal ny = 0.14 + t * (0.86 - 0.14);
-            drawBall(toPt(crossX, ny), QColor("#ff3b30"));
-        }
-
-        // Barre horizontale (5 rouges, de l'axe vers la noire).
-        const int horizCount = 5;
-        for (int i = 1; i <= horizCount; ++i)
-        {
-            qreal t = static_cast<qreal>(i) / horizCount;
-            qreal nx = crossX - t * (crossX - 0.16);
-            drawBall(toPt(nx, 0.5), QColor("#ff3b30"));
-        }
-
-        // Repere au point de croisement (ni rouge ni bille reelle, juste
-        // un marqueur visuel -- voir le schema de reference).
-        drawBall(toPt(crossX, 0.5), QColor("#d8c9a3"));
-
-        drawBall(blackPt, QColor("#161616"));
-        drawBall(bluePt, QColor("#1565ff"));
-        drawBall(brownPt, QColor("#8b4513"));
-        drawBall(yellowPt, QColor("#ffcc00"));
-        drawBall(greenPt, QColor("#00c853"));
-
-        // Bille blanche de depart (variante 1 : entre les rouges et la
-        // bleue) + trajectoire indicative.
-        QPointF cuePt = toPt((crossX + 0.56) / 2, 0.5);
-        drawBall(cuePt, QColor("#f5f5f5"));
-        painter.setPen(QPen(QColor(255, 255, 255, 200), 1.5));
-        painter.drawLine(toPt(0.03, 0.06), cuePt);
-
-        return pixmap;
-    }
-
     // Diagramme "Controle de la bille blanche" : bleue sur son point,
     // blanche a ~25cm en ligne vers une poche du milieu, et un repere
     // vertical (5 points) a cote de la blanche pour visualiser les
@@ -363,11 +276,13 @@ namespace
         painter.setRenderHint(QPainter::Antialiasing);
         BallPainter bp{painter, clothRect, clothRect.height() * 0.032};
 
-        bp.dZone();
-        QPointF bluePt = bp.at(0.52, 0.5);
+        // Ni jaune, ni verte, ni marron ; bleue et blanche sur l'axe de la
+        // poche du milieu (x = 0.5) pour que le trait soit bien droit.
+        bp.dZone(false);
+        QPointF bluePt = bp.at(0.5, 0.5);
         bp.ball(bluePt, kColorBlue);
 
-        QPointF cuePt = bp.at(0.52, 0.5 - 0.24);
+        QPointF cuePt = bp.at(0.5, 0.5 - 0.24);
         bp.ball(cuePt, kColorCue);
 
         painter.setPen(QPen(QColor(255, 255, 255, 200), 1.5));
@@ -412,8 +327,8 @@ namespace
     }
 
     // Diagramme "Se mettre en place sur les spots" : blanche sur le point
-    // marron, noire contre la bande directement derriere le point noir
-    // (alignee noir-rose-bleu-marron) -- la blanche doit revenir droit a
+    // marron, aucune autre bille, ligne vers le point noir -- la blanche
+    // doit revenir droit a
     // son point de depart apres avoir touche la bande.
     QPixmap drawSpotsDiagram(int width, int height)
     {
@@ -423,15 +338,14 @@ namespace
         painter.setRenderHint(QPainter::Antialiasing);
         BallPainter bp{painter, clothRect, clothRect.height() * 0.032};
 
-        QPointF brownPt = bp.dZone();
-        // La blanche occupe le point marron (dessinee par-dessus).
-        bp.ball(brownPt, kColorCue);
-
-        QPointF blackPt = bp.at(0.02, 0.5);
-        bp.ball(blackPt, kColorBlack);
+        // Seule la blanche reste, sur le point marron ; la ligne va jusqu'au
+        // point noir (aucune bille de couleur dessinee).
+        QPointF brownPt = bp.dZone(false);
+        QPointF blackSpot = bp.at(0.14, 0.5);
 
         painter.setPen(QPen(QColor(255, 255, 255, 200), 1.5));
-        painter.drawLine(brownPt, QPointF(blackPt.x() + bp.ballR, blackPt.y()));
+        painter.drawLine(brownPt, blackSpot);
+        bp.ball(brownPt, kColorCue);
 
         return pixmap;
     }
@@ -662,7 +576,73 @@ namespace
     {
         static const QVector<Exercise> data = {
             {
-                "Line-Up",
+                "1. Se mettre en place sur les spots",
+                "<p>Faire rouler la blanche sur les points centraux est un excellent indicateur "
+                "pour savoir si vous jouez droit -- l'un des fondamentaux avant d'aborder des "
+                "exercices plus complexes.</p>"
+
+                "<p><b>MISE EN PLACE</b></p>"
+                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
+                "<li>Placez la blanche sur le point marron.</li>"
+                "<li>Laissez la table libre : aucune autre bille n'est necessaire.</li>"
+                "</ol>"
+
+                "<p><b>DEROULEMENT</b></p>"
+                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
+                "<li>Centrez bien le procede de la queue sur la blanche.</li>"
+                "<li>Visez le centre de la table, par-dessus les points marron, bleu, rose et noir, "
+                "droit vers la bande du fond.</li>"
+                "<li>Frappez avec assez de vitesse pour que la blanche remonte jusqu'a la bande "
+                "de depart.</li>"
+                "<li>Restez immobile apres la frappe : si la blanche revient exactement a son "
+                "point de depart, c'est que vous avez frappe droit et centre.</li>"
+                "</ol>"
+
+                "<p><b>CONSEILS</b></p>"
+                "<ul style='margin:4px 0; padding-left:20px; line-height:1.7'>"
+                "<li>Ne frappez ni trop fort ni trop doucement, sous peine de derive naturelle "
+                "de la blanche sur le tapis.</li>"
+                "<li>Si la blanche ne revient pas exactement a son point de depart, cela indique "
+                "une frappe decentree ou un effet lateral involontaire.</li>"
+                "</ul>"
+            },
+            {
+                "2. Controle de la bille blanche",
+                "<p>Petit exercice pour observer la reaction de la blanche apres l'impact avec "
+                "la bille cible : sa trajectoire depend directement du point ou vous placez le "
+                "procede de la queue sur son axe vertical.</p>"
+
+                "<p><b>MISE EN PLACE</b></p>"
+                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
+                "<li>Placez la bleue sur son point.</li>"
+                "<li>Placez la blanche a environ 25 cm de la bleue, en ligne droite vers une "
+                "poche du milieu.</li>"
+                "<li>Reperez 5 points de frappe sur l'axe vertical de la blanche : Haut, "
+                "1 cm au-dessus du centre, Centre, 1 cm en dessous du centre, Bas (effet "
+                "retro).</li>"
+                "</ol>"
+
+                "<p><b>DEROULEMENT</b></p>"
+                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
+                "<li>Jouez un coup normal pour empocher la bleue dans la poche du milieu.</li>"
+                "<li>Essayez 5 coups a chaque position de frappe et notez la reaction de la "
+                "blanche apres l'impact.</li>"
+                "<li>Gardez le bras et la prise souples, en poussant bien la blanche jusqu'au "
+                "bout du mouvement (sans a-coups).</li>"
+                "</ol>"
+
+                "<p><b>CONSEILS</b></p>"
+                "<ul style='margin:4px 0; padding-left:20px; line-height:1.7'>"
+                "<li>Une frappe haute (effet suivi) fait suivre la blanche derriere la bleue, "
+                "jusque dans la meme poche.</li>"
+                "<li>Une frappe basse (effet retro) fait reculer la blanche vers la poche "
+                "opposee a la bleue.</li>"
+                "<li>Une fois a l'aise, ajoutez d'autres points de frappe sur l'axe vertical "
+                "pour affiner votre controle.</li>"
+                "</ul>"
+            },
+            {
+                "3. Line-Up",
                 "<p>Probablement l'exercice le plus utilise par les joueurs professionnels pour "
                 "se detendre et travailler les bases : empocher rouge apres couleur, comme en "
                 "match, mais avec les rouges deja parfaitement placees pour ne pas avoir a "
@@ -676,8 +656,8 @@ namespace
                 "<ul style='margin:4px 0; padding-left:20px'>"
                 "<li>2 rouges sous la noire</li>"
                 "<li>4 rouges entre la noire et la rose</li>"
-                "<li>7 rouges entre la rose et la bleue</li>"
-                "<li>2 rouges entre la bleue et la marron</li>"
+                "<li>4 rouges entre la rose et la bleue</li>"
+                "<li>5 rouges entre la bleue et la marron</li>"
                 "</ul></li>"
                 "<li>Choisissez la rouge de depart (souvent la 2e apres la noire).</li>"
                 "</ol>"
@@ -710,7 +690,7 @@ namespace
                 "</ul>"
             },
             {
-                "The T",
+                "4. The T",
                 "<p>Legerement plus exigeant que le Line-Up : les rouges forment un \"T\" plutot "
                 "qu'une simple ligne, obligeant a jouer dans un espace plus restreint. S'adresse "
                 "surtout aux joueurs intermediaires/avances qui veulent muscler les coups utiles "
@@ -760,42 +740,7 @@ namespace
                 "</ul>"
             },
             {
-                "Controle de la bille blanche",
-                "<p>Petit exercice pour observer la reaction de la blanche apres l'impact avec "
-                "la bille cible : sa trajectoire depend directement du point ou vous placez le "
-                "procede de la queue sur son axe vertical.</p>"
-
-                "<p><b>MISE EN PLACE</b></p>"
-                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Placez la bleue sur son point.</li>"
-                "<li>Placez la blanche a environ 25 cm de la bleue, en ligne droite vers une "
-                "poche du milieu.</li>"
-                "<li>Reperez 5 points de frappe sur l'axe vertical de la blanche : Haut, "
-                "1 cm au-dessus du centre, Centre, 1 cm en dessous du centre, Bas (effet "
-                "retro).</li>"
-                "</ol>"
-
-                "<p><b>DEROULEMENT</b></p>"
-                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Jouez un coup normal pour empocher la bleue dans la poche du milieu.</li>"
-                "<li>Essayez 5 coups a chaque position de frappe et notez la reaction de la "
-                "blanche apres l'impact.</li>"
-                "<li>Gardez le bras et la prise souples, en poussant bien la blanche jusqu'au "
-                "bout du mouvement (sans a-coups).</li>"
-                "</ol>"
-
-                "<p><b>CONSEILS</b></p>"
-                "<ul style='margin:4px 0; padding-left:20px; line-height:1.7'>"
-                "<li>Une frappe haute (effet suivi) fait suivre la blanche derriere la bleue, "
-                "jusque dans la meme poche.</li>"
-                "<li>Une frappe basse (effet retro) fait reculer la blanche vers la poche "
-                "opposee a la bleue.</li>"
-                "<li>Une fois a l'aise, ajoutez d'autres points de frappe sur l'axe vertical "
-                "pour affiner votre controle.</li>"
-                "</ul>"
-            },
-            {
-                "Potting Long Blues",
+                "5. Potting Long Blues",
                 "<p>Empocher des bleues a moyenne/longue distance developpe le toucher necessaire "
                 "aux coups d'ouverture : bien execute, ce type de coup vous place directement en "
                 "position sur la rose.</p>"
@@ -823,38 +768,7 @@ namespace
                 "</ul>"
             },
             {
-                "Se mettre en place sur les spots",
-                "<p>Faire rouler la blanche sur les points centraux est un excellent indicateur "
-                "pour savoir si vous jouez droit -- l'un des fondamentaux avant d'aborder des "
-                "exercices plus complexes.</p>"
-
-                "<p><b>MISE EN PLACE</b></p>"
-                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Placez la blanche sur le point marron.</li>"
-                "<li>Placez la noire dans l'alignement noir-rose-bleu-marron, mais contre la "
-                "bande, juste derriere le point noir.</li>"
-                "</ol>"
-
-                "<p><b>DEROULEMENT</b></p>"
-                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Centrez bien le procede de la queue sur la blanche.</li>"
-                "<li>Visez le centre de la table, par-dessus les points, droit sur la noire.</li>"
-                "<li>Frappez avec assez de vitesse pour que la blanche remonte jusqu'a la bande "
-                "de depart.</li>"
-                "<li>Restez immobile apres la frappe : si la blanche revient exactement a son "
-                "point de depart, c'est que vous avez frappe droit et centre.</li>"
-                "</ol>"
-
-                "<p><b>CONSEILS</b></p>"
-                "<ul style='margin:4px 0; padding-left:20px; line-height:1.7'>"
-                "<li>Ne frappez ni trop fort ni trop doucement, sous peine de derive naturelle "
-                "de la blanche sur le tapis.</li>"
-                "<li>Si la blanche ne revient pas exactement a son point de depart, cela indique "
-                "une frappe decentree ou un effet lateral involontaire.</li>"
-                "</ul>"
-            },
-            {
-                "Empocher la bille noire",
+                "6. Empocher la bille noire",
                 "<p>Exercice mental qui consiste a empocher des noires sous differents angles, "
                 "dans un espace restreint -- utile pour apprendre a simplifier son jeu de "
                 "position coup apres coup.</p>"
@@ -882,7 +796,7 @@ namespace
                 "</ul>"
             },
             {
-                "Potting direct des rouges",
+                "7. Potting direct des rouges",
                 "<p>Enchainer des rouges en ligne droite est excellent pour travailler la "
                 "position et verifier que la queue part bien droite sur la ligne de visee -- si "
                 "vous ratez toujours du meme cote, cela revele un defaut de mise en place ou de "
@@ -927,7 +841,7 @@ namespace
                 "</ul>"
             },
             {
-                "Potting Long Reds",
+                "8. Potting Long Reds",
                 "<p>Empocher des rouges longues developpe le toucher necessaire au coup "
                 "d'ouverture qui, bien execute, vous place directement en position sur la "
                 "rose.</p>"
@@ -960,7 +874,7 @@ namespace
                 "</ul>"
             },
             {
-                "Sortir des situations de snooker faciles",
+                "9. Sortir des situations de snooker faciles",
                 "<p>Sortir d'un snooker facile devrait l'etre... mais ce n'est pas toujours le "
                 "cas. Cet exercice structure la reflexion a avoir avant de jouer un coup de "
                 "sortie, via la technique du \"miroir\".</p>"
@@ -1000,7 +914,7 @@ namespace
                 "</ul>"
             },
             {
-                "Coups de securite au snooker sur les rouges",
+                "10. Coups de securite au snooker sur les rouges",
                 "<p>Exercice de toucher pour les petits coups de securite delicats : imaginez "
                 "que l'adversaire a rate une rouge longue et l'a laissee juste sous le paquet -- "
                 "l'ideal est de la laisser en zone de securite, avec un snooker difficile a la "
@@ -1035,7 +949,7 @@ namespace
                 "</ul>"
             },
             {
-                "Empocher plusieurs bleues",
+                "11. Empocher plusieurs bleues",
                 "<p>Exercice de toucher pour la situation ou rose et noire sont a egalite au "
                 "score et qu'il reste des rouges autour de la bleue : viser le bon cote de la "
                 "bleue devient crucial pour enchainer sur la rouge suivante -- un exercice a "
@@ -1133,7 +1047,33 @@ ExerciseDialog::ExerciseDialog(QWidget* parent)
         "QPushButton:hover { border-color: " + kGreen + "; }"
     );
     connect(closeButton, &QPushButton::clicked, this, &QDialog::accept);
-    rightCol->addWidget(closeButton, 0, Qt::AlignRight);
+
+    // Compteur de serie : uniquement pour les exercices a 15 rouges
+    // (Line-Up et The T), voir showExercise().
+    m_scoreButton = new QPushButton("Compter ma serie", this);
+    m_scoreButton->setStyleSheet(
+        "QPushButton { background-color: " + kGreen + "; color: " + kWhite + ";"
+        "border: none; border-radius: 5px; padding: 8px 16px; font-weight: bold; }"
+        "QPushButton:hover { background-color: #22b300; }"
+    );
+    connect(m_scoreButton, &QPushButton::clicked, this, [this]()
+    {
+        int row = m_exerciseList->currentRow();
+        if (row < 0 || row >= exercises().size())
+        {
+            return;
+        }
+        QString name = exercises()[row].title;
+        name.remove(QRegularExpression("^\\d+\\.\\s*"));
+        ExerciseScoreDialog dialog(name, this);
+        dialog.exec();
+    });
+
+    QHBoxLayout* buttonRow = new QHBoxLayout();
+    buttonRow->addWidget(m_scoreButton);
+    buttonRow->addStretch(1);
+    buttonRow->addWidget(closeButton);
+    rightCol->addLayout(buttonRow);
 
     outer->addLayout(rightCol, 1);
 
@@ -1148,21 +1088,25 @@ void ExerciseDialog::showExercise(int index)
         return;
     }
     m_contentLabel->setText(exercises()[index].html);
+    // Line-Up (index 2) et The T (index 3) : 15 rouges + couleurs, comptage
+    // de serie possible.
+    m_scoreButton->setVisible(index == 2 || index == 3);
     // Chaque exercice a son propre diagramme de mise en place -- ajouter
     // un "case" ici pour tout nouvel exercice.
     switch (index)
     {
-    case 1:
-        m_diagramLabel->setPixmap(drawTShapeDiagram(520, 220));
+    case 0:
+        m_diagramLabel->setPixmap(drawSpotsDiagram(520, 220));
         break;
-    case 2:
+    case 1:
         m_diagramLabel->setPixmap(drawCueBallControlDiagram(520, 220));
         break;
     case 3:
-        m_diagramLabel->setPixmap(drawLongBluesDiagram(520, 220));
+        m_diagramLabel->setPixmap(QPixmap(EXERCISE_2_IMAGE_PATH).scaled(
+            520, 220, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         break;
     case 4:
-        m_diagramLabel->setPixmap(drawSpotsDiagram(520, 220));
+        m_diagramLabel->setPixmap(drawLongBluesDiagram(520, 220));
         break;
     case 5:
         m_diagramLabel->setPixmap(drawBlackPottingDiagram(520, 220));

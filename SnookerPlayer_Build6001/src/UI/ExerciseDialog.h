@@ -4,6 +4,7 @@
 
 class QListWidget;
 class QLabel;
+class QPushButton;
 
 // =====================================================================
 // ExerciseDialog
@@ -27,4 +28,5 @@ private:
     QListWidget* m_exerciseList = nullptr;
     QLabel* m_diagramLabel = nullptr;
     QLabel* m_contentLabel = nullptr;
+    QPushButton* m_scoreButton = nullptr;
 };

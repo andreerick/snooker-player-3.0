@@ -127,6 +127,7 @@ add_executable(EngineTests
     Shot.cpp
     SnookerGeometry.cpp
     ScenarioReplay.cpp
+    ExerciseSeries.cpp
 )
 target_include_directories(EngineTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(EngineTests PRIVATE
@@ -181,6 +182,10 @@ qt_add_executable(SnookerPlayer
     SnookerPlayer_Build6001/src/UI/CompetitionChoiceDialog.h
     SnookerPlayer_Build6001/src/UI/ExerciseDialog.cpp
     SnookerPlayer_Build6001/src/UI/ExerciseDialog.h
+    SnookerPlayer_Build6001/src/UI/ExerciseScoreDialog.cpp
+    SnookerPlayer_Build6001/src/UI/ExerciseScoreDialog.h
+    SnookerPlayer_Build6001/src/UI/ExerciseSessions.cpp
+    SnookerPlayer_Build6001/src/UI/ExerciseSessions.h
     SnookerPlayer_Build6001/src/UI/UiUtils.cpp
     SnookerPlayer_Build6001/src/UI/UiUtils.h
 
@@ -220,6 +225,10 @@ qt_add_executable(SnookerPlayer
     # Rejeu des scenarios (partage avec les tests automatiques)
     ScenarioReplay.cpp
     ScenarioReplay.h
+
+    # Comptage des series d'entrainement (Line-Up, The T)
+    ExerciseSeries.cpp
+    ExerciseSeries.h
 )
 
 target_include_directories(SnookerPlayer PRIVATE
@@ -278,6 +287,7 @@ endif()
 target_compile_definitions(SnookerPlayer PRIVATE
     RULES_TEXT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/docs/reglement_snooker/Regles_officielles_snooker_FR_sept2024.txt"
     HOME_SCREEN_IMAGE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/accueil_v3.png"
+    EXERCISE_2_IMAGE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/exercice_2_the_t.png"
 )
 
 # CueSense (voir CueSenseLauncher) : sur Windows le chemin reste code en

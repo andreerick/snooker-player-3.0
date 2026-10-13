@@ -2,11 +2,15 @@
 
 #include <QDialog>
 #include <QString>
+#include <QStringList>
 
 class QListWidget;
 class QListWidgetItem;
 class QLabel;
 class QPushButton;
+
+// Noms des joueurs connus (liste enregistree + historique des matchs).
+QStringList knownPlayerNames();
 
 // =====================================================================
 // PlayersDialog

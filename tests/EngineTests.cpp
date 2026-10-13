@@ -5,6 +5,7 @@
 #include "Referee.h"
 #include "SnookerGeometry.h"
 #include "ScenarioReplay.h"
+#include "ExerciseSeries.h"
 
 #include <fstream>
 #include <iostream>
@@ -373,6 +374,39 @@ namespace
         state({ { "Jaune", 150, 89 }, { "Rouge", 125, 89 } }, "Couleur", SnookerState::Snookered, "geometrie : seule couleur bloquee");
         state({ { "Rouge", 125, 89 }, { "Rouge", 150, 89 } }, "Rouge", SnookerState::NotSnookered, "geometrie : une bille jouable devant une autre");
     }
+    void testExerciseSeries()
+    {
+        {
+            ExerciseSeries s;
+            check(s.next() == ExerciseSeries::Next::Red, "serie : on commence par une rouge");
+            check(!s.pot(7), "serie : une couleur n'est pas permise en premier");
+            check(s.pot(1), "serie : rouge acceptee");
+            check(s.next() == ExerciseSeries::Next::AnyColor, "serie : couleur attendue apres une rouge");
+            check(!s.pot(1), "serie : deux rouges de suite refusees");
+            check(s.pot(7), "serie : noire apres la rouge");
+            check(s.points() == 8 && s.redsPotted() == 1, "serie : 8 points, 1 rouge");
+            check(s.undo() && s.points() == 1, "serie : annulation de la noire");
+            check(s.undo() && s.points() == 0 && !s.undo(), "serie : annulation jusqu'a vide");
+        }
+        {
+            ExerciseSeries s;
+            for (int i = 0; i < 15; ++i)
+            {
+                check(s.pot(1), "serie complete : rouge " + std::to_string(i + 1));
+                check(s.pot(7), "serie complete : noire " + std::to_string(i + 1));
+            }
+            check(s.next() == ExerciseSeries::Next::SpecificColor && s.nextColorValue() == 2,
+                  "serie complete : jaune attendue apres 15 rouges");
+            check(!s.pot(7), "serie complete : la noire n'est pas permise avant la jaune");
+            for (int value = 2; value <= 7; ++value)
+            {
+                check(s.pot(value), "serie complete : couleur finale " + std::to_string(value));
+            }
+            check(s.isDone() && s.points() == 147, "serie complete : 147 points, terminee");
+            check(!s.pot(1), "serie complete : plus aucune bille permise");
+        }
+    }
+
 }
 
 int main()
@@ -389,6 +423,7 @@ int main()
     testMatch();
     testScenarioReplay();
     testSnookerGeometry();
+    testExerciseSeries();
 
     std::cout << g_checks << " controles, " << g_failures << " echec(s)" << std::endl;
     return g_failures == 0 ? 0 : 1;

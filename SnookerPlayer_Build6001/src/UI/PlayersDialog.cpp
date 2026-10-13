@@ -1,5 +1,6 @@
 #include "PlayersDialog.h"
 #include "../Storage/MatchStorage.h"
+#include "ExerciseSessions.h"
 #include "UiUtils.h"
 
 #include <QVBoxLayout>
@@ -221,6 +222,11 @@ namespace
     }
 }
 
+QStringList knownPlayerNames()
+{
+    return allKnownPlayerNames();
+}
+
 PlayersDialog::PlayersDialog(QWidget* parent)
     : QDialog(parent)
 {
@@ -393,10 +399,21 @@ void PlayersDialog::showPlayer(const QString& name)
     computePlayerData(name, stats, history);
 
     int winRate = stats.played > 0 ? (stats.won * 100 / stats.played) : 0;
-    m_statsLabel->setText(
-        QString("Parties jouees : %1    Victoires : %2 (%3%)    Frames : %4 - %5")
-            .arg(stats.played).arg(stats.won).arg(winRate).arg(stats.framesWon).arg(stats.framesLost)
-    );
+    QString statsText = QString("Parties jouees : %1    Victoires : %2 (%3%)    Frames : %4 - %5")
+            .arg(stats.played).arg(stats.won).arg(winRate).arg(stats.framesWon).arg(stats.framesLost);
+
+    // Entrainement : meilleur score par exercice compte (voir ExerciseScoreDialog).
+    for (const QString& exercise : QStringList{ "Line-Up", "The T" })
+    {
+        ExerciseSummary summary = ExerciseSessions::summaryFor(name, exercise);
+        if (summary.count > 0)
+        {
+            statsText += QString("\nEntrainement %1 : meilleur %2, moyenne %3 (%4 serie(s))")
+                             .arg(exercise).arg(summary.best)
+                             .arg(summary.average, 0, 'f', 1).arg(summary.count);
+        }
+    }
+    m_statsLabel->setText(statsText);
 
     m_historyList->clear();
     if (history.isEmpty())
