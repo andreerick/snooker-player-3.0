@@ -33,11 +33,11 @@ namespace
     // du tapis), mesurees sur le schema "The T" valide par l'utilisateur le
     // 2026-10-13 : noire, rose, bleue sur l'axe, marron au centre du "D",
     // jaune et verte de part et d'autre. A reutiliser pour les schemas.
-    const qreal kSpotBlackX = 0.088;
-    const qreal kSpotPinkX = 0.262;
-    const qreal kSpotBlueX = 0.510;
+    const qreal kSpotBlackX = 0.0915;
+    const qreal kSpotPinkX = 0.2655;
+    const qreal kSpotBlueX = 0.5095;
     const qreal kSpotBrownX = 0.788;
-    const qreal kSpotYellowY = 0.331;
+    const qreal kSpotYellowY = 0.330;
     const qreal kSpotGreenY = 0.663;
 
     struct Exercise
@@ -46,13 +46,11 @@ namespace
         QString html;
     };
 
-    // Utilitaires communs a tous les diagrammes de mise en place, extraits
-    // pour eviter de redupliquer le trace table/tapis/poches (identique
-    // partout) dans chaque nouvelle fonction drawXxxDiagram ajoutee pour
-    // les exercices 3 et suivants. Les diagrammes du Line-Up et du T
-    // (exercices 1 et 2, ecrits avant l'ajout de cet utilitaire) restent
-    // volontairement inchanges pour ne pas risquer de regression sur des
-    // rendus deja valides par l'utilisateur.
+    // Contour de table commun a tous les diagrammes, calque sur le schema
+    // "The T" valide par l'utilisateur (2026-10-13) : rail brun mince,
+    // tapis vert, poches noires aux quatre coins et au milieu des grands
+    // cotes, avec leurs machoires jaunes. Proportions 1,9 : 1. Renvoie le
+    // rectangle du tapis (la surface de jeu) dans clothRectOut.
     QPixmap createTableBase(int width, int height, QRectF& clothRectOut)
     {
         QPixmap pixmap(width, height);
@@ -61,33 +59,55 @@ namespace
             QPainter painter(&pixmap);
             painter.setRenderHint(QPainter::Antialiasing);
 
-            qreal margin = width * 0.03;
-            QRectF cushionRect(margin, margin, width - 2 * margin, height - 2 * margin);
+            const qreal aspect = 1.91;
+            const qreal border = 4.0;
+            qreal outerH = height - 2 * border;
+            qreal outerW = outerH * aspect;
+            if (outerW > width - 2 * border)
+            {
+                outerW = width - 2 * border;
+                outerH = outerW / aspect;
+            }
+            QRectF outer((width - outerW) / 2.0, (height - outerH) / 2.0, outerW, outerH);
+
             painter.setPen(Qt::NoPen);
-            painter.setBrush(QColor("#4a2c17"));
-            painter.drawRoundedRect(cushionRect, 8, 8);
+            painter.setBrush(QColor("#4a2006"));
+            painter.drawRect(outer);
 
-            qreal clothMargin = width * 0.028;
-            QRectF clothRect(
-                cushionRect.left() + clothMargin, cushionRect.top() + clothMargin,
-                cushionRect.width() - 2 * clothMargin, cushionRect.height() - 2 * clothMargin
-            );
-            painter.setBrush(QColor("#1a6b1a"));
-            painter.drawRect(clothRect);
+            const qreal inset = outerW * 0.0175;
+            QRectF cloth = outer.adjusted(inset, inset, -inset, -inset);
+            painter.setPen(QPen(QColor("#006400"), 1.5));
+            painter.setBrush(QColor("#228b22"));
+            painter.drawRect(cloth);
 
-            qreal pocketR = width * 0.016;
-            painter.setBrush(QColor("#111111"));
+            // Machoires jaunes : coins arrondis aux quatre coins, petit
+            // rectangle au milieu des grands cotes.
+            const QColor jawColor("#ffd400");
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(jawColor);
+            const qreal jaw = outerW * 0.0285;
+            painter.drawRoundedRect(QRectF(outer.left(), outer.top(), jaw, jaw), 3, 3);
+            painter.drawRoundedRect(QRectF(outer.right() - jaw, outer.top(), jaw, jaw), 3, 3);
+            painter.drawRoundedRect(QRectF(outer.left(), outer.bottom() - jaw, jaw, jaw), 3, 3);
+            painter.drawRoundedRect(QRectF(outer.right() - jaw, outer.bottom() - jaw, jaw, jaw), 3, 3);
+            const qreal midW = outerW * 0.027;
+            const qreal midH = inset + outerW * 0.004;
+            painter.drawRect(QRectF(outer.center().x() - midW / 2, outer.top(), midW, midH));
+            painter.drawRect(QRectF(outer.center().x() - midW / 2, outer.bottom() - midH, midW, midH));
+
+            // Poches : sur les coins du tapis et au milieu des grands cotes.
+            const qreal pocketR = outerW * 0.0105;
+            painter.setBrush(QColor("#000000"));
             for (const QPointF& p : {
-                cushionRect.topLeft(), cushionRect.topRight(),
-                cushionRect.bottomLeft(), cushionRect.bottomRight(),
-                QPointF(cushionRect.center().x(), cushionRect.top()),
-                QPointF(cushionRect.center().x(), cushionRect.bottom())
+                cloth.topLeft(), cloth.topRight(), cloth.bottomLeft(), cloth.bottomRight(),
+                QPointF(cloth.center().x(), cloth.top()),
+                QPointF(cloth.center().x(), cloth.bottom())
             })
             {
                 painter.drawEllipse(p, pocketR, pocketR);
             }
 
-            clothRectOut = clothRect;
+            clothRectOut = cloth;
         }
         return pixmap;
     }
@@ -122,21 +142,19 @@ namespace
         // par les diagrammes).
         QPointF dZone(bool drawColors = true) const
         {
-            QPointF brownPt = at(0.82, 0.5);
-            QPointF yellowPt = at(0.82, 0.30);
-            QPointF greenPt = at(0.82, 0.70);
+            QPointF brownPt = at(kSpotBrownX, 0.5);
+            QPointF yellowPt = at(kSpotBrownX, kSpotYellowY);
+            QPointF greenPt = at(kSpotBrownX, kSpotGreenY);
 
             painter.setPen(QPen(QColor(255, 255, 255, 160), 1.2));
             painter.setBrush(Qt::NoBrush);
             // Rayon = ecart marron -> jaune/verte : les extremites du "D"
             // tombent exactement sur la jaune et la verte.
-            qreal dRadius = clothRect.height() * 0.20;
+            qreal dRadius = clothRect.height() * (0.5 - kSpotYellowY);
             QRectF dRect(brownPt.x() - dRadius, brownPt.y() - dRadius, dRadius * 2, dRadius * 2);
             // Balaie vers la DROITE (span negatif) : le "D" doit se creuser
             // vers la bande la plus proche (cote mouche marron), pas vers
-            // le paquet de rouges -- un span positif ici le faisait bomber
-            // du mauvais cote (repere sur capture d'ecran, voir discussion
-            // avec l'utilisateur du 2026-09-14).
+            // le paquet de rouges.
             painter.drawArc(dRect, 90 * 16, -180 * 16);
             painter.drawLine(QPointF(brownPt.x(), clothRect.top()), QPointF(brownPt.x(), clothRect.bottom()));
 
@@ -157,38 +175,10 @@ namespace
     // partage par l'utilisateur pour les proportions.
     QPixmap drawLineUpDiagram(int width, int height)
     {
-        QPixmap pixmap(width, height);
-        pixmap.fill(Qt::transparent);
-
+        QRectF clothRect;
+        QPixmap pixmap = createTableBase(width, height, clothRect);
         QPainter painter(&pixmap);
         painter.setRenderHint(QPainter::Antialiasing);
-
-        qreal margin = width * 0.03;
-        QRectF cushionRect(margin, margin, width - 2 * margin, height - 2 * margin);
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor("#4a2c17"));
-        painter.drawRoundedRect(cushionRect, 8, 8);
-
-        qreal clothMargin = width * 0.028;
-        QRectF clothRect(
-            cushionRect.left() + clothMargin, cushionRect.top() + clothMargin,
-            cushionRect.width() - 2 * clothMargin, cushionRect.height() - 2 * clothMargin
-        );
-        painter.setBrush(QColor("#1a6b1a"));
-        painter.drawRect(clothRect);
-
-        // Pockets (4 coins + 2 milieux de grand cote).
-        qreal pocketR = width * 0.016;
-        painter.setBrush(QColor("#111111"));
-        for (const QPointF& p : {
-            cushionRect.topLeft(), cushionRect.topRight(),
-            cushionRect.bottomLeft(), cushionRect.bottomRight(),
-            QPointF(cushionRect.center().x(), cushionRect.top()),
-            QPointF(cushionRect.center().x(), cushionRect.bottom())
-        })
-        {
-            painter.drawEllipse(p, pocketR, pocketR);
-        }
 
         auto toPt = [&](qreal nx, qreal ny)
         {
@@ -198,7 +188,7 @@ namespace
             );
         };
 
-        qreal ballR = clothRect.height() * 0.032;
+        qreal ballR = clothRect.width() * 0.014;
         auto drawBall = [&](QPointF p, const QColor& color)
         {
             painter.setPen(QPen(QColor("#000000"), 1));
@@ -274,7 +264,7 @@ namespace
         QPixmap pixmap = createTableBase(width, height, clothRect);
         QPainter painter(&pixmap);
         painter.setRenderHint(QPainter::Antialiasing);
-        BallPainter bp{painter, clothRect, clothRect.height() * 0.032};
+        BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
 
         // Ni jaune, ni verte, ni marron ; bleue et blanche sur l'axe de la
         // poche du milieu (x = 0.5) pour que le trait soit bien droit.
@@ -310,10 +300,10 @@ namespace
         QPixmap pixmap = createTableBase(width, height, clothRect);
         QPainter painter(&pixmap);
         painter.setRenderHint(QPainter::Antialiasing);
-        BallPainter bp{painter, clothRect, clothRect.height() * 0.032};
+        BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
 
-        bp.dZone();
-        QPointF bluePt = bp.at(0.52, 0.5);
+        bp.dZone(false);
+        QPointF bluePt = bp.at(kSpotBlueX, 0.5);
         bp.ball(bluePt, kColorBlue);
 
         QPointF cuePt = bp.at(0.72, 0.68);
@@ -336,45 +326,16 @@ namespace
         QPixmap pixmap = createTableBase(width, height, clothRect);
         QPainter painter(&pixmap);
         painter.setRenderHint(QPainter::Antialiasing);
-        BallPainter bp{painter, clothRect, clothRect.height() * 0.032};
+        BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
 
         // Seule la blanche reste, sur le point marron ; la ligne va jusqu'au
         // point noir (aucune bille de couleur dessinee).
         QPointF brownPt = bp.dZone(false);
-        QPointF blackSpot = bp.at(0.14, 0.5);
+        QPointF blackSpot = bp.at(kSpotBlackX, 0.5);
 
         painter.setPen(QPen(QColor(255, 255, 255, 200), 1.5));
         painter.drawLine(brownPt, blackSpot);
         bp.ball(brownPt, kColorCue);
-
-        return pixmap;
-    }
-
-    // Diagramme "Empocher la bille noire" : noire sur son point, blanche
-    // a mi-chemin vers la bande laterale en position "1/2 bille" ; 2
-    // positions alternatives (1/4, 3/4) indiquees en transparence.
-    QPixmap drawBlackPottingDiagram(int width, int height)
-    {
-        QRectF clothRect;
-        QPixmap pixmap = createTableBase(width, height, clothRect);
-        QPainter painter(&pixmap);
-        painter.setRenderHint(QPainter::Antialiasing);
-        BallPainter bp{painter, clothRect, clothRect.height() * 0.032};
-
-        bp.dZone();
-        QPointF blackPt = bp.at(0.14, 0.5);
-        bp.ball(blackPt, kColorBlack);
-
-        QPointF cuePt = bp.at(0.26, 0.68);
-        bp.ball(cuePt, kColorCue);
-
-        painter.setPen(QPen(QColor(255, 255, 255, 200), 1.5));
-        painter.drawLine(cuePt, clothRect.bottomLeft());
-
-        painter.setPen(QPen(QColor("#000000"), 1));
-        painter.setBrush(QColor(245, 245, 245, 120));
-        painter.drawEllipse(bp.at(0.26, 0.5 + 0.05), bp.ballR, bp.ballR);
-        painter.drawEllipse(bp.at(0.28, 0.5 + 0.32), bp.ballR, bp.ballR);
 
         return pixmap;
     }
@@ -388,14 +349,14 @@ namespace
         QPixmap pixmap = createTableBase(width, height, clothRect);
         QPainter painter(&pixmap);
         painter.setRenderHint(QPainter::Antialiasing);
-        BallPainter bp{painter, clothRect, clothRect.height() * 0.028};
+        BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
 
         bp.dZone();
-        QPointF bluePt = bp.at(0.52, 0.5);
+        QPointF bluePt = bp.at(kSpotBlueX, 0.5);
         bp.ball(bluePt, kColorBlue);
-        QPointF pinkPt = bp.at(0.30, 0.5);
+        QPointF pinkPt = bp.at(kSpotPinkX, 0.5);
         bp.ball(pinkPt, kColorPink);
-        QPointF blackPt = bp.at(0.10, 0.5);
+        QPointF blackPt = bp.at(kSpotBlackX, 0.5);
         bp.ball(blackPt, kColorBlack);
 
         // Les 3 niveaux restent tous en rouge plein (une transparence sur
@@ -433,14 +394,14 @@ namespace
         QPixmap pixmap = createTableBase(width, height, clothRect);
         QPainter painter(&pixmap);
         painter.setRenderHint(QPainter::Antialiasing);
-        BallPainter bp{painter, clothRect, clothRect.height() * 0.032};
+        BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
 
         bp.dZone();
-        QPointF bluePt = bp.at(0.52, 0.5);
+        QPointF bluePt = bp.at(kSpotBlueX, 0.5);
         bp.ball(bluePt, kColorBlue);
-        QPointF pinkPt = bp.at(0.30, 0.5);
+        QPointF pinkPt = bp.at(kSpotPinkX, 0.5);
         bp.ball(pinkPt, kColorPink);
-        QPointF blackPt = bp.at(0.10, 0.5);
+        QPointF blackPt = bp.at(kSpotBlackX, 0.5);
         bp.ball(blackPt, kColorBlack);
 
         QPointF redPt = bp.at(0.40, 0.5);
@@ -467,7 +428,7 @@ namespace
         QPixmap pixmap = createTableBase(width, height, clothRect);
         QPainter painter(&pixmap);
         painter.setRenderHint(QPainter::Antialiasing);
-        BallPainter bp{painter, clothRect, clothRect.height() * 0.032};
+        BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
 
         QPointF targetPt = bp.at(0.18, 0.16);
         bp.ball(targetPt, kColorBlue);
@@ -503,20 +464,20 @@ namespace
         QPixmap pixmap = createTableBase(width, height, clothRect);
         QPainter painter(&pixmap);
         painter.setRenderHint(QPainter::Antialiasing);
-        BallPainter bp{painter, clothRect, clothRect.height() * 0.032};
+        BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
 
         bp.dZone();
-        QPointF blackPt = bp.at(0.14, 0.5);
+        QPointF blackPt = bp.at(kSpotBlackX, 0.5);
         bp.ball(blackPt, kColorBlack);
-        QPointF pinkPt = bp.at(0.30, 0.5);
+        QPointF pinkPt = bp.at(kSpotPinkX, 0.5);
         bp.ball(pinkPt, kColorPink);
-        QPointF bluePt = bp.at(0.52, 0.5);
+        QPointF bluePt = bp.at(kSpotBlueX, 0.5);
         bp.ball(bluePt, kColorBlue);
 
-        QPointF redPt = bp.at(0.14, 0.5 - 0.10);
+        QPointF redPt = bp.at(kSpotBlackX, 0.5 - 0.10);
         bp.ball(redPt, kColorRed);
 
-        QPointF cuePt = bp.at(0.14, 0.5 - 0.22);
+        QPointF cuePt = bp.at(kSpotBlackX, 0.5 - 0.22);
         bp.ball(cuePt, kColorCue);
 
         painter.setPen(QPen(QColor(255, 255, 255, 130), 1.2));
@@ -538,25 +499,25 @@ namespace
         QPixmap pixmap = createTableBase(width, height, clothRect);
         QPainter painter(&pixmap);
         painter.setRenderHint(QPainter::Antialiasing);
-        BallPainter bp{painter, clothRect, clothRect.height() * 0.032};
+        BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
 
         bp.dZone();
-        QPointF blackPt = bp.at(0.14, 0.5);
+        QPointF blackPt = bp.at(kSpotBlackX, 0.5);
         bp.ball(blackPt, kColorBlack);
-        QPointF pinkPt = bp.at(0.30, 0.5);
+        QPointF pinkPt = bp.at(kSpotPinkX, 0.5);
         bp.ball(pinkPt, kColorPink);
-        QPointF bluePt = bp.at(0.52, 0.5);
+        QPointF bluePt = bp.at(kSpotBlueX, 0.5);
         bp.ball(bluePt, kColorBlue);
 
         const int sideCount = 3;
         const qreal spacing = 0.055;
         for (int i = 1; i <= sideCount; ++i)
         {
-            bp.ball(bp.at(0.52 - i * spacing, 0.5), kColorRed);
-            bp.ball(bp.at(0.52 + i * spacing, 0.5), kColorRed);
+            bp.ball(bp.at(kSpotBlueX - i * spacing, 0.5), kColorRed);
+            bp.ball(bp.at(kSpotBlueX + i * spacing, 0.5), kColorRed);
         }
 
-        QPointF cuePt = bp.at(0.52, 0.5 + 0.28);
+        QPointF cuePt = bp.at(kSpotBlueX, 0.5 + 0.28);
         bp.ball(cuePt, kColorCue);
 
         painter.setPen(QPen(QColor(255, 255, 255, 200), 1.5));
@@ -642,7 +603,48 @@ namespace
                 "</ul>"
             },
             {
-                "3. Line-Up",
+                "3. Detendez votre bras",
+                "<p>Version de l'exercice de mise en place qui se joue uniquement avec des "
+                "rouges : elle detend le bras et convient a tous les niveaux. Si vous manquez "
+                "de confiance en debutant, c'est un bon exercice pour commencer : avec toutes "
+                "les billes en position ideale, il ne reste plus qu'a les empocher.</p>"
+
+                "<p><b>MISE EN PLACE</b></p>"
+                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
+                "<li>Disposez les 15 rouges en ligne au centre de la table, comme sur le "
+                "schema ci-dessus.</li>"
+                "<li>Choisissez une rouge de depart (souvent celle du bas ; les joueurs "
+                "avances commencent par la premiere rouge).</li>"
+                "</ol>"
+                "<p style='color:#7a7f87'>D'autres repartitions existent (1 ou 3 rouges sous le "
+                "point noir, etc.) : choisissez une configuration et gardez-la pour mesurer "
+                "vos progres d'une seance a l'autre.</p>"
+
+                "<p><b>DEROULEMENT</b></p>"
+                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
+                "<li>Empochez les rouges l'une apres l'autre, soit du bas vers le haut, soit "
+                "dans un ordre aleatoire.</li>"
+                "<li>Si vous ratez une bille, remettez tout en place et recommencez : cette "
+                "\"punition\" aide a rester concentre. Vous pouvez aussi continuer malgre "
+                "l'echec pour apprendre a relacher la pression.</li>"
+                "<li>Notez votre score pour evaluer vos progres au fil des seances.</li>"
+                "</ol>"
+
+                "<p><b>CONSEILS</b></p>"
+                "<ul style='margin:4px 0; padding-left:20px; line-height:1.7'>"
+                "<li>Imaginez deux lignes qui divisent la table en trois parties egales dans "
+                "la longueur : la blanche doit s'arreter entre la ligne de billes et la bande, "
+                "pour toujours garder un angle jouable. Evitez qu'elle finisse collee a la "
+                "bande ou trop pres des billes restantes.</li>"
+                "<li>Quand vous maitrisez l'exercice, commencez par la rouge du bas et "
+                "remontez progressivement : cela affine votre placement.</li>"
+                "<li>Le but est la fluidite et la detente : gardez un bras souple, fixez-vous "
+                "des objectifs realistes et cherchez a comprendre ce qui s'est passe quand "
+                "l'exercice echoue.</li>"
+                "</ul>"
+            },
+            {
+                "4. Line-Up",
                 "<p>Probablement l'exercice le plus utilise par les joueurs professionnels pour "
                 "se detendre et travailler les bases : empocher rouge apres couleur, comme en "
                 "match, mais avec les rouges deja parfaitement placees pour ne pas avoir a "
@@ -690,7 +692,7 @@ namespace
                 "</ul>"
             },
             {
-                "4. The T",
+                "5. The T",
                 "<p>Legerement plus exigeant que le Line-Up : les rouges forment un \"T\" plutot "
                 "qu'une simple ligne, obligeant a jouer dans un espace plus restreint. S'adresse "
                 "surtout aux joueurs intermediaires/avances qui veulent muscler les coups utiles "
@@ -740,7 +742,37 @@ namespace
                 "</ul>"
             },
             {
-                "5. Potting Long Blues",
+                "6. Empocher plusieurs bleues",
+                "<p>Exercice de toucher pour la situation ou rose et noire sont a egalite au "
+                "score et qu'il reste des rouges autour de la bleue : viser le bon cote de la "
+                "bleue devient crucial pour enchainer sur la rouge suivante -- un exercice a "
+                "deux coups d'avance, plus difficile qu'il n'y parait.</p>"
+
+                "<p><b>MISE EN PLACE</b></p>"
+                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
+                "<li>Placez toutes les couleurs a leurs points.</li>"
+                "<li>Placez 3 rouges de chaque cote du point bleu, alignees avec les points "
+                "marron et rose.</li>"
+                "</ol>"
+
+                "<p><b>DEROULEMENT</b></p>"
+                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
+                "<li>Placez la blanche pour empocher une rouge tout en gardant un angle sur la "
+                "bleue, puis enchainez sur la rouge suivante.</li>"
+                "<li>Exercice de precision : evitez de trop deplacer la blanche.</li>"
+                "<li>Si vous perdez la position, visez une autre partie de la poche pour recreer "
+                "un angle (en adaptant la vitesse du coup).</li>"
+                "<li>Une fois les 6 rouges eliminees, ajoutez-en une a chaque extremite pour "
+                "augmenter la difficulte au fil des seances.</li>"
+                "</ol>"
+
+                "<p><b>CONSEILS</b></p>"
+                "<ul style='margin:4px 0; padding-left:20px; line-height:1.7'>"
+                "<li>Notez vos scores pour suivre vos progres et leur vitesse d'amelioration.</li>"
+                "</ul>"
+            },
+            {
+                "7. Potting Long Blues",
                 "<p>Empocher des bleues a moyenne/longue distance developpe le toucher necessaire "
                 "aux coups d'ouverture : bien execute, ce type de coup vous place directement en "
                 "position sur la rose.</p>"
@@ -768,7 +800,7 @@ namespace
                 "</ul>"
             },
             {
-                "6. Empocher la bille noire",
+                "8. Empocher la bille noire",
                 "<p>Exercice mental qui consiste a empocher des noires sous differents angles, "
                 "dans un espace restreint -- utile pour apprendre a simplifier son jeu de "
                 "position coup apres coup.</p>"
@@ -776,16 +808,18 @@ namespace
                 "<p><b>MISE EN PLACE</b></p>"
                 "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
                 "<li>Placez la noire sur son point.</li>"
-                "<li>Placez la blanche a mi-chemin entre la bande laterale et la noire, en "
-                "position 1/4, 1/2, 3/4 ou pleine bille (par rapport a la noire).</li>"
+                "<li>Placez 5 billes de chaque cote de la noire, en deux rangees legerement "
+                "inclinees comme sur le schema : chacune marque une position de depart pour la "
+                "blanche, de la plus droite a la plus ouverte (pleine bille, 3/4, 1/2, 1/4).</li>"
                 "</ol>"
 
                 "<p><b>DEROULEMENT</b></p>"
                 "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
                 "<li>Commencez simple : une noire droite dans la poche de coin.</li>"
-                "<li>Empochez-en le plus possible a la suite, sans effet lateral au debut (juste "
+                "<li>Jouez ensuite depuis chaque position en ouvrant l'angle peu a peu, et "
+                "empochez-en le plus possible a la suite, sans effet lateral au debut (juste "
                 "haut/bas).</li>"
-                "<li>Notez votre score total et le coup ou la serie se casse.</li>"
+                "<li>Notez votre score total et la position ou la serie se casse.</li>"
                 "</ol>"
 
                 "<p><b>CONSEILS</b></p>"
@@ -796,7 +830,7 @@ namespace
                 "</ul>"
             },
             {
-                "7. Potting direct des rouges",
+                "9. Potting direct des rouges",
                 "<p>Enchainer des rouges en ligne droite est excellent pour travailler la "
                 "position et verifier que la queue part bien droite sur la ligne de visee -- si "
                 "vous ratez toujours du meme cote, cela revele un defaut de mise en place ou de "
@@ -841,7 +875,7 @@ namespace
                 "</ul>"
             },
             {
-                "8. Potting Long Reds",
+                "10. Potting Long Reds",
                 "<p>Empocher des rouges longues developpe le toucher necessaire au coup "
                 "d'ouverture qui, bien execute, vous place directement en position sur la "
                 "rose.</p>"
@@ -874,7 +908,7 @@ namespace
                 "</ul>"
             },
             {
-                "9. Sortir des situations de snooker faciles",
+                "11. Sortir des situations de snooker faciles",
                 "<p>Sortir d'un snooker facile devrait l'etre... mais ce n'est pas toujours le "
                 "cas. Cet exercice structure la reflexion a avoir avant de jouer un coup de "
                 "sortie, via la technique du \"miroir\".</p>"
@@ -914,7 +948,7 @@ namespace
                 "</ul>"
             },
             {
-                "10. Coups de securite au snooker sur les rouges",
+                "12. Coups de securite au snooker sur les rouges",
                 "<p>Exercice de toucher pour les petits coups de securite delicats : imaginez "
                 "que l'adversaire a rate une rouge longue et l'a laissee juste sous le paquet -- "
                 "l'ideal est de la laisser en zone de securite, avec un snooker difficile a la "
@@ -946,36 +980,6 @@ namespace
                 "<ul style='margin:4px 0; padding-left:20px; line-height:1.7'>"
                 "<li>Il n'y a pas toujours un chemin evident vers la securite -- parfois un "
                 "petit detour est necessaire pour proteger a la fois la rouge et la blanche.</li>"
-                "</ul>"
-            },
-            {
-                "11. Empocher plusieurs bleues",
-                "<p>Exercice de toucher pour la situation ou rose et noire sont a egalite au "
-                "score et qu'il reste des rouges autour de la bleue : viser le bon cote de la "
-                "bleue devient crucial pour enchainer sur la rouge suivante -- un exercice a "
-                "deux coups d'avance, plus difficile qu'il n'y parait.</p>"
-
-                "<p><b>MISE EN PLACE</b></p>"
-                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Placez toutes les couleurs a leurs points.</li>"
-                "<li>Placez 3 rouges de chaque cote du point bleu, alignees avec les points "
-                "marron et rose.</li>"
-                "</ol>"
-
-                "<p><b>DEROULEMENT</b></p>"
-                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Placez la blanche pour empocher une rouge tout en gardant un angle sur la "
-                "bleue, puis enchainez sur la rouge suivante.</li>"
-                "<li>Exercice de precision : evitez de trop deplacer la blanche.</li>"
-                "<li>Si vous perdez la position, visez une autre partie de la poche pour recreer "
-                "un angle (en adaptant la vitesse du coup).</li>"
-                "<li>Une fois les 6 rouges eliminees, ajoutez-en une a chaque extremite pour "
-                "augmenter la difficulte au fil des seances.</li>"
-                "</ol>"
-
-                "<p><b>CONSEILS</b></p>"
-                "<ul style='margin:4px 0; padding-left:20px; line-height:1.7'>"
-                "<li>Notez vos scores pour suivre vos progres et leur vitesse d'amelioration.</li>"
                 "</ul>"
             },
         };
@@ -1088,9 +1092,9 @@ void ExerciseDialog::showExercise(int index)
         return;
     }
     m_contentLabel->setText(exercises()[index].html);
-    // Line-Up (index 2) et The T (index 3) : 15 rouges + couleurs, comptage
+    // Line-Up (index 3) et The T (index 4) : 15 rouges + couleurs, comptage
     // de serie possible.
-    m_scoreButton->setVisible(index == 2 || index == 3);
+    m_scoreButton->setVisible(index == 3 || index == 4);
     // Chaque exercice a son propre diagramme de mise en place -- ajouter
     // un "case" ici pour tout nouvel exercice.
     switch (index)
@@ -1101,30 +1105,35 @@ void ExerciseDialog::showExercise(int index)
     case 1:
         m_diagramLabel->setPixmap(drawCueBallControlDiagram(520, 220));
         break;
-    case 3:
-        m_diagramLabel->setPixmap(QPixmap(EXERCISE_2_IMAGE_PATH).scaled(
+    case 2:
+        m_diagramLabel->setPixmap(QPixmap(EXERCISE_3_IMAGE_PATH).scaled(
             520, 220, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         break;
     case 4:
-        m_diagramLabel->setPixmap(drawLongBluesDiagram(520, 220));
+        m_diagramLabel->setPixmap(QPixmap(EXERCISE_2_IMAGE_PATH).scaled(
+            520, 220, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         break;
     case 5:
-        m_diagramLabel->setPixmap(drawBlackPottingDiagram(520, 220));
+        m_diagramLabel->setPixmap(drawMultipleBluesDiagram(520, 220));
         break;
     case 6:
-        m_diagramLabel->setPixmap(drawRedsPottingDiagram(520, 220));
+        m_diagramLabel->setPixmap(drawLongBluesDiagram(520, 220));
         break;
     case 7:
-        m_diagramLabel->setPixmap(drawLongRedsDiagram(520, 220));
+        m_diagramLabel->setPixmap(QPixmap(EXERCISE_6_IMAGE_PATH).scaled(
+            520, 220, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         break;
     case 8:
-        m_diagramLabel->setPixmap(drawSnookerEscapeDiagram(520, 220));
+        m_diagramLabel->setPixmap(drawRedsPottingDiagram(520, 220));
         break;
     case 9:
-        m_diagramLabel->setPixmap(drawRedSafetyDiagram(520, 220));
+        m_diagramLabel->setPixmap(drawLongRedsDiagram(520, 220));
         break;
     case 10:
-        m_diagramLabel->setPixmap(drawMultipleBluesDiagram(520, 220));
+        m_diagramLabel->setPixmap(drawSnookerEscapeDiagram(520, 220));
+        break;
+    case 11:
+        m_diagramLabel->setPixmap(drawRedSafetyDiagram(520, 220));
         break;
     default:
         m_diagramLabel->setPixmap(drawLineUpDiagram(520, 220));

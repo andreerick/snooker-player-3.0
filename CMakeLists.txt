@@ -288,6 +288,8 @@ target_compile_definitions(SnookerPlayer PRIVATE
     RULES_TEXT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/docs/reglement_snooker/Regles_officielles_snooker_FR_sept2024.txt"
     HOME_SCREEN_IMAGE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/accueil_v3.png"
     EXERCISE_2_IMAGE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/exercice_2_the_t.png"
+    EXERCISE_3_IMAGE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/exercice_3_detendez_bras.png"
+    EXERCISE_6_IMAGE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/exercice_6_la_noire.png"
 )
 
 # CueSense (voir CueSenseLauncher) : sur Windows le chemin reste code en
