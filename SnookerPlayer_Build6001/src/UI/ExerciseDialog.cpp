@@ -5,6 +5,8 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QListWidget>
+#include <QFontMetrics>
+#include <algorithm>
 #include <QLabel>
 #include <QPushButton>
 #include <QScrollArea>
@@ -951,15 +953,26 @@ ExerciseDialog::ExerciseDialog(QWidget* parent)
         "QListWidget::item { padding: 10px 8px; border-radius: 4px; }"
         "QListWidget::item:selected { background-color: " + kGreen + "; }"
     );
+    // Largeur de la colonne = titre le plus long (sinon les titres sont
+    // coupes avec une barre de defilement horizontale), bornee pour ne
+    // pas manger la place du diagramme.
+    const QFontMetrics titleMetrics(m_exerciseList->font());
+    int longestTitle = 0;
     for (const Exercise& exercise : exercises())
     {
         m_exerciseList->addItem(exercise.title);
+        longestTitle = std::max(longestTitle, titleMetrics.horizontalAdvance(exercise.title));
     }
+    m_exerciseList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     leftCol->addWidget(m_exerciseList, 1);
+
+    // marges internes de l'item + de la liste + barre de defilement verticale
+    const int listWidth = std::clamp(longestTitle + 70, 220, 380);
+    resize(820 + (listWidth - 220), 560);
 
     QWidget* leftWidget = new QWidget(this);
     leftWidget->setLayout(leftCol);
-    leftWidget->setFixedWidth(220);
+    leftWidget->setFixedWidth(listWidth);
     outer->addWidget(leftWidget);
 
     QVBoxLayout* rightCol = new QVBoxLayout();
