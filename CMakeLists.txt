@@ -290,6 +290,7 @@ target_compile_definitions(SnookerPlayer PRIVATE
     EXERCISE_2_IMAGE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/exercice_2_the_t.png"
     EXERCISE_3_IMAGE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/exercice_3_detendez_bras.png"
     EXERCISE_6_IMAGE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/exercice_6_la_noire.png"
+    EXERCISE_11_IMAGE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/exercice_11_snooker_facile.png"
 )
 
 # CueSense (voir CueSenseLauncher) : sur Windows le chemin reste code en

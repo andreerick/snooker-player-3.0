@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QPainter>
+#include <cmath>
 #include <QRegularExpression>
 
 namespace
@@ -351,36 +352,63 @@ namespace
         painter.setRenderHint(QPainter::Antialiasing);
         BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
 
-        bp.dZone();
-        QPointF bluePt = bp.at(kSpotBlueX, 0.5);
-        bp.ball(bluePt, kColorBlue);
-        QPointF pinkPt = bp.at(kSpotPinkX, 0.5);
-        bp.ball(pinkPt, kColorPink);
-        QPointF blackPt = bp.at(kSpotBlackX, 0.5);
-        bp.ball(blackPt, kColorBlack);
+        // Pas de billes de couleur : seulement le "D", les 3 colonnes de
+        // 8 rouges, les blanches de depart et les traits de visee.
+        bp.dZone(false);
 
         // Les 3 niveaux restent tous en rouge plein (une transparence sur
         // fond vert virait au marron et brouillait la lecture) ; seule
         // l'etiquette numerotee sous chaque colonne distingue les niveaux.
         struct Level { qreal nx; QString label; };
+        // La ligne 2 est sur l'axe des deux poches du milieu (x = 0.5) ;
+        // les rouges sont espacees d'une bille (centre a centre = 2
+        // diametres).
         const Level levels[] = {
-            { 0.67, "1" },
-            { 0.52, "2" },
-            { 0.38, "3" },
+            { 0.65, "1" },
+            { 0.50, "2" },
+            { 0.36, "3" },
         };
+        const qreal step = 4.0 * bp.ballR / clothRect.height();
         for (const Level& lvl : levels)
         {
-            for (int i = -7; i <= 7; ++i)
+            for (int i = 0; i < 8; ++i)
             {
-                qreal ny = 0.5 + i * 0.052;
+                qreal ny = 0.5 + (i - 3.5) * step;
                 bp.ball(bp.at(lvl.nx, ny), kColorRed);
             }
             painter.setPen(QColor(255, 255, 255, 220));
-            painter.drawText(bp.at(lvl.nx, 0.5 + 8 * 0.052).toPoint(), lvl.label);
+            painter.drawText(bp.at(lvl.nx - 0.004, 0.5 - 3.5 * step - 0.045).toPoint(), lvl.label);
         }
 
-        QPointF cuePt = bp.at(0.80, 0.5);
-        bp.ball(cuePt, kColorCue);
+        // Trois lignes de visee vers les poches de coin de gauche, d'apres le
+        // schema de l'utilisateur : chacune passe par le centre d'une rouge
+        // cible (ligne 1 haut, ligne 2 3e, ligne 3 bas) et part d'une blanche
+        // posee sur la ligne de depart ; les traits finissent dans la poche.
+        const qreal baulkX = kSpotBrownX;
+        auto redY = [&](int i) { return 0.5 + (i - 3.5) * step; };
+        // y (normalise) a la ligne de depart, sur la droite coin -> cible.
+        auto yAtBaulk = [&](qreal cornerY, qreal targetX, qreal targetY)
+        {
+            return cornerY + (targetY - cornerY) * baulkX / targetX;
+        };
+        const qreal yTop = yAtBaulk(0.0, 0.65, redY(0));
+        const qreal yMid = yAtBaulk(0.0, 0.50, redY(2));
+        const qreal yBottom = yAtBaulk(1.0, 0.36, redY(7));
+
+        QPointF whiteTop = bp.at(baulkX, yTop);
+        QPointF whiteMid = bp.at(baulkX, yMid);
+        QPointF whiteBottom = bp.at(baulkX, yBottom);
+        QPointF cornerTop = clothRect.topLeft();
+        QPointF cornerBottom = clothRect.bottomLeft();
+
+        painter.setPen(QPen(QColor(255, 255, 255, 220), 1.5));
+        painter.drawLine(cornerTop, whiteTop);
+        painter.drawLine(cornerTop, whiteMid);
+        painter.drawLine(cornerBottom, whiteBottom);
+
+        bp.ball(whiteTop, kColorCue);
+        bp.ball(whiteMid, kColorCue);
+        bp.ball(whiteBottom, kColorCue);
 
         return pixmap;
     }
@@ -396,13 +424,10 @@ namespace
         painter.setRenderHint(QPainter::Antialiasing);
         BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
 
-        bp.dZone();
-        QPointF bluePt = bp.at(kSpotBlueX, 0.5);
-        bp.ball(bluePt, kColorBlue);
+        // Seule la rose reste parmi les couleurs.
+        bp.dZone(false);
         QPointF pinkPt = bp.at(kSpotPinkX, 0.5);
         bp.ball(pinkPt, kColorPink);
-        QPointF blackPt = bp.at(kSpotBlackX, 0.5);
-        bp.ball(blackPt, kColorBlack);
 
         QPointF redPt = bp.at(0.40, 0.5);
         bp.ball(redPt, kColorRed);
@@ -410,82 +435,24 @@ namespace
         QPointF cuePt = bp.at(0.62, 0.5);
         bp.ball(cuePt, kColorCue);
 
+        // La rouge part vers la poche du coin en haut a gauche ; la blanche
+        // doit la toucher "en fantome" : sa position au contact est sur le
+        // prolongement poche -> rouge, a deux rayons du centre de la rouge.
+        QPointF pocket = clothRect.topLeft();
+        QPointF dir = redPt - pocket;
+        dir /= std::hypot(dir.x(), dir.y());
+        QPointF ghostPt = redPt + dir * (2.0 * bp.ballR);
+
         painter.setPen(QPen(QColor(255, 255, 255, 200), 1.5));
-        painter.drawLine(cuePt, redPt);
-        painter.drawLine(redPt, QPointF(clothRect.left(), redPt.y()));
+        painter.drawLine(pocket, ghostPt);
+        painter.drawLine(cuePt, ghostPt);
+        bp.ball(ghostPt, kColorCue);
 
-        return pixmap;
-    }
-
-    // Diagramme "Sortir des situations de snooker faciles" : bille objet
-    // (bleue) et bille bloquante pres de la bande, blanche a cote --
-    // l'image miroir de la bille objet (pointillee, au-dessus de la
-    // bande) et la ligne de visee blanche->miroir->bille objet sont
-    // calculees geometriquement pour illustrer la technique du miroir.
-    QPixmap drawSnookerEscapeDiagram(int width, int height)
-    {
-        QRectF clothRect;
-        QPixmap pixmap = createTableBase(width, height, clothRect);
-        QPainter painter(&pixmap);
-        painter.setRenderHint(QPainter::Antialiasing);
-        BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
-
-        QPointF targetPt = bp.at(0.18, 0.16);
-        bp.ball(targetPt, kColorBlue);
-        QPointF blockerPt = bp.at(0.18, 0.34);
-        bp.ball(blockerPt, kColorMarker);
-        QPointF cuePt = bp.at(0.32, 0.34);
-        bp.ball(cuePt, kColorCue);
-
-        QPointF mirrorPt(targetPt.x(), clothRect.top() - (targetPt.y() - clothRect.top()));
-        painter.setPen(QPen(QColor(255, 255, 255, 130), 1, Qt::DashLine));
+        // Grand cercle : zone ou la blanche doit s'arreter apres le coup.
+        painter.setPen(QPen(QColor(255, 255, 255, 230), 1.5));
         painter.setBrush(Qt::NoBrush);
-        painter.drawEllipse(mirrorPt, bp.ballR, bp.ballR);
-
-        qreal t = (clothRect.top() - cuePt.y()) / (mirrorPt.y() - cuePt.y());
-        QPointF cushionAimPt(cuePt.x() + t * (mirrorPt.x() - cuePt.x()), clothRect.top());
-
-        painter.setPen(QPen(QColor(255, 255, 255, 100), 1, Qt::DashLine));
-        painter.drawLine(cuePt, mirrorPt);
-        painter.setPen(QPen(QColor(255, 255, 255, 200), 1.5));
-        painter.drawLine(cuePt, cushionAimPt);
-        painter.drawLine(cushionAimPt, targetPt);
-
-        return pixmap;
-    }
-
-    // Diagramme "Coups de securite au snooker sur les rouges" : noire,
-    // rose, bleue a leurs points, une rouge alignee sur la noire, blanche
-    // juste derriere -- eventail de lignes vers 6 positions cibles le
-    // long de la bande de fond.
-    QPixmap drawRedSafetyDiagram(int width, int height)
-    {
-        QRectF clothRect;
-        QPixmap pixmap = createTableBase(width, height, clothRect);
-        QPainter painter(&pixmap);
-        painter.setRenderHint(QPainter::Antialiasing);
-        BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
-
-        bp.dZone();
-        QPointF blackPt = bp.at(kSpotBlackX, 0.5);
-        bp.ball(blackPt, kColorBlack);
-        QPointF pinkPt = bp.at(kSpotPinkX, 0.5);
-        bp.ball(pinkPt, kColorPink);
-        QPointF bluePt = bp.at(kSpotBlueX, 0.5);
-        bp.ball(bluePt, kColorBlue);
-
-        QPointF redPt = bp.at(kSpotBlackX, 0.5 - 0.10);
-        bp.ball(redPt, kColorRed);
-
-        QPointF cuePt = bp.at(kSpotBlackX, 0.5 - 0.22);
-        bp.ball(cuePt, kColorCue);
-
-        painter.setPen(QPen(QColor(255, 255, 255, 130), 1.2));
-        for (int i = 0; i < 6; ++i)
-        {
-            qreal nx = 0.06 + i * 0.05;
-            painter.drawLine(redPt, bp.at(nx, 0.92));
-        }
+        const qreal zoneRadius = clothRect.width() * 0.0786;
+        painter.drawEllipse(bp.at(0.356, 0.795), zoneRadius, zoneRadius);
 
         return pixmap;
     }
@@ -836,23 +803,18 @@ namespace
                 "vous ratez toujours du meme cote, cela revele un defaut de mise en place ou de "
                 "visee.</p>"
 
-                "<p><b>MISE EN PLACE -- Niveau 1 (courte distance)</b></p>"
+                "<p><b>MISE EN PLACE</b></p>"
                 "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Placez une rouge au milieu de la table, entre les points bleu et marron.</li>"
-                "<li>Placez 7 rouges de chaque cote de celle-ci, en ligne, a egale distance les "
-                "unes des autres.</li>"
+                "<li>Placez 8 rouges sur chacune des 3 lignes du schema, en ligne droite, a "
+                "egale distance les unes des autres (espacees d'une bille).</li>"
+                "<li>La ligne 2 est alignee sur les deux poches du milieu ; la ligne 1 est la "
+                "plus proche de la ligne de depart, la ligne 3 la plus eloignee.</li>"
                 "</ol>"
-
-                "<p><b>MISE EN PLACE -- Niveau 2 (distance moyenne)</b></p>"
-                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Placez une rouge sur le point bleu, 7 rouges de chaque cote, alignees avec "
-                "les poches du milieu.</li>"
-                "</ol>"
-
-                "<p><b>MISE EN PLACE -- Niveau 3 (longue distance)</b></p>"
-                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Placez une rouge entre les points rose et bleu, 7 rouges de chaque cote.</li>"
-                "</ol>"
+                "<ul style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
+                "<li>Niveau 1 (courte distance) : la ligne 1.</li>"
+                "<li>Niveau 2 (distance moyenne) : la ligne 2.</li>"
+                "<li>Niveau 3 (longue distance) : la ligne 3.</li>"
+                "</ul>"
 
                 "<p><b>DEROULEMENT (commun aux 3 niveaux)</b></p>"
                 "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
@@ -863,7 +825,7 @@ namespace
                 "<li>Rouge empochee directement : 2 points. Rouge tombee dans une poche du "
                 "milieu apres avoir touche la bande : 1 point. Rouge qui touche d'abord la bande "
                 "laterale : 0 point.</li>"
-                "<li>Essayez d'empocher les 15 rouges et notez votre score.</li>"
+                "<li>Essayez d'empocher les 8 rouges de la ligne et notez votre score.</li>"
                 "</ol>"
 
                 "<p><b>CONSEILS</b></p>"
@@ -945,41 +907,6 @@ namespace
                 "essayez une sortie plein fouet, ou par une autre bande.</li>"
                 "<li>Testez les effets retro/stun/suivi pour observer comment ils changent la "
                 "trajectoire de sortie.</li>"
-                "</ul>"
-            },
-            {
-                "12. Coups de securite au snooker sur les rouges",
-                "<p>Exercice de toucher pour les petits coups de securite delicats : imaginez "
-                "que l'adversaire a rate une rouge longue et l'a laissee juste sous le paquet -- "
-                "l'ideal est de la laisser en zone de securite, avec un snooker difficile a la "
-                "cle.</p>"
-
-                "<p><b>MISE EN PLACE</b></p>"
-                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Un exercice a la fois, une seule rouge.</li>"
-                "<li>Utilisez environ 6 positions le long de la bande (une marque a la craie "
-                "peut aider).</li>"
-                "<li>La 1ere rouge doit etre alignee avec le point noir.</li>"
-                "<li>La blanche se place toujours juste derriere la noire.</li>"
-                "</ol>"
-
-                "<p><b>DEROULEMENT -- 3 objectifs a chaque coup</b></p>"
-                "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Laisser la blanche derriere une bille de retenue.</li>"
-                "<li>Laisser la blanche contre la bande de depart, ou aussi pres que possible.</li>"
-                "<li>Ramener la rouge vers la rose et la noire, pour creer un snooker sur la "
-                "blanche.</li>"
-                "<li>Essayez d'abord le coup le plus facile pour rapprocher les 2 billes de la "
-                "bande de depart, puis testez des effets lateraux/retro/vises pour arriver au "
-                "meme resultat par un autre chemin.</li>"
-                "<li>Notez 1 point par objectif atteint (3 points max par coup) pour suivre vos "
-                "progres.</li>"
-                "</ol>"
-
-                "<p><b>CONSEILS</b></p>"
-                "<ul style='margin:4px 0; padding-left:20px; line-height:1.7'>"
-                "<li>Il n'y a pas toujours un chemin evident vers la securite -- parfois un "
-                "petit detour est necessaire pour proteger a la fois la rouge et la blanche.</li>"
                 "</ul>"
             },
         };
@@ -1131,10 +1058,8 @@ void ExerciseDialog::showExercise(int index)
         m_diagramLabel->setPixmap(drawLongRedsDiagram(520, 220));
         break;
     case 10:
-        m_diagramLabel->setPixmap(drawSnookerEscapeDiagram(520, 220));
-        break;
-    case 11:
-        m_diagramLabel->setPixmap(drawRedSafetyDiagram(520, 220));
+        m_diagramLabel->setPixmap(QPixmap(EXERCISE_11_IMAGE_PATH).scaled(
+            520, 220, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         break;
     default:
         m_diagramLabel->setPixmap(drawLineUpDiagram(520, 220));
