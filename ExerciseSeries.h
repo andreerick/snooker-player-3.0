@@ -24,7 +24,8 @@ public:
         Done            // toutes les billes sont empochees
     };
 
-    explicit ExerciseSeries(int redCount = 15);
+    // redsOnly : variante "rouges seulement" (aucune couleur), score max = redCount.
+    explicit ExerciseSeries(int redCount = 15, bool redsOnly = false);
 
     Next next() const;
     int nextColorValue() const;
@@ -37,10 +38,12 @@ public:
     int points() const;
     int redsPotted() const;
     int redCount() const { return m_redCount; }
+    bool redsOnly() const { return m_redsOnly; }
     bool isDone() const { return next() == Next::Done; }
     const std::vector<int>& sequence() const { return m_sequence; }
 
 private:
     int m_redCount;
+    bool m_redsOnly;
     std::vector<int> m_sequence;
 };

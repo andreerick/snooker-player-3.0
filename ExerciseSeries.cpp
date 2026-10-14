@@ -32,14 +32,19 @@ namespace
     }
 }
 
-ExerciseSeries::ExerciseSeries(int redCount)
+ExerciseSeries::ExerciseSeries(int redCount, bool redsOnly)
     : m_redCount(redCount)
+    , m_redsOnly(redsOnly)
 {
 }
 
 ExerciseSeries::Next ExerciseSeries::next() const
 {
     Progress p = replay(m_sequence);
+    if (m_redsOnly)
+    {
+        return p.reds < m_redCount ? Next::Red : Next::Done;
+    }
     if (p.lastWasRed)
     {
         return Next::AnyColor;

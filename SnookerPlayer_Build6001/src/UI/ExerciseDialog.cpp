@@ -1069,7 +1069,8 @@ ExerciseDialog::ExerciseDialog(QWidget* parent)
         }
         QString name = exercises()[row].title;
         name.remove(QRegularExpression("^\\d+\\.\\s*"));
-        ExerciseScoreDialog dialog(name, this);
+        // Index 2 = "Detendez votre bras" (15 rouges, sans couleur).
+        ExerciseScoreDialog dialog(name, row == 2, this);
         dialog.exec();
     });
 
@@ -1092,9 +1093,9 @@ void ExerciseDialog::showExercise(int index)
         return;
     }
     m_contentLabel->setText(exercises()[index].html);
-    // Line-Up (index 3) et The T (index 4) : 15 rouges + couleurs, comptage
+    // "Detendez votre bras" (2), Line-Up (3) et The T (4) : 15 rouges, comptage
     // de serie possible.
-    m_scoreButton->setVisible(index == 3 || index == 4);
+    m_scoreButton->setVisible(index == 2 || index == 3 || index == 4);
     // Chaque exercice a son propre diagramme de mise en place -- ajouter
     // un "case" ici pour tout nouvel exercice.
     switch (index)

@@ -405,6 +405,16 @@ namespace
             check(s.isDone() && s.points() == 147, "serie complete : 147 points, terminee");
             check(!s.pot(1), "serie complete : plus aucune bille permise");
         }
+        {
+            ExerciseSeries s(15, true);
+            check(!s.pot(7), "rouges seules : aucune couleur permise");
+            for (int i = 0; i < 15; ++i)
+            {
+                check(s.pot(1), "rouges seules : rouge " + std::to_string(i + 1));
+            }
+            check(s.isDone() && s.points() == 15, "rouges seules : 15 points, terminee");
+            check(!s.pot(1), "rouges seules : plus de bille apres la 15e");
+        }
     }
 
 }

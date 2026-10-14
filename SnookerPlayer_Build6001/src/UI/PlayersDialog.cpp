@@ -403,7 +403,7 @@ void PlayersDialog::showPlayer(const QString& name)
             .arg(stats.played).arg(stats.won).arg(winRate).arg(stats.framesWon).arg(stats.framesLost);
 
     // Entrainement : meilleur score par exercice compte (voir ExerciseScoreDialog).
-    for (const QString& exercise : QStringList{ "Line-Up", "The T" })
+    for (const QString& exercise : QStringList{ "Detendez votre bras", "Line-Up", "The T" })
     {
         ExerciseSummary summary = ExerciseSessions::summaryFor(name, exercise);
         if (summary.count > 0)

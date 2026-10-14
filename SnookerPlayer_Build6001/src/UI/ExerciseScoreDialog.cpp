@@ -59,9 +59,11 @@ namespace
     }
 }
 
-ExerciseScoreDialog::ExerciseScoreDialog(const QString& exerciseName, QWidget* parent)
+ExerciseScoreDialog::ExerciseScoreDialog(const QString& exerciseName, bool redsOnly, QWidget* parent)
     : QDialog(parent)
     , m_exerciseName(exerciseName)
+    , m_redsOnly(redsOnly)
+    , m_series(15, redsOnly)
 {
     setWindowTitle("Compter une serie - " + exerciseName);
     applyDarkTitleBar(this);
@@ -116,6 +118,7 @@ ExerciseScoreDialog::ExerciseScoreDialog(const QString& exerciseName, QWidget* p
         int value = kBalls[i].value;
         connect(button, &QPushButton::clicked, this, [this, value]() { potBall(value); });
         m_ballButtons[i] = button;
+        button->setVisible(!m_redsOnly || value == 1);
         ballRow->addWidget(button);
     }
     root->addLayout(ballRow);
@@ -234,7 +237,7 @@ void ExerciseScoreDialog::saveSeries()
 
 void ExerciseScoreDialog::newSeries()
 {
-    m_series = ExerciseSeries();
+    m_series = ExerciseSeries(15, m_redsOnly);
     m_ended = false;
     m_saved = false;
     refreshSeries();

@@ -24,7 +24,8 @@ class ExerciseScoreDialog : public QDialog
     Q_OBJECT
 
 public:
-    ExerciseScoreDialog(const QString& exerciseName, QWidget* parent = nullptr);
+    // redsOnly : exercice a 15 rouges sans couleur (boutons couleurs masques).
+    ExerciseScoreDialog(const QString& exerciseName, bool redsOnly = false, QWidget* parent = nullptr);
 
 private:
     void potBall(int value);
@@ -36,6 +37,7 @@ private:
     void refreshHistory();
 
     QString m_exerciseName;
+    bool m_redsOnly = false;
     ExerciseSeries m_series;
     bool m_ended = false;
     bool m_saved = false;
