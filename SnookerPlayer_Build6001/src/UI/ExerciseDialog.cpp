@@ -275,20 +275,29 @@ namespace
         QPointF bluePt = bp.at(0.5, 0.5);
         bp.ball(bluePt, kColorBlue);
 
-        QPointF cuePt = bp.at(0.5, 0.5 - 0.24);
+        // Blanche de l'autre cote de la bleue (distance libre, ici 0,14 de la
+        // largeur de la table) : le trait part de la blanche, passe par la
+        // bleue et arrive dans la poche du milieu.
+        QPointF cuePt = bp.at(0.5, 0.5 + 0.14);
         bp.ball(cuePt, kColorCue);
 
         painter.setPen(QPen(QColor(255, 255, 255, 200), 1.5));
         painter.drawLine(cuePt, QPointF(clothRect.center().x(), clothRect.top()));
 
-        // Repere des 5 points de frappe verticaux, a cote de la blanche.
-        qreal markX = cuePt.x() - bp.ballR * 2.4;
+        // Agrandissement de la blanche (3 fois) au niveau de la rose, avec les
+        // 5 points de frappe de son axe vertical en rouge : haut, +1 cm,
+        // centre, -1 cm, bas.
+        const qreal bigR = bp.ballR * 3.0;
+        QPointF bigPt = bp.at(kSpotPinkX, 0.5);
+        painter.setPen(QPen(QColor("#000000"), 1.2));
+        painter.setBrush(kColorCue);
+        painter.drawEllipse(bigPt, bigR, bigR);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor("#e53935"));
         for (int i = -2; i <= 2; ++i)
         {
-            QPointF markPt(markX, cuePt.y() + i * bp.ballR * 0.55);
-            painter.setPen(QPen(QColor("#000000"), 1));
-            painter.setBrush(QColor(245, 245, 245, i == 0 ? 255 : 150));
-            painter.drawEllipse(markPt, bp.ballR * 0.22, bp.ballR * 0.22);
+            QPointF dot(bigPt.x(), bigPt.y() + i * bigR * 0.38);
+            painter.drawEllipse(dot, bigR * 0.11, bigR * 0.11);
         }
 
         return pixmap;
@@ -331,13 +340,13 @@ namespace
         painter.setRenderHint(QPainter::Antialiasing);
         BallPainter bp{painter, clothRect, clothRect.width() * 0.014};
 
-        // Seule la blanche reste, sur le point marron ; la ligne va jusqu'au
-        // point noir (aucune bille de couleur dessinee).
+        // Seule la blanche reste, sur le point marron ; la ligne va jusqu'a la
+        // bande du fond (aucune bille de couleur dessinee).
         QPointF brownPt = bp.dZone(false);
-        QPointF blackSpot = bp.at(kSpotBlackX, 0.5);
+        QPointF farCushion(clothRect.left(), brownPt.y());
 
         painter.setPen(QPen(QColor(255, 255, 255, 200), 1.5));
-        painter.drawLine(brownPt, blackSpot);
+        painter.drawLine(brownPt, farCushion);
         bp.ball(brownPt, kColorCue);
 
         return pixmap;
@@ -520,10 +529,10 @@ namespace
                 "<p><b>DEROULEMENT</b></p>"
                 "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
                 "<li>Centrez bien le procede de la queue sur la blanche.</li>"
-                "<li>Visez le centre de la table, par-dessus les points marron, bleu, rose et noir, "
+                "<li>Visez le centre de la table, par-dessus les points bleu, rose et noir, "
                 "droit vers la bande du fond.</li>"
-                "<li>Frappez avec assez de vitesse pour que la blanche remonte jusqu'a la bande "
-                "de depart.</li>"
+                "<li>Frappez avec assez de vitesse pour que la blanche touche la bande du fond "
+                "puis revienne vers vous, vers la queue.</li>"
                 "<li>Restez immobile apres la frappe : si la blanche revient exactement a son "
                 "point de depart, c'est que vous avez frappe droit et centre.</li>"
                 "</ol>"
@@ -545,8 +554,8 @@ namespace
                 "<p><b>MISE EN PLACE</b></p>"
                 "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
                 "<li>Placez la bleue sur son point.</li>"
-                "<li>Placez la blanche a environ 25 cm de la bleue, en ligne droite vers une "
-                "poche du milieu.</li>"
+                "<li>Choisissez une distance et alignez la blanche, la bleue et la poche du "
+                "milieu.</li>"
                 "<li>Reperez 5 points de frappe sur l'axe vertical de la blanche : Haut, "
                 "1 cm au-dessus du centre, Centre, 1 cm en dessous du centre, Bas (effet "
                 "retro).</li>"
@@ -582,8 +591,8 @@ namespace
                 "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
                 "<li>Disposez les 15 rouges en ligne au centre de la table, comme sur le "
                 "schema ci-dessus.</li>"
-                "<li>Choisissez une rouge de depart (souvent celle du bas ; les joueurs "
-                "avances commencent par la premiere rouge).</li>"
+                "<li>Choisissez une rouge de depart (souvent celle du bas, du cote de la bande "
+                "de la noire ; les joueurs avances commencent par la premiere rouge).</li>"
                 "</ol>"
                 "<p style='color:#7a7f87'>D'autres repartitions existent (1 ou 3 rouges sous le "
                 "point noir, etc.) : choisissez une configuration et gardez-la pour mesurer "
@@ -591,7 +600,8 @@ namespace
 
                 "<p><b>DEROULEMENT</b></p>"
                 "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Empochez les rouges l'une apres l'autre, soit du bas vers le haut, soit "
+                "<li>Empochez les rouges l'une apres l'autre, soit du bas vers le haut (de la "
+                "bande de la noire vers le cote des couleurs jaune, verte et marron), soit "
                 "dans un ordre aleatoire.</li>"
                 "<li>Si vous ratez une bille, remettez tout en place et recommencez : cette "
                 "\"punition\" aide a rester concentre. Vous pouvez aussi continuer malgre "
@@ -601,12 +611,13 @@ namespace
 
                 "<p><b>CONSEILS</b></p>"
                 "<ul style='margin:4px 0; padding-left:20px; line-height:1.7'>"
-                "<li>Imaginez deux lignes qui divisent la table en trois parties egales dans "
-                "la longueur : la blanche doit s'arreter entre la ligne de billes et la bande, "
-                "pour toujours garder un angle jouable. Evitez qu'elle finisse collee a la "
-                "bande ou trop pres des billes restantes.</li>"
-                "<li>Quand vous maitrisez l'exercice, commencez par la rouge du bas et "
-                "remontez progressivement : cela affine votre placement.</li>"
+                "<li>Les deux bandes hachurees du schema indiquent la zone dans laquelle la "
+                "blanche doit revenir apres chaque coup : c'est la qu'elle offre le plus de "
+                "possibilites d'enchainer plusieurs rouges. Evitez qu'elle finisse collee a "
+                "la bande ou trop pres des billes restantes.</li>"
+                "<li>Quand vous maitrisez l'exercice, commencez par la rouge du bas (cote "
+                "bande de la noire) et remontez progressivement vers le cote des couleurs : "
+                "cela affine votre placement.</li>"
                 "<li>Le but est la fluidite et la detente : gardez un bras souple, fixez-vous "
                 "des objectifs realistes et cherchez a comprendre ce qui s'est passe quand "
                 "l'exercice echoue.</li>"
