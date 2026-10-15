@@ -31,6 +31,12 @@
 //        ArucoCalibrationTool.exe --check <index_camera 0/1/2> <image_ou_flux>
 //   4. Calibre une camera (definitif) :
 //        ArucoCalibrationTool.exe <index_camera 0/1/2> <image_ou_flux>
+//
+// OPTION --decalage <cm> (camera 2 uniquement) : les marqueurs 5 et 6
+// sont decales de la poche du milieu pour ne pas la chevaucher -- le 5
+// (bord haut) de d cm vers le baulk, le 6 (bord bas) de d cm vers la
+// noire. Sans l'option, d = 0 (marqueurs face a face a 178,5 cm).
+//   Exemple : ArucoCalibrationTool.exe --decalage 10 1 <image_ou_flux>
 // =====================================================================
 
 struct MarkerInfo { int id; std::string description; };
@@ -59,6 +65,25 @@ struct CameraMarkerSpec
     std::vector<cv::Point2f> tableCm;
 };
 
+// Decalage d (cm) des marqueurs 5 et 6 par rapport a la poche du milieu
+// (option --decalage). 0 = marqueurs face a face.
+float g_centerMarkerOffsetCm = 0.0f;
+
+void printCenterOffsetInfo(int cameraIndex)
+{
+    if (cameraIndex != 1)
+    {
+        return;
+    }
+    std::cout << "Decalage d des marqueurs 5 et 6 : " << g_centerMarkerOffsetCm << " cm";
+    if (g_centerMarkerOffsetCm == 0.0f)
+    {
+        std::cout << "  (marqueurs supposes face a face ; s'ils sont decales de la poche du milieu,"
+                  << " relancer avec --decalage <cm>)";
+    }
+    std::cout << std::endl;
+}
+
 CameraMarkerSpec getCameraMarkerSpec(int cameraIndex)
 {
     const float W = 178.0f; // largeur reelle de la table (cm)
@@ -73,7 +98,8 @@ CameraMarkerSpec getCameraMarkerSpec(int cameraIndex)
     case 1: // Camera 2, bleue/centre, verticale, zone 130->227cm (centree sur 178.5)
         spec.tilted = false;
         spec.ids = { 5, 6 };
-        spec.tableCm = { {178.5f, 0.f}, {178.5f, W} };
+        // Marqueur 5 (bord haut) : d cm vers le baulk ; marqueur 6 (bord bas) : d cm vers la noire.
+        spec.tableCm = { {178.5f - g_centerMarkerOffsetCm, 0.f}, {178.5f + g_centerMarkerOffsetCm, W} };
         break;
     case 2: // Camera 3, rouges/rose/noire, inclinee ~4 deg, zone 227->357cm
         spec.tilted = true;
@@ -222,6 +248,7 @@ void runPositionCheck(int cameraIndex, const std::string& source)
     std::cout << "Marqueurs attendus : ";
     for (size_t i = 0; i < spec.ids.size(); i++) std::cout << "ID " << spec.ids[i] << (i + 1 < spec.ids.size() ? ", " : "");
     std::cout << std::endl;
+    printCenterOffsetInfo(cameraIndex);
     if (spec.tilted)
     {
         std::cout << "Camera inclinee par design (~4 deg) : la mire doit cadrer le centre de SA zone," << std::endl;
@@ -387,6 +414,46 @@ void runPositionCheck(int cameraIndex, const std::string& source)
 
 int main(int argc, char** argv)
 {
+    // Option --decalage <cm> (n'importe ou dans la ligne de commande) : decalage d
+    // des marqueurs 5 et 6 par rapport a la poche du milieu. Retiree des arguments
+    // avant le traitement habituel.
+    std::vector<char*> filteredArgs;
+    filteredArgs.push_back(argv[0]);
+    for (int i = 1; i < argc; i++)
+    {
+        if (std::string(argv[i]) == "--decalage")
+        {
+            if (i + 1 >= argc)
+            {
+                std::cout << "Erreur : --decalage attend une valeur en cm (ex. --decalage 10)." << std::endl;
+                return 1;
+            }
+            float value = 0.0f;
+            try
+            {
+                value = std::stof(argv[i + 1]);
+            }
+            catch (const std::exception&)
+            {
+                std::cout << "Erreur : valeur de --decalage invalide : " << argv[i + 1] << std::endl;
+                return 1;
+            }
+            if (value < 0.0f || value > 40.0f)
+            {
+                std::cout << "Erreur : --decalage doit etre compris entre 0 et 40 cm." << std::endl;
+                return 1;
+            }
+            g_centerMarkerOffsetCm = value;
+            i++;
+        }
+        else
+        {
+            filteredArgs.push_back(argv[i]);
+        }
+    }
+    argc = static_cast<int>(filteredArgs.size());
+    argv = filteredArgs.data();
+
     if (argc >= 2 && std::string(argv[1]) == "--generate")
     {
         generateMarkers();
@@ -416,6 +483,7 @@ int main(int argc, char** argv)
         std::cout << "  Generer les marqueurs        : ArucoCalibrationTool.exe --generate" << std::endl;
         std::cout << "  Tester le positionnement      : ArucoCalibrationTool.exe --check <index_camera 0/1/2> <image_ou_index_flux>" << std::endl;
         std::cout << "  Calibrer une camera (definitif): ArucoCalibrationTool.exe <index_camera 0/1/2> <image_ou_index_flux>" << std::endl;
+        std::cout << "  Option (camera 2) : --decalage <cm>  decalage des marqueurs 5 et 6 par rapport a la poche du milieu" << std::endl;
         return 1;
     }
 
@@ -469,6 +537,7 @@ int main(int argc, char** argv)
     std::vector<std::vector<cv::Point2f>> rejected;
     detector.detectMarkers(frame, corners, ids, rejected);
 
+    printCenterOffsetInfo(cameraIndex);
     std::cout << "Marqueurs detectes : " << ids.size() << " (attendus : ";
     for (size_t i = 0; i < spec.ids.size(); i++) std::cout << "ID " << spec.ids[i] << (i + 1 < spec.ids.size() ? ", " : "");
     std::cout << ")" << std::endl;
