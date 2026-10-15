@@ -61,3 +61,8 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+# Documents binaires : jamais de conversion de fins de ligne (un PDF "texte" serait corrompu)
+*.pdf binary
+*.docx binary
+*.png binary
