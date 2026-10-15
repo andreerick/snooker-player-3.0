@@ -216,6 +216,17 @@ namespace
         painter.drawArc(dRect, 90 * 16, -180 * 16);
         painter.drawLine(QPointF(brownPt.x(), clothRect.top()), QPointF(brownPt.x(), clothRect.bottom()));
 
+        // Zone de retour de la blanche : deux bandes hachurees de 20 cm, entre
+        // la ligne des rouges et chaque bande.
+        const qreal bandHalf = (20.0 / 178.0) / 2.0;
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QBrush(QColor(255, 255, 255, 200), Qt::BDiagPattern));
+        for (qreal ny : { 0.25, 0.75 })
+        {
+            painter.drawRect(QRectF(clothRect.left(), toPt(0.0, ny - bandHalf).y(),
+                                    clothRect.width(), clothRect.height() * bandHalf * 2.0));
+        }
+
         QPointF bluePt = toPt(kSpotBlueX, 0.5);
         QPointF pinkPt = toPt(kSpotPinkX, 0.5);
         QPointF blackPt = toPt(kSpotBlackX, 0.5);
@@ -636,15 +647,15 @@ namespace
                 "<li>Alignez les 15 rouges au centre de la table, dans le prolongement de la "
                 "ligne noire-rose-bleue-marron :"
                 "<ul style='margin:4px 0; padding-left:20px'>"
-                "<li>2 rouges sous la noire</li>"
+                "<li>2 rouges entre la bande et la noire</li>"
                 "<li>4 rouges entre la noire et la rose</li>"
                 "<li>4 rouges entre la rose et la bleue</li>"
                 "<li>5 rouges entre la bleue et la marron</li>"
                 "</ul></li>"
                 "<li>Choisissez la rouge de depart (souvent la 2e apres la noire).</li>"
                 "</ol>"
-                "<p style='color:#7a7f87'>D'autres repartitions existent (1 ou 3 rouges sous la "
-                "noire, etc.) : le choix importe peu, mais gardez toujours la MEME repartition "
+                "<p style='color:#7a7f87'>D'autres repartitions existent (1 ou 3 rouges entre la "
+                "bande et la noire, etc.) : le choix importe peu, mais gardez toujours la MEME repartition "
                 "d'une seance a l'autre pour pouvoir comparer vos progres.</p>"
 
                 "<p><b>DEROULEMENT</b></p>"
@@ -659,11 +670,12 @@ namespace
 
                 "<p><b>CONSEILS</b></p>"
                 "<ul style='margin:4px 0; padding-left:20px; line-height:1.7'>"
-                "<li>Imaginez la table divisee en 3 bandes egales dans la longueur : la bille "
-                "visee doit s'arreter dans l'une d'elles pour garder un angle jouable sur la "
-                "suivante -- jamais collee a la bande, ni trop pres des billes restantes.</li>"
+                "<li>Les deux bandes hachurees du schema indiquent la zone dans laquelle la "
+                "blanche doit revenir apres chaque coup, pour garder un angle jouable sur la "
+                "bille suivante -- jamais collee a la bande, ni trop pres des billes "
+                "restantes.</li>"
                 "<li>Une fois a l'aise, essayez de commencer par la rouge la plus eloignee "
-                "(cote bleue) plutot que la plus proche : ca muscle la concentration au moment "
+                "(cote marron) plutot que la plus proche : ca muscle la concentration au moment "
                 "de choisir sa bille.</li>"
                 "<li>Certains joueurs preferent ne pas compter leur score et se concentrer "
                 "juste sur le rythme (combien de rouges avant une erreur), pour se vider "
@@ -696,7 +708,8 @@ namespace
 
                 "<p><b>DEROULEMENT -- Version 1 (plus accessible)</b></p>"
                 "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Placez la blanche entre les rouges et la bleue.</li>"
+                "<li>Placez la blanche ou vous voulez : sa position de depart est au choix du "
+                "joueur.</li>"
                 "<li>Empochez une rouge puis une couleur, comme en jeu normal.</li>"
                 "<li>Une fois toutes les rouges empochees, terminez avec les couleurs dans "
                 "l'ordre habituel.</li>"
@@ -717,8 +730,8 @@ namespace
                 "deplacer trop loin.</li>"
                 "<li>Une fois a l'aise, essayez d'empocher les rouges dans un ordre precis pour "
                 "vous mettre a l'epreuve.</li>"
-                "<li>Comme pour le Line-Up, certains preferent ne pas compter leur score et "
-                "juste suivre le rythme -- les deux approches sont valables.</li>"
+                "<li>Dans cet exercice, vous pouvez compter les points : utilisez \"Compter ma "
+                "serie\" pour noter votre score et suivre vos progres.</li>"
                 "</ul>"
             },
             {
@@ -760,16 +773,16 @@ namespace
                 "<p><b>MISE EN PLACE</b></p>"
                 "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
                 "<li>Placez la bleue sur son point.</li>"
-                "<li>Placez la blanche a environ 60 cm de la bleue (puis 90 cm, 120 cm en "
-                "progressant), en ligne droite vers une poche de coin.</li>"
+                "<li>Choisissez une distance (puis eloignez-la progressivement) et alignez la "
+                "blanche, la bleue et la poche de coin.</li>"
                 "</ol>"
 
                 "<p><b>DEROULEMENT</b></p>"
                 "<ol style='margin:4px 0 12px; padding-left:20px; line-height:1.7'>"
-                "<li>Empochez 5 a 10 bleues droites dans chaque poche de coin, a partir de "
-                "60 cm.</li>"
-                "<li>Repetez l'exercice a des distances plus importantes le long de la meme "
-                "ligne.</li>"
+                "<li>Empochez la bleue dans la poche de coin, puis remettez-la sur son point "
+                "et recommencez : 5 a 10 fois pour chaque poche de coin.</li>"
+                "<li>Repetez l'exercice en eloignant la blanche de la bleue, le long de la "
+                "meme ligne.</li>"
                 "<li>Notez votre score pour evaluer vos progres au fil des seances.</li>"
                 "</ol>"
 
