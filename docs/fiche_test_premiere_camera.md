@@ -8,8 +8,9 @@ les 2 autres. A faire dans l'ordre ; noter le resultat de chaque etape
 
 - [ ] Mettre le projet a jour sur le Mac (`git pull`), compiler, lancer.
 - [ ] Materiel : camera ELP, rallonge USB 3 m, adaptateur USB-A femelle -> USB-C
-      (cote Mac), cable lampe/support, marqueurs ArUco imprimes
-      (`docs/planche_6_marqueurs_aruco_a_imprimer.pdf`), metre.
+      (cote Mac), cable lampe/support, metre, et les marqueurs ArUco **5 et 6**
+      imprimes a 100 % (`docs/planche_10_marqueurs_aruco_a_imprimer.pdf`,
+      page 1).
 - [ ] Brancher la camera DIRECTEMENT sur une prise USB-C du Mac (pas de hub).
 
 ## 1. La camera est-elle vue ?
@@ -38,16 +39,24 @@ les 2 autres. A faire dans l'ordre ; noter le resultat de chaque etape
 ## 3. Position physique (120 cm au-dessus de la table)
 
 1. Fixer la camera a 120 cm (bord bas des abat-jour), verticale, au centre.
-2. Mesurer la hauteur reelle et la noter (ecart toleré : quelques cm).
+2. Mesurer la hauteur reelle et la noter (ecart tolere : quelques cm).
 3. Verifier que toute la largeur de la table (178 cm) est dans l'image.
 
 ## 4. Calibration par marqueurs
 
-1. Coller les marqueurs de la camera 2 (ids 5 et 6, bords haut et bas).
-2. Tester le positionnement **avant** de calibrer :
-   `ArucoCalibrationTool --check 1 <flux>` (index selon l'etape 1).
-3. Si les 2 marqueurs sont reconnus : calibrer (commande sans `--check`).
-4. Noter les erreurs eventuelles ("marqueur non detecte", etc.).
+1. Coller les marqueurs de la camera 2 sur le rail marron, de part et d'autre
+   de la poche du milieu (voir `docs/guide_pose_marqueurs_aruco.pdf`) :
+   - marqueur **5** : bord HAUT, a **droite** de la poche (cote baulk) ;
+   - marqueur **6** : bord BAS, a **gauche** de la poche (cote noire).
+2. **Mesurer le decalage d** : distance entre la poche du milieu et chaque
+   marqueur (quelques cm, la meme pour les deux). Noter d = ______ cm.
+3. Tester le positionnement **avant** de calibrer :
+   `ArucoCalibrationTool --decalage <d> --check 1 <flux>`
+   (index selon l'etape 1 ; sous Windows : `ArucoCalibrationTool.exe`).
+4. Si les 2 marqueurs sont reconnus : calibrer, meme commande sans `--check` :
+   `ArucoCalibrationTool --decalage <d> 1 <flux>`.
+5. Noter les erreurs eventuelles ("marqueur non detecte", etc.).
+   Si d = 0 (marqueurs face a face), l'option `--decalage` est inutile.
 
 ## 5. Mesures a relever (pour la suite)
 

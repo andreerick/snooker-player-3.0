@@ -186,6 +186,8 @@ qt_add_executable(SnookerPlayer
     SnookerPlayer_Build6001/src/UI/ExerciseScoreDialog.h
     SnookerPlayer_Build6001/src/UI/ExerciseSessions.cpp
     SnookerPlayer_Build6001/src/UI/ExerciseSessions.h
+    SnookerPlayer_Build6001/src/UI/CameraMireDialog.cpp
+    SnookerPlayer_Build6001/src/UI/CameraMireDialog.h
     SnookerPlayer_Build6001/src/UI/UiUtils.cpp
     SnookerPlayer_Build6001/src/UI/UiUtils.h
 

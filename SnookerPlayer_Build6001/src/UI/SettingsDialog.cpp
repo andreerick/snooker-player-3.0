@@ -1,5 +1,6 @@
 #include "SettingsDialog.h"
 #include "UiUtils.h"
+#include "CameraMireDialog.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -311,8 +312,18 @@ SettingsDialog::SettingsDialog(QWidget* parent)
                 launchCalibrationTool(this, index);
             });
 
+        QPushButton* mireButton = new QPushButton("Mire...", row);
+        mireButton->setStyleSheet(smallButtonStyle);
+        mireButton->setEnabled(detected);
+        connect(mireButton, &QPushButton::clicked, this, [this, index]()
+            {
+                CameraMireDialog dialog(index, this);
+                dialog.exec();
+            });
+
         rowLayout->addWidget(statusDot);
         rowLayout->addWidget(statusText, 1);
+        rowLayout->addWidget(mireButton);
         rowLayout->addWidget(calibrateButton);
         cameraCard->addWidget(row);
     }
