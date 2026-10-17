@@ -53,12 +53,14 @@ SpeechAnnouncer::SpeechAnnouncer(QObject* parent)
         m_tts->setLocale(frenchLocales.first());
     }
 
-    // Liste volontairement courte (choix de l'utilisateur) : les deux voix de
-    // type Siri, "Marie" (feminine, "Voix 1") puis "Daniel" (masculine,
-    // "Voix 2"). Si elles n'existent pas (autre systeme, ex. Windows), on
-    // garde toutes les voix francaises plutot que de n'en proposer aucune.
+    // Liste volontairement courte (choix de l'utilisateur apres essais) :
+    // "Amelie" (preferee, voix par defaut), "Marie" (type Siri) et "Thomas".
+    // La voix francaise "Daniel" (type Siri) est EXCLUE : macOS la declare
+    // mais elle reste muette (0,2 s pour une phrase de 3 s, mesure avec
+    // AVSpeechSynthesizer). Si aucune de ces voix n'existe (autre systeme,
+    // ex. Windows), on garde toutes les voix francaises.
     QList<QVoice> kept;
-    for (const QString& wanted : { QString("Marie"), QString("Daniel") })
+    for (const QString& wanted : { QString::fromUtf8("Am\u00e9lie"), QString("Marie"), QString("Thomas") })
     {
         for (const QVoice& voice : m_voices)
         {
@@ -83,20 +85,12 @@ QList<QVoice> SpeechAnnouncer::availableVoices() const
 QString SpeechAnnouncer::recommendedVoiceName() const
 {
     // La liste est deja reduite (voir le constructeur) : la recommandee est
-    // la premiere, "Marie" ("Voix 1") quand elle est installee.
+    // la premiere, "Amelie" quand elle est installee.
     return m_voices.isEmpty() ? QString() : m_voices.first().name();
 }
 
 QString SpeechAnnouncer::displayLabel(const QString& voiceName)
 {
-    if (voiceName == "Marie")
-    {
-        return "Voix 1 : Marie";
-    }
-    if (voiceName == "Daniel")
-    {
-        return "Voix 2 : Daniel";
-    }
     return voiceName;
 }
 

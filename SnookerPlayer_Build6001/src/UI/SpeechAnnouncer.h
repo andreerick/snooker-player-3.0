@@ -40,10 +40,10 @@ public:
     QList<QVoice> availableVoices() const;
 
     // Nom de la voix recommandee par defaut : la premiere de la liste
-    // ("Marie", "Voix 1"). Vide si aucune voix n'est disponible.
+    // ("Amelie"). Vide si aucune voix n'est disponible.
     QString recommendedVoiceName() const;
 
-    // Libelle affiche pour une voix dans les Parametres ("Voix 1 : Marie").
+    // Libelle affiche pour une voix dans les Parametres (son nom).
     static QString displayLabel(const QString& voiceName);
 
     // Choisit la voix par son nom (QVoice::name()). Nom vide ou inconnu :

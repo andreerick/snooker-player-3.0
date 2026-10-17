@@ -245,8 +245,7 @@ SettingsDialog::SettingsDialog(QWidget* parent)
         "cet ordinateur, les voix proposees different.";
 #ifdef Q_OS_MACOS
     voiceHintText +=
-        " Voix 1 (Marie, feminine) et Voix 2 (Daniel, masculine) : voix de type Siri installees "
-        "avec macOS.";
+        " Voix proposees : Amelie, Marie et Thomas (installees avec macOS).";
 #endif
     QLabel* voiceHint = new QLabel(voiceHintText, content);
     voiceHint->setWordWrap(true);
