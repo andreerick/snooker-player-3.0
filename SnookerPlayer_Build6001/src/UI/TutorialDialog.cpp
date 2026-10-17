@@ -123,7 +123,7 @@ namespace
             {
                 "Regler l'application",
                 "Le bouton <b>PARAMETRES</b> (en haut a droite) regroupe : les annonces vocales "
-                "(activer/desactiver, choisir une voix feminine ou masculine), le modele de "
+                "(activer/desactiver, choisir et ecouter une des voix installees), le modele de "
                 "telecommande de bureau (complete pour les tests, ou simplifiee pour l'usage "
                 "courant), le mode de suivi (<b>Manuel</b> : comptage a la telecommande, cameras "
                 "seulement pour le repositionnement des billes), le statut des cameras avec acces "

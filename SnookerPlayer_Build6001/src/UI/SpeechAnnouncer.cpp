@@ -14,32 +14,123 @@ SpeechAnnouncer::SpeechAnnouncer(QObject* parent)
     // pas forcement le francais). Si aucune voix francaise n'est
     // disponible, on garde la voix par defaut plutot que de ne rien dire
     // du tout.
-    const QList<QLocale> locales = m_tts->availableLocales();
-    for (const QLocale& locale : locales)
+    // QTextToSpeech ne liste que les voix de la langue COURANTE : on balaie
+    // chaque variante de francais (France d'abord, puis Canada...) pour
+    // reunir toutes les voix francaises installees.
+    QList<QLocale> frenchLocales;
+    for (const QLocale& locale : m_tts->availableLocales())
     {
         if (locale.language() == QLocale::French)
         {
-            m_tts->setLocale(locale);
-            break;
+            if (locale.territory() == QLocale::France)
+            {
+                frenchLocales.prepend(locale);
+            }
+            else
+            {
+                frenchLocales.append(locale);
+            }
         }
+    }
+    for (const QLocale& locale : frenchLocales)
+    {
+        m_tts->setLocale(locale);
+        for (const QVoice& voice : m_tts->availableVoices())
+        {
+            bool known = false;
+            for (const QVoice& existing : m_voices)
+            {
+                known = known || (existing.name() == voice.name());
+            }
+            if (!known)
+            {
+                m_voices.append(voice);
+            }
+        }
+    }
+    if (!frenchLocales.isEmpty())
+    {
+        m_tts->setLocale(frenchLocales.first());
     }
 }
 
-void SpeechAnnouncer::setPreferredGender(QVoice::Gender gender)
+QList<QVoice> SpeechAnnouncer::availableVoices() const
+{
+    return m_voices;
+}
+
+QString SpeechAnnouncer::recommendedVoiceName() const
+{
+    // Plus le score est petit, meilleure est la voix. Les voix "Premium" et
+    // "Ameliore(e)" (a telecharger dans les reglages du systeme) sonnent
+    // beaucoup moins robotiques que les voix de base ; a defaut, "Thomas"
+    // (voix francaise standard la plus naturelle de macOS), puis "Amelie".
+    auto score = [](const QVoice& voice) -> int
+    {
+        const QString name = voice.name();
+        int s = 50;
+        if (name.contains("Premium", Qt::CaseInsensitive)) s = 0;
+        else if (name.contains("Enhanced", Qt::CaseInsensitive)
+              || name.contains(QString::fromUtf8("Am\u00e9lior"), Qt::CaseInsensitive)
+              || name.contains("Siri", Qt::CaseInsensitive)) s = 10;
+        else if (name.startsWith("Thomas", Qt::CaseInsensitive)) s = 20;
+        else if (name.startsWith(QString::fromUtf8("Am\u00e9lie"), Qt::CaseInsensitive)) s = 30;
+        if (voice.locale().territory() == QLocale::France) s -= 1; // France avant Canada
+        return s;
+    };
+    QString best;
+    int bestScore = 1000;
+    for (const QVoice& voice : availableVoices())
+    {
+        const int sc = score(voice);
+        if (sc < bestScore)
+        {
+            bestScore = sc;
+            best = voice.name();
+        }
+    }
+    return best;
+}
+
+void SpeechAnnouncer::setVoiceByName(const QString& name)
 {
     if (!m_tts)
     {
         return;
     }
-    const QList<QVoice> voices = m_tts->availableVoices();
+    const QList<QVoice> voices = availableVoices();
+    const QString wanted = name.isEmpty() ? recommendedVoiceName() : name;
     for (const QVoice& voice : voices)
     {
-        if (voice.gender() == gender)
+        if (voice.name() == wanted)
         {
+            m_tts->setLocale(voice.locale()); // la voix n'est valable que dans sa propre langue
             m_tts->setVoice(voice);
             return;
         }
     }
+    if (!name.isEmpty())
+    {
+        // Voix enregistree mais plus installee : retombe sur la recommandee.
+        setVoiceByName(QString());
+    }
+}
+
+QString SpeechAnnouncer::currentVoiceName() const
+{
+    return m_tts ? m_tts->voice().name() : QString();
+}
+
+void SpeechAnnouncer::preview(const QString& text)
+{
+    if (!m_tts)
+    {
+        return;
+    }
+    m_queue.clear();
+    m_speaking = false;
+    m_tts->stop();
+    m_tts->say(text);
 }
 
 void SpeechAnnouncer::setEnabled(bool enabled)

@@ -1,4 +1,5 @@
 #include "SettingsDialog.h"
+#include "SpeechAnnouncer.h"
 #include "UiUtils.h"
 #include "CameraMireDialog.h"
 
@@ -130,11 +131,10 @@ bool SettingsDialog::loadSpeechEnabled()
     return settings.value("speech/enabled", true).toBool();
 }
 
-QVoice::Gender SettingsDialog::loadSpeechGender()
+QString SettingsDialog::loadSpeechVoiceName()
 {
     QSettings settings(settingsFilePath(), QSettings::IniFormat);
-    QString value = settings.value("speech/gender", "female").toString();
-    return (value == "male") ? QVoice::Male : QVoice::Female;
+    return settings.value("speech/voiceName", QString()).toString();
 }
 
 QString SettingsDialog::loadRemoteVersion()
@@ -195,36 +195,64 @@ SettingsDialog::SettingsDialog(QWidget* parent)
         });
     soundCard->addWidget(m_speechCheckBox);
 
-    QWidget* genderRow = new QWidget(content);
-    QHBoxLayout* genderRowLayout = new QHBoxLayout(genderRow);
-    genderRowLayout->setContentsMargins(0, 0, 0, 0);
-    QLabel* genderLabel = new QLabel("Voix :", genderRow);
-    genderLabel->setStyleSheet("color: " + kWhite + "; font-size: 13px; background: transparent;");
-    m_genderCombo = new QComboBox(genderRow);
-    m_genderCombo->setStyleSheet(comboStyle);
-    m_genderCombo->addItem("Feminine", "female");
-    m_genderCombo->addItem("Masculine", "male");
-    m_genderCombo->setCurrentIndex(loadSpeechGender() == QVoice::Male ? 1 : 0);
-    connect(m_genderCombo, &QComboBox::currentTextChanged, this, [this](const QString&)
-        {
-            QString value = m_genderCombo->currentData().toString();
-            QSettings settings(settingsFilePath(), QSettings::IniFormat);
-            settings.setValue("speech/gender", value);
-            settings.sync();
-            emit speechGenderChanged(value == "male" ? QVoice::Male : QVoice::Female);
-        });
-    genderRowLayout->addWidget(genderLabel);
-    genderRowLayout->addWidget(m_genderCombo, 1);
-    soundCard->addWidget(genderRow);
+    // Choix de la voix : liste des voix francaises installees + "recommandee".
+    // Moteur vocal local a la boite de dialogue (cet ecran existe avant
+    // tout match, donc avant le SpeechAnnouncer de MainWindow).
+    SpeechAnnouncer* voiceEngine = new SpeechAnnouncer(this);
+    const QString recommended = voiceEngine->recommendedVoiceName();
 
-    QLabel* genderHint = new QLabel(
-        "Selon le moteur vocal installe sur ce PC, la voix demandee peut ne pas etre disponible "
-        "(la voix par defaut est alors gardee).",
-        content
-    );
-    genderHint->setWordWrap(true);
-    genderHint->setStyleSheet("color: " + kGray + "; font-size: 10px; background: transparent;");
-    soundCard->addWidget(genderHint);
+    QWidget* voiceRow = new QWidget(content);
+    QHBoxLayout* voiceRowLayout = new QHBoxLayout(voiceRow);
+    voiceRowLayout->setContentsMargins(0, 0, 0, 0);
+    QLabel* voiceLabel = new QLabel("Voix :", voiceRow);
+    voiceLabel->setStyleSheet("color: " + kWhite + "; font-size: 13px; background: transparent;");
+    m_voiceCombo = new QComboBox(voiceRow);
+    m_voiceCombo->setStyleSheet(comboStyle);
+    m_voiceCombo->addItem(recommended.isEmpty()
+        ? QString("Voix recommandee (automatique)")
+        : "Voix recommandee : " + recommended, QString());
+    for (const QVoice& voice : voiceEngine->availableVoices())
+    {
+        m_voiceCombo->addItem(voice.name(), voice.name());
+    }
+    const int savedIndex = m_voiceCombo->findData(loadSpeechVoiceName());
+    m_voiceCombo->setCurrentIndex(savedIndex >= 0 ? savedIndex : 0);
+
+    QPushButton* listenButton = new QPushButton("Ecouter", voiceRow);
+    listenButton->setStyleSheet(smallButtonStyle);
+
+    auto selectedVoiceName = [this]() { return m_voiceCombo->currentData().toString(); };
+    connect(m_voiceCombo, &QComboBox::currentIndexChanged, this, [this, selectedVoiceName](int)
+        {
+            const QString name = selectedVoiceName();
+            QSettings settings(settingsFilePath(), QSettings::IniFormat);
+            settings.setValue("speech/voiceName", name);
+            settings.sync();
+            emit speechVoiceChanged(name);
+        });
+    connect(listenButton, &QPushButton::clicked, this, [voiceEngine, selectedVoiceName]()
+        {
+            voiceEngine->setVoiceByName(selectedVoiceName());
+            voiceEngine->preview("Alice, quatorze points. Au tour de Bob.");
+        });
+    voiceRowLayout->addWidget(voiceLabel);
+    voiceRowLayout->addWidget(m_voiceCombo, 1);
+    voiceRowLayout->addWidget(listenButton);
+    soundCard->addWidget(voiceRow);
+
+    QString voiceHintText =
+        "Cliquez sur \"Ecouter\" pour entendre la voix choisie. Selon le moteur vocal installe sur "
+        "cet ordinateur, les voix proposees different.";
+#ifdef Q_OS_MACOS
+    voiceHintText +=
+        " Pour des voix plus naturelles : Reglages Systeme > Accessibilite > Contenu enonce > "
+        "Voix du systeme > Gerer les voix, puis telecharger une voix francaise \"Premium\" "
+        "ou \"Amelioree\" ; elle apparaitra ici.";
+#endif
+    QLabel* voiceHint = new QLabel(voiceHintText, content);
+    voiceHint->setWordWrap(true);
+    voiceHint->setStyleSheet("color: " + kGray + "; font-size: 10px; background: transparent;");
+    soundCard->addWidget(voiceHint);
 
     // --- Telecommande ---
     QVBoxLayout* remoteCard = addSettingsCard(layout, content, "TELECOMMANDE");

@@ -38,9 +38,10 @@ public:
     // initialiser SpeechAnnouncer dans le bon etat des sa creation.
     static bool loadSpeechEnabled();
 
-    // Lit le genre de voix preferre (settings.ini, "speech/gender"),
-    // feminin par defaut. Voir SpeechAnnouncer::setPreferredGender().
-    static QVoice::Gender loadSpeechGender();
+    // Lit le nom de la voix choisie (settings.ini, "speech/voiceName") ;
+    // vide = voix recommandee par l'appli (voir
+    // SpeechAnnouncer::recommendedVoiceName()).
+    static QString loadSpeechVoiceName();
 
     // Lit le modele de telecommande de bureau choisi (settings.ini,
     // "ui/remoteVersion") : "1.0" (complete, scenarios/tests) ou "2.0"
@@ -55,8 +56,9 @@ signals:
     // existe), plutot que d'attendre le prochain match pour en tenir compte.
     void speechEnabledChanged(bool enabled);
 
-    // Meme logique que speechEnabledChanged, pour le choix de genre de voix.
-    void speechGenderChanged(QVoice::Gender gender);
+    // Meme logique que speechEnabledChanged, pour le choix de la voix
+    // (nom vide = voix recommandee).
+    void speechVoiceChanged(const QString& voiceName);
 
     // Emis quand le choix de modele de telecommande change PENDANT que la
     // boite de dialogue est ouverte, pour que MainWindow bascule tout de
@@ -65,6 +67,6 @@ signals:
 
 private:
     QCheckBox* m_speechCheckBox = nullptr;
-    QComboBox* m_genderCombo = nullptr;
+    QComboBox* m_voiceCombo = nullptr;
     QComboBox* m_remoteVersionCombo = nullptr;
 };

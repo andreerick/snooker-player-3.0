@@ -35,11 +35,27 @@ public:
     void setEnabled(bool enabled);
     bool isEnabled() const { return m_enabled; }
 
-    // Bascule sur la premiere voix disponible du genre demande (voir
-    // QVoice::gender(), parmi les voix du moteur TTS installe sur la
-    // machine) ; ne fait rien si aucune voix de ce genre n'existe (garde
-    // la voix actuelle plutot que d'echouer silencieusement sur rien).
-    void setPreferredGender(QVoice::Gender gender);
+    // Voix francaises installees sur la machine (voir availableVoices() de
+    // QTextToSpeech, restreint a la langue choisie dans le constructeur).
+    QList<QVoice> availableVoices() const;
+
+    // Nom de la voix que l'appli RECOMMANDE par defaut parmi celles
+    // installees : une voix "Premium" ou "Ameliore(e)"/"Enhanced"/"Siri" si
+    // il y en a une (bien plus naturelle), sinon "Thomas", puis "Amelie",
+    // puis la premiere voix francaise. Vide si aucune voix n'est disponible.
+    QString recommendedVoiceName() const;
+
+    // Choisit la voix par son nom (QVoice::name()). Nom vide ou inconnu :
+    // voix recommandee (recommendedVoiceName()).
+    void setVoiceByName(const QString& name);
+
+    // Nom de la voix actuellement utilisee.
+    QString currentVoiceName() const;
+
+    // Prononce `text` tout de suite (interrompt une annonce en cours),
+    // meme si les annonces sont desactivees : sert a "Ecouter" dans les
+    // Parametres. N'utilise pas la file d'attente de announce().
+    void preview(const QString& text);
 
     // Ajoute `text` a la file d'attente vocale (voir m_queue) : ne parle
     // JAMAIS par-dessus une annonce en cours, contrairement a
@@ -58,6 +74,10 @@ private:
     void speakNext();
 
     std::unique_ptr<QTextToSpeech> m_tts;
+    // Toutes les voix francaises (France, Canada, ...) : QTextToSpeech ne
+    // liste que les voix de la langue COURANTE, il faut donc balayer chaque
+    // variante de francais disponible au demarrage.
+    QList<QVoice> m_voices;
     bool m_enabled = true;
     QStringList m_queue;
     bool m_speaking = false;

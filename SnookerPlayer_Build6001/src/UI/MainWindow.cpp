@@ -2921,11 +2921,11 @@ MainWindow::MainWindow(QWidget* parent)
                         m_speechToggleButton->setText(enabled ? "Son : Actif" : "Son : Coupe");
                     }
                 });
-            connect(&dialog, &SettingsDialog::speechGenderChanged, this, [this](QVoice::Gender gender)
+            connect(&dialog, &SettingsDialog::speechVoiceChanged, this, [this](const QString& voiceName)
                 {
                     if (m_speech)
                     {
-                        m_speech->setPreferredGender(gender);
+                        m_speech->setVoiceByName(voiceName);
                     }
                 });
             connect(&dialog, &SettingsDialog::remoteVersionChanged, this, [this](const QString&)
@@ -3116,7 +3116,7 @@ void MainWindow::beginMatch(const QString& player1Name, const QString& player2Na
 
     m_speech = new SpeechAnnouncer(this);
     m_speech->setEnabled(SettingsDialog::loadSpeechEnabled());
-    m_speech->setPreferredGender(SettingsDialog::loadSpeechGender());
+    m_speech->setVoiceByName(SettingsDialog::loadSpeechVoiceName());
     if (m_speechToggleButton)
     {
         m_speechToggleButton->setText(m_speech->isEnabled() ? "Son : Actif" : "Son : Coupe");
