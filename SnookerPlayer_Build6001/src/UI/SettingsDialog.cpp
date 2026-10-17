@@ -210,10 +210,10 @@ SettingsDialog::SettingsDialog(QWidget* parent)
     m_voiceCombo->setStyleSheet(comboStyle);
     m_voiceCombo->addItem(recommended.isEmpty()
         ? QString("Voix recommandee (automatique)")
-        : "Voix recommandee : " + recommended, QString());
+        : "Voix recommandee : " + SpeechAnnouncer::displayLabel(recommended), QString());
     for (const QVoice& voice : voiceEngine->availableVoices())
     {
-        m_voiceCombo->addItem(voice.name(), voice.name());
+        m_voiceCombo->addItem(SpeechAnnouncer::displayLabel(voice.name()), voice.name());
     }
     const int savedIndex = m_voiceCombo->findData(loadSpeechVoiceName());
     m_voiceCombo->setCurrentIndex(savedIndex >= 0 ? savedIndex : 0);
@@ -245,9 +245,8 @@ SettingsDialog::SettingsDialog(QWidget* parent)
         "cet ordinateur, les voix proposees different.";
 #ifdef Q_OS_MACOS
     voiceHintText +=
-        " Pour des voix plus naturelles : Reglages Systeme > Accessibilite > Contenu enonce > "
-        "Voix du systeme > Gerer les voix, puis telecharger une voix francaise \"Premium\" "
-        "ou \"Amelioree\" ; elle apparaitra ici.";
+        " Voix 1 (Marie, feminine) et Voix 2 (Daniel, masculine) : voix de type Siri installees "
+        "avec macOS.";
 #endif
     QLabel* voiceHint = new QLabel(voiceHintText, content);
     voiceHint->setWordWrap(true);

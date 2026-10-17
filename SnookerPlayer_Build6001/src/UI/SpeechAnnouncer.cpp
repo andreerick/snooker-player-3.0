@@ -53,24 +53,20 @@ SpeechAnnouncer::SpeechAnnouncer(QObject* parent)
         m_tts->setLocale(frenchLocales.first());
     }
 
-    // Liste volontairement courte : Thomas et Amelie (les plus claires des
-    // voix de base de macOS, choix de l'utilisateur) + toute voix
-    // "Premium"/"Amelioree"/"Enhanced"/"Siri" installee (bien plus naturelle).
-    // Si aucune de celles-ci n'existe (autre systeme, ex. Windows), on garde
-    // toutes les voix francaises plutot que de n'en proposer aucune.
+    // Liste volontairement courte (choix de l'utilisateur) : les deux voix de
+    // type Siri, "Marie" (feminine, "Voix 1") puis "Daniel" (masculine,
+    // "Voix 2"). Si elles n'existent pas (autre systeme, ex. Windows), on
+    // garde toutes les voix francaises plutot que de n'en proposer aucune.
     QList<QVoice> kept;
-    for (const QVoice& voice : m_voices)
+    for (const QString& wanted : { QString("Marie"), QString("Daniel") })
     {
-        const QString name = voice.name();
-        const bool natural = name.contains("Premium", Qt::CaseInsensitive)
-            || name.contains("Enhanced", Qt::CaseInsensitive)
-            || name.contains(QString::fromUtf8("Am\u00e9lior"), Qt::CaseInsensitive)
-            || name.contains("Siri", Qt::CaseInsensitive);
-        const bool chosen = name.startsWith("Thomas", Qt::CaseInsensitive)
-            || name.startsWith(QString::fromUtf8("Am\u00e9lie"), Qt::CaseInsensitive);
-        if (natural || chosen)
+        for (const QVoice& voice : m_voices)
         {
-            kept.append(voice);
+            if (voice.name() == wanted)
+            {
+                kept.append(voice);
+                break;
+            }
         }
     }
     if (!kept.isEmpty())
@@ -86,35 +82,22 @@ QList<QVoice> SpeechAnnouncer::availableVoices() const
 
 QString SpeechAnnouncer::recommendedVoiceName() const
 {
-    // Plus le score est petit, meilleure est la voix. Les voix "Premium" et
-    // "Ameliore(e)" (a telecharger dans les reglages du systeme) sonnent
-    // beaucoup moins robotiques que les voix de base ; a defaut, "Thomas"
-    // (voix francaise standard la plus naturelle de macOS), puis "Amelie".
-    auto score = [](const QVoice& voice) -> int
+    // La liste est deja reduite (voir le constructeur) : la recommandee est
+    // la premiere, "Marie" ("Voix 1") quand elle est installee.
+    return m_voices.isEmpty() ? QString() : m_voices.first().name();
+}
+
+QString SpeechAnnouncer::displayLabel(const QString& voiceName)
+{
+    if (voiceName == "Marie")
     {
-        const QString name = voice.name();
-        int s = 50;
-        if (name.contains("Premium", Qt::CaseInsensitive)) s = 0;
-        else if (name.contains("Enhanced", Qt::CaseInsensitive)
-              || name.contains(QString::fromUtf8("Am\u00e9lior"), Qt::CaseInsensitive)
-              || name.contains("Siri", Qt::CaseInsensitive)) s = 10;
-        else if (name.startsWith("Thomas", Qt::CaseInsensitive)) s = 20;
-        else if (name.startsWith(QString::fromUtf8("Am\u00e9lie"), Qt::CaseInsensitive)) s = 30;
-        if (voice.locale().territory() == QLocale::France) s -= 1; // France avant Canada
-        return s;
-    };
-    QString best;
-    int bestScore = 1000;
-    for (const QVoice& voice : availableVoices())
-    {
-        const int sc = score(voice);
-        if (sc < bestScore)
-        {
-            bestScore = sc;
-            best = voice.name();
-        }
+        return "Voix 1 : Marie";
     }
-    return best;
+    if (voiceName == "Daniel")
+    {
+        return "Voix 2 : Daniel";
+    }
+    return voiceName;
 }
 
 void SpeechAnnouncer::setVoiceByName(const QString& name)

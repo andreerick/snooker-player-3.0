@@ -39,11 +39,12 @@ public:
     // QTextToSpeech, restreint a la langue choisie dans le constructeur).
     QList<QVoice> availableVoices() const;
 
-    // Nom de la voix que l'appli RECOMMANDE par defaut parmi celles
-    // installees : une voix "Premium" ou "Ameliore(e)"/"Enhanced"/"Siri" si
-    // il y en a une (bien plus naturelle), sinon "Thomas", puis "Amelie",
-    // puis la premiere voix francaise. Vide si aucune voix n'est disponible.
+    // Nom de la voix recommandee par defaut : la premiere de la liste
+    // ("Marie", "Voix 1"). Vide si aucune voix n'est disponible.
     QString recommendedVoiceName() const;
+
+    // Libelle affiche pour une voix dans les Parametres ("Voix 1 : Marie").
+    static QString displayLabel(const QString& voiceName);
 
     // Choisit la voix par son nom (QVoice::name()). Nom vide ou inconnu :
     // voix recommandee (recommendedVoiceName()).
