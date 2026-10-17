@@ -52,6 +52,31 @@ SpeechAnnouncer::SpeechAnnouncer(QObject* parent)
     {
         m_tts->setLocale(frenchLocales.first());
     }
+
+    // Liste volontairement courte : Thomas et Amelie (les plus claires des
+    // voix de base de macOS, choix de l'utilisateur) + toute voix
+    // "Premium"/"Amelioree"/"Enhanced"/"Siri" installee (bien plus naturelle).
+    // Si aucune de celles-ci n'existe (autre systeme, ex. Windows), on garde
+    // toutes les voix francaises plutot que de n'en proposer aucune.
+    QList<QVoice> kept;
+    for (const QVoice& voice : m_voices)
+    {
+        const QString name = voice.name();
+        const bool natural = name.contains("Premium", Qt::CaseInsensitive)
+            || name.contains("Enhanced", Qt::CaseInsensitive)
+            || name.contains(QString::fromUtf8("Am\u00e9lior"), Qt::CaseInsensitive)
+            || name.contains("Siri", Qt::CaseInsensitive);
+        const bool chosen = name.startsWith("Thomas", Qt::CaseInsensitive)
+            || name.startsWith(QString::fromUtf8("Am\u00e9lie"), Qt::CaseInsensitive);
+        if (natural || chosen)
+        {
+            kept.append(voice);
+        }
+    }
+    if (!kept.isEmpty())
+    {
+        m_voices = kept;
+    }
 }
 
 QList<QVoice> SpeechAnnouncer::availableVoices() const
