@@ -11,7 +11,7 @@
 // =====================================================================
 // Outil de calibration AUTOMATIQUE par marqueurs ArUco
 // ---------------------------------------------------------------------
-// Version a 10 marqueurs, calquee sur manuel_calibration_cameras.odt
+// Version a 10 marqueurs, calquee sur manuel_calibration_cameras.docx
 // (mesures reelles confirmees a l'installation) :
 //   - Camera 1 (index 0, jaune/verte/marron) et Camera 3 (index 2,
 //     rouges/rose/noire) sont inclinees ~4 deg vers l'exterieur ->
@@ -524,7 +524,7 @@ int main(int argc, char** argv)
     // Detection automatique des marqueurs de CETTE camera (voir
     // getCameraMarkerSpec() : 2 marqueurs/2 points pour la camera
     // verticale (bleue), 4 marqueurs/homographie pour les 2 cameras
-    // inclinees, conformement a manuel_calibration_cameras.odt).
+    // inclinees, conformement a manuel_calibration_cameras.docx).
     // -----------------------------------------------------------------
     CameraMarkerSpec spec = getCameraMarkerSpec(cameraIndex);
 
