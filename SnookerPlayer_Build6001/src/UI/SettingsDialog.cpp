@@ -245,7 +245,7 @@ SettingsDialog::SettingsDialog(QWidget* parent)
         "cet ordinateur, les voix proposees different.";
 #ifdef Q_OS_MACOS
     voiceHintText +=
-        " Voix proposees : Amelie, Marie et Thomas (installees avec macOS).";
+        " Voix proposees : Amelie et Thomas (installees avec macOS).";
 #endif
     QLabel* voiceHint = new QLabel(voiceHintText, content);
     voiceHint->setWordWrap(true);

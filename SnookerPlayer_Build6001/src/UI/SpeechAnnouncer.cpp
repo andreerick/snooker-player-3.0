@@ -54,13 +54,14 @@ SpeechAnnouncer::SpeechAnnouncer(QObject* parent)
     }
 
     // Liste volontairement courte (choix de l'utilisateur apres essais) :
-    // "Amelie" (preferee, voix par defaut), "Marie" (type Siri) et "Thomas".
+    // "Amelie" (preferee, voix par defaut) et "Thomas". "Marie" (type Siri) a
+    // ete retiree a la demande de l'utilisateur.
     // La voix francaise "Daniel" (type Siri) est EXCLUE : macOS la declare
     // mais elle reste muette (0,2 s pour une phrase de 3 s, mesure avec
     // AVSpeechSynthesizer). Si aucune de ces voix n'existe (autre systeme,
     // ex. Windows), on garde toutes les voix francaises.
     QList<QVoice> kept;
-    for (const QString& wanted : { QString::fromUtf8("Am\u00e9lie"), QString("Marie"), QString("Thomas") })
+    for (const QString& wanted : { QString::fromUtf8("Am\u00e9lie"), QString("Thomas") })
     {
         for (const QVoice& voice : m_voices)
         {
